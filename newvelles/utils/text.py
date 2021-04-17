@@ -1,6 +1,13 @@
 import re
 from typing import Dict, Iterable, List, Optional
 
+import numpy as np
+from scipy.spatial import distance
+from sklearn.metrics.pairwise import cosine_similarity
+import tensorflow_hub as hub
+
+
+_EMBEDDINGS_PATH = '/var/data/universal-sentence-encoder_4'
 _STOPWORDS = frozenset({
     "a", "about", "above", "after", "again", "against", "ain", "all", "am", "an", "and", "any",
     "are", "aren", "aren't", "as", "at", "be", "because", "been", "before", "being", "below",
@@ -91,8 +98,6 @@ def _clean_text(text):
     """
     if not text:  # if no text then skip processing
         return ''
-    if 'font color' in text or '@' in text:  # skip / clean anything related to subtitles
-        return ''
     text = text.lower()
     text = text.replace('<i>', '')  # skip / clean anything related to html
     text = text.replace('<\\i>', '')  # skip / clean anything related to html
@@ -132,3 +137,35 @@ def process_content(sentence: str, terms_mapping: Optional[Dict[str, str]] = Non
         for term, mapping in terms_mapping.items():
             sentence = re.sub(rf'\b{term}\b', mapping, sentence, flags=re.I)
     return list(_remove_stopwords(_tokenizer(_clean_text(sentence))))
+
+
+def load_embedding_model():  # pragma: no cover
+    return hub.KerasLayer(_EMBEDDINGS_PATH)
+
+
+def similarity(embed_model, sentence1: str, sentence2: str) -> float:  # pragma: no cover
+    e1 = embed_model([sentence1])
+    e2 = embed_model([sentence2])
+    return 1.0 - distance.cosine(e1[0], e2[0])
+
+
+def group_sentences(embed_model, sentences: List[str], threshold: float = 0.5):  # pragma: no cover
+    sparse_matrix = embed_model(sentences)
+    similarities = cosine_similarity(sparse_matrix)
+    similar = np.where(similarities >= threshold)
+    similar_sets = [(i, similar[1][similar[0] == i]) for i in np.unique(similar[0])]
+    return remove_subsets([x[1] for x in similar_sets])
+
+
+def remove_subsets(all_sets):
+    sets = sorted(all_sets, key=lambda x: len(x), reverse=False)
+    final_sets = []
+    for i in range(0, len(sets)):
+        skip = False
+        for s in sets[i + 1:]:
+            if not skip and len(set(sets[i]).difference(set(s))) == 0:
+                final_sets.append(s)
+                skip = True
+        if not skip:
+            final_sets.append(sets[i])
+    return set(map(tuple, final_sets))
