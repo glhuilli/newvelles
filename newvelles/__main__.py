@@ -1,14 +1,12 @@
-from typing import Dict, List
+from typing import Any, Dict
 from collections import defaultdict
 
 import click
 
+from newvelles.display.show import print_sorted_grouped_titles
 from newvelles.feed.load import load_paths
+from newvelles.feed.log import log_entries
 from newvelles.feed.parser import parse_feed
-from newvelles.utils.text import group_sentences, load_embedding_model
-
-
-EMBEDDING_MODEL = load_embedding_model()
 
 
 @click.command()
@@ -16,24 +14,14 @@ EMBEDDING_MODEL = load_embedding_model()
 @click.option('--query', default='', help='Limit news to a particular query')
 @click.option('--stats', is_flag=True, help='Add stats for each news article')
 def main(limit, query, stats):
-    # print(f'fetch news...{limit} {query} {stats}')
     feeds = load_paths()
-    data: Dict[str, List[str]] = defaultdict(list)
     sentences = []
-    for feed_tuple in parse_feed(feeds):
-        data[feed_tuple[0]].append(feed_tuple[1])
-        sentences.append(feed_tuple[1])
-    unique_sets = group_sentences(EMBEDDING_MODEL, sentences)
-    all_news = []
-    for s in unique_sets:
-        if len(s) > 1:
-            print('******')
-            for i in s:
-                print(sentences[i])
-        else:
-            all_news.append(sentences[s[0]])
-    for s in all_news:
-        print(s)
+    data: Dict[str, Any] = defaultdict(list)
+    for feed_title, entry in parse_feed(feeds):
+        sentences.append(entry.title)
+        data[feed_title].append(entry)
+    log_entries(data)
+    print_sorted_grouped_titles(sentences, stats)
 
 
 if __name__ == '__main__':
