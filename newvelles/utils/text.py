@@ -154,7 +154,7 @@ def group_sentences(embed_model, sentences: List[str], threshold: float = 0.5): 
     similarities = cosine_similarity(sparse_matrix)
     similar = np.where(similarities >= threshold)
     similar_sets = [(i, similar[1][similar[0] == i]) for i in np.unique(similar[0])]
-    return remove_subsets([x[1] for x in similar_sets])
+    return remove_similar_subsets([x[1] for x in similar_sets])
 
 
 def remove_subsets(all_sets):
@@ -169,3 +169,36 @@ def remove_subsets(all_sets):
         if not skip:
             final_sets.append(sets[i])
     return set(map(tuple, final_sets))
+
+
+def _remove_similar_subsets(all_sets):
+    sets = sorted(all_sets, key=lambda x: len(x), reverse=False)
+    final_sets = []
+    for i in range(0, len(sets)):
+        skip = False
+        for s in sets[i + 1:]:
+            if not skip and len(set(sets[i]).intersection(set(s))) > 0:
+                final_sets.append(set(sets[i]).union(set(s)))
+                skip = True
+        if not skip:
+            final_sets.append(sorted(sets[i]))
+    return set(map(tuple, final_sets))
+
+
+def remove_similar_subsets(all_sets):
+    print(all_sets)
+    if not all_sets:
+        return set(all_sets)
+    while True:
+        output = _remove_similar_subsets(all_sets)
+        if _compare_sets(output, all_sets):
+            break
+        else:
+            all_sets = output
+    return all_sets
+
+
+def _compare_sets(set1, set2):
+    sset1 = sorted([sorted(x) for x in set1])
+    sset2 = sorted([sorted(x) for x in set2])
+    return sset1 == sset2
