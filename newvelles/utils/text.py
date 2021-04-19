@@ -186,7 +186,6 @@ def _remove_similar_subsets(all_sets):
 
 
 def remove_similar_subsets(all_sets):
-    print(all_sets)
     if not all_sets:
         return set(all_sets)
     while True:
