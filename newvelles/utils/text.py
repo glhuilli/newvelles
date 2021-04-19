@@ -178,7 +178,7 @@ def _remove_similar_subsets(all_sets):
         skip = False
         for s in sets[i + 1:]:
             if not skip and len(set(sets[i]).intersection(set(s))) > 0:
-                final_sets.append(set(sets[i]).union(set(s)))
+                final_sets.append(sorted(set(sets[i]).union(set(s))))
                 skip = True
         if not skip:
             final_sets.append(sorted(sets[i]))
