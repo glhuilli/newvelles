@@ -1,5 +1,7 @@
 from typing import Any, Dict
+import time
 from collections import defaultdict
+
 import click
 
 from newvelles.models.grouping import build_visualization
@@ -26,17 +28,24 @@ def build_data(feeds: Any) -> Dict[str, str]:
 @click.option('--stats', is_flag=True, help='Add stats for each news article')
 @click.option('--debug', is_flag=True, help='Add stats for each news article')
 def main(rss_file, limit, query, stats, debug):
-    feeds = load_rss(rss_file)
-    title_data = build_data(feeds)
-    visualization_data, group_sentences = build_visualization(title_data, debug)
+    while True:
+        feeds = load_rss(rss_file)
+        title_data = build_data(feeds)
+        visualization_data, group_sentences = build_visualization(title_data, debug)
 
-    # log data
-    log_visualization(visualization_data)
-    log_groups(group_sentences)
+        # log data
+        log_visualization(visualization_data)
+        log_groups(group_sentences)
 
-    if debug:
-        print_sorted_grouped_titles(group_sentences, stats)
-        print_viz(visualization_data)
+        if debug:
+            print_sorted_grouped_titles(group_sentences, stats)
+            print_viz(visualization_data)
+
+        if debug:
+            print('*' * 100)
+            print('waiting for 5 minutes..')
+            print('*' * 100)
+        time.sleep(5 * 60)
 
 
 if __name__ == '__main__':
