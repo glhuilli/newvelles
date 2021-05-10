@@ -39,4 +39,3 @@ http://localhost:8000/
 #### v0.0.1 (2021-05-09)
 
 * Initial release of the command line version of newsvelle with the UI tool. 
-

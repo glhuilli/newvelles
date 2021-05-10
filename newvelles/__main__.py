@@ -34,8 +34,6 @@ def main(rss_file, limit, query, stats, debug):
     log_visualization(visualization_data)
     log_groups(group_sentences)
 
-    # TODO: upload visualization_data to S3
-
     if debug:
         print_sorted_grouped_titles(group_sentences, stats)
         print_viz(visualization_data)

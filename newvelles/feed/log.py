@@ -37,6 +37,10 @@ def log_visualization(visualization_data, output_path: str = _LOG_PATH) -> str:
     with open(log_path_latest, 'w') as f:
         json.dump(visualization_data, f)
 
+    log_path_latest_current = f"./{_LOG_LATEST_VISUALIZATION_NAME}.json"
+    with open(log_path_latest_current, 'w') as f:
+        json.dump(visualization_data, f)
+
     latest_metadata = {
         'datetime': current_datetime,
         'version': _VISUALIZATION_VERSION,
