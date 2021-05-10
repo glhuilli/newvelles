@@ -154,7 +154,7 @@ def group_sentences(embed_model, sentences: List[str], threshold: float = 0.5): 
     similarities = cosine_similarity(sparse_matrix)
     similar = np.where(similarities >= threshold)
     similar_sets = [(i, similar[1][similar[0] == i]) for i in np.unique(similar[0])]
-    return remove_similar_subsets([x[1] for x in similar_sets])
+    return similar_sets, remove_similar_subsets([x[1] for x in similar_sets])
 
 
 def remove_subsets(all_sets):

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>News viewer</title>
+    <script src="./index.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <h3>List of news</h3>
+    <div id="show-news"></div>
+  </body>
+  <script type="text/javascript">
+    var request = new XMLHttpRequest();
+    request.open("GET", "./latest_news.json", false);
+    request.send(null);
+    var value = JSON.parse(request.responseText);
+
+    window.onload = function() {
+      appendJSON(value);
+    };
+
+    function buttonClickHandler() {
+      console.log('click');
+      appendJSON(document.getElementById('text-area').value)
+    }
+
+    function getJSONfile(event) {
+      event.preventDefault();
+      const jsonAddress = document.getElementById('json-file').value;
+      fetch(jsonAddress)
+        .then(response => response.json())
+        .then(data => {
+          appendJSON(data);
+        });
+    }
+
+    function appendJSON(data) {
+      const htmlToString = false;
+      const jsonHTML = jsonToHTML(data)(true)(htmlToString);
+      document.getElementById('show-news').innerHTML =  jsonHTML;
+      setClickListeners();
+    }
+  </script>
+</html>
