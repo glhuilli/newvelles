@@ -1,11 +1,11 @@
 import re
-from typing import Dict, Iterable, List, Optional
+from collections import Counter
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
+import tensorflow_hub as hub
 from scipy.spatial import distance
 from sklearn.metrics.pairwise import cosine_similarity
-import tensorflow_hub as hub
-
 
 _EMBEDDINGS_PATH = '/var/data/universal-sentence-encoder_4'
 _STOPWORDS = frozenset({
@@ -160,7 +160,7 @@ def group_sentences(embed_model, sentences: List[str], threshold: float = 0.5): 
 def remove_subsets(all_sets):
     sets = sorted(all_sets, key=lambda x: len(x), reverse=False)
     final_sets = []
-    for i in range(0, len(sets)):
+    for i, _ in enumerate(sets):
         skip = False
         for s in sets[i + 1:]:
             if not skip and len(set(sets[i]).difference(set(s))) == 0:
@@ -174,7 +174,7 @@ def remove_subsets(all_sets):
 def _remove_similar_subsets(all_sets):
     sets = sorted(all_sets, key=lambda x: len(x), reverse=False)
     final_sets = []
-    for i in range(0, len(sets)):
+    for i, _ in enumerate(sets):
         skip = False
         for s in sets[i + 1:]:
             if not skip and len(set(sets[i]).intersection(set(s))) > 0:
@@ -192,8 +192,7 @@ def remove_similar_subsets(all_sets):
         output = _remove_similar_subsets(all_sets)
         if _compare_sets(output, all_sets):
             break
-        else:
-            all_sets = output
+        all_sets = output
     return all_sets
 
 
@@ -201,3 +200,10 @@ def _compare_sets(set1, set2):
     sset1 = sorted([sorted(x) for x in set1])
     sset2 = sorted([sorted(x) for x in set2])
     return sset1 == sset2
+
+
+def get_top_words(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]]:
+    words = Counter()
+    for sentence in sentences:
+        words.update(process_content(sentence))
+    return sorted(words.items(), key=lambda x: x[1], reverse=True)[:top_n]
