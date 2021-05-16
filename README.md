@@ -19,10 +19,17 @@ python setup.py install
 Then, run the script to pull the news and generate the visualization data. 
 
 ```bash
-newvelles --rss_file data/rss_source_short.txt --debug
+newvelles --rss_file data/rss_source_short.txt 
 ```
 
-Finally, start a server so the web page can be accessed within your localhost. 
+If you want to keep the news updated every N minutes (configured in the `./config/newvelles.ini`) file, you can run 
+
+
+```bash
+newvelles --rss_file data/rss_source_short.txt --daemon
+```
+
+Finally, start a server in the root path of this project so the web page can be accessed within your localhost. 
 
 ```bash
 python -m http.server 
@@ -38,4 +45,11 @@ http://localhost:8000/
 
 #### v0.0.1 (2021-05-09)
 
-* Initial release of the command line version of newsvelle with the UI tool. 
+* Initial release of the command line version of newvelles with the UI tool. 
+
+
+#### v0.0.2 (2021-05-16)
+
+* Upgraded output format for visualization. 
+* Daemon support to keep news updated every N minutes. 
+* Configuration support for debugging and daemon.
