@@ -17,8 +17,15 @@ function jsonToHTML(input) {
           } else if(typeof(value) === 'object') {
             content = '{}'
           } else {
-            const formattedContent = (typeof(value) === 'string' && htmlToString) ? value.replace(repSm, '&lt;').replace(repGt, '&gt;') : `<a href=`+value+` target=#>link</a>`;
-            content = getFinalContent(formattedContent);
+            if(key == 'link') {
+                const formattedContent = (typeof(value) === 'string' && htmlToString) ? value.replace(repSm, '&lt;').replace(repGt, '&gt;') : `<a href=` + value+` target=#>`+value+`</a>`;
+                content = getFinalContent(formattedContent);
+            } else if(key == 'title') {
+                continue;
+            } else {
+                const formattedContent = (typeof(value) === 'string' && htmlToString) ? value.replace(repSm, '&lt;').replace(repGt, '&gt;') : value;
+                content = getFinalContent(formattedContent);
+            }
           }
           htmlArray.push(`<li>${key}: ${content}</li>`)
         }
@@ -40,10 +47,7 @@ function parseInput(input) {
 }
 
 function getFinalContent(formattedContent) {
-  if(formattedContent.length < 50 || typeof(formattedContent) == 'number') {
     return `<span>${formattedContent}</span>`;
-  }
-  return `<span class="clickable" style="cursor: pointer">+</span><pre style="display:none">${formattedContent}</pre>`;
 }
 
 function setClickListeners() {
