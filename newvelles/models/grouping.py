@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from newvelles.config import debug
 from newvelles.feed import NewsEntry
@@ -68,13 +68,15 @@ def build_visualization(
                 grp_idx_header, group_titles = get_top_words_gidx(grp_idx, group_indexes,
                                                                   similar_sets, titles)
                 for title in group_titles:
-                    visualization[grp_top_words][grp_idx_header][title] = dict(title_data[title]._asdict())
+                    visualization[grp_top_words][grp_idx_header][title] = dict(
+                        title_data[title]._asdict())
             else:
                 for grp_idx in group_indexes:
                     grp_idx_header, group_titles = get_top_words_gidx(grp_idx, group_indexes,
                                                                       similar_sets, titles)
                     for title in group_titles:
-                        visualization[grp_top_words][grp_idx_header][title] = dict(title_data[title]._asdict())
+                        visualization[grp_top_words][grp_idx_header][title] = dict(
+                            title_data[title]._asdict())
 
         # TODO: review if should include "other" news or not
         #  not convinced yet it helps as it's too much noise.
