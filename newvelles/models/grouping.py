@@ -3,11 +3,12 @@ from collections import defaultdict
 from typing import Dict, List, Tuple
 
 from newvelles.config import debug
+from newvelles.feed import NewsEntry
 from newvelles.utils.text import get_top_words, group_sentences, load_embedding_model
 
 # This version needs to be updated in case major
 # changes are done to the visualization files below.
-VISUALIZATION_VERSION = '0.2.0'
+VISUALIZATION_VERSION = '0.2.1'
 DEBUG = debug()
 _EMBEDDING_MODEL = load_embedding_model()
 
@@ -36,7 +37,7 @@ def generate_top_words(groups_indexes, similar_sets, sentences):
 
 
 def build_visualization(
-        title_link: Dict[str, str],
+        title_data: Dict[str, NewsEntry],
         cluster_limit: int = 0) -> Tuple[Dict[int, Dict[str, List[str]]], Dict[int, List[str]]]:
     """
     data is defined by {sentence: link}
@@ -44,7 +45,7 @@ def build_visualization(
     TODO: refactor this method so it's easier to understand.
     TODO: Use the limit to generate only top N news
     """
-    titles = [x[0] for x in title_link.items()]
+    titles = [x[0] for x in title_data.items()]
     similar_sets, unique_sets = group_sentences(_EMBEDDING_MODEL, titles)
     # TODO: consider removing title_groups (currently only used for debugging)
     title_groups = defaultdict(list)
@@ -58,7 +59,7 @@ def build_visualization(
             title_groups_indexes[idx].append(title_idx)
 
     top_words_group = generate_top_words(title_groups_indexes, similar_sets, titles)
-    visualization = defaultdict(lambda: defaultdict(lambda: defaultdict(str)))
+    visualization = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(str))))
     for idx, group_indexes in title_groups_indexes.items():
         grp_top_words = top_words_group[idx]
         if len(group_indexes) > cluster_limit:
@@ -67,13 +68,15 @@ def build_visualization(
                 grp_idx_header, group_titles = get_top_words_gidx(grp_idx, group_indexes,
                                                                   similar_sets, titles)
                 for title in group_titles:
-                    visualization[grp_top_words][grp_idx_header][title] = title_link[title]
+                    visualization[grp_top_words][grp_idx_header][title] = dict(
+                        title_data[title]._asdict())
             else:
                 for grp_idx in group_indexes:
                     grp_idx_header, group_titles = get_top_words_gidx(grp_idx, group_indexes,
                                                                       similar_sets, titles)
                     for title in group_titles:
-                        visualization[grp_top_words][grp_idx_header][title] = title_link[title]
+                        visualization[grp_top_words][grp_idx_header][title] = dict(
+                            title_data[title]._asdict())
 
         # TODO: review if should include "other" news or not
         #  not convinced yet it helps as it's too much noise.
