@@ -41,6 +41,8 @@ And then, open the web version of newvelles in your browser,
 http://localhost:8000/
 ```
 
+Note that you need to run the `newvelles` command before launching the webapp so the `latest_news.json` file is created, which will be needed to visualize the output. 
+
 ### Changelog
 
 #### v0.0.1 (2021-05-09)
