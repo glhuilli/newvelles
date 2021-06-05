@@ -12,13 +12,13 @@ CONFIG = config()
 DEBUG = debug()
 
 
-def run(rss_file):
+def run(rss_file: str, s3: bool) -> None:
     title_data = build_data_from_rss_feeds(rss_file)
     cluster_limit = int(CONFIG['PARAMS']['cluster_limit'])
     visualization_data, group_sentences = build_visualization(title_data,
                                                               cluster_limit=cluster_limit)
     # log data
-    log_visualization(visualization_data)
+    log_visualization(visualization_data, s3=s3)
     log_groups(group_sentences)
 
     if DEBUG:
@@ -26,8 +26,8 @@ def run(rss_file):
         print_viz(visualization_data)
 
 
-def run_daemon(rss_file):
-    run(rss_file)
+def run_daemon(rss_file, s3):
+    run(rss_file, s3)
     wait_time = int(CONFIG['DAEMON']['wait_time']) * 60
     if CONFIG['DAEMON']['debug'] == 'True':
         print('*' * 100 + f'\nwaiting for {wait_time} seconds..\n' + '*' * 100)
@@ -37,7 +37,8 @@ def run_daemon(rss_file):
 @click.command()
 @click.option('--rss_file', default='./data/rss_source.txt', help='Txt file with RSS urls')
 @click.option('--daemon', is_flag=True, help='Runs in daemon mode')
-def main(rss_file, daemon):
+@click.option('--s3', is_flag=True, help='Uploads latest news to S3 bucket')
+def main(rss_file, daemon, s3):
     """
     Given a file with RSS links, generate a dictionary that can be used to visualize all news.
 
@@ -45,9 +46,9 @@ def main(rss_file, daemon):
     """
     if daemon:
         while True:
-            run_daemon(rss_file)
+            run_daemon(rss_file, s3)
     else:
-        run(rss_file)
+        run(rss_file, s3)
 
 
 if __name__ == '__main__':
