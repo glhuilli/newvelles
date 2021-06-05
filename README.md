@@ -55,3 +55,13 @@ Note that you need to run the `newvelles` command before launching the webapp so
 * Upgraded output format for visualization. 
 * Daemon support to keep news updated every N minutes. 
 * Configuration support for debugging and daemon.
+
+
+#### v0.0.3 (2021-05-21)
+
+* Added link, date, and full title to each visualized news item. 
+
+
+#### v0.0.4 (2021-06-05)
+
+* Upload data to S3 so it can be visualized by `newvelles_web`.
