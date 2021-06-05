@@ -1,3 +1,4 @@
+from datetime import datetime
 import time
 
 import click
@@ -30,7 +31,8 @@ def run_daemon(rss_file, s3):
     run(rss_file, s3)
     wait_time = int(CONFIG['DAEMON']['wait_time']) * 60
     if CONFIG['DAEMON']['debug'] == 'True':
-        print('*' * 100 + f'\nwaiting for {wait_time} seconds..\n' + '*' * 100)
+        print('*' * 100 + f'\nLatest run: {datetime.now().isoformat()}\n' +
+              f'\nwaiting for {wait_time} seconds..\n' + '*' * 100)
     time.sleep(wait_time)
 
 

@@ -53,8 +53,10 @@ def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool
         json.dump(visualization_data, f)
 
     if s3:
-        upload_to_s3(_S3_PUBLIC_BUCKET, f'{_LOG_LATEST_VISUALIZATION_NAME}.json',
-                     json.dumps(visualization_data).encode('utf-8'), public_read=True)
+        upload_to_s3(_S3_PUBLIC_BUCKET,
+                     f'{_LOG_LATEST_VISUALIZATION_NAME}.json',
+                     json.dumps(visualization_data).encode('utf-8'),
+                     public_read=True)
 
     latest_metadata = {
         'datetime': current_datetime,
