@@ -12,7 +12,8 @@ _LOG_GROUPED_NAME = 'all_grouped_entries'
 _LOG_VISUALIZATION_NAME = 'newvelles_visualization'
 _LOG_LATEST_VISUALIZATION_NAME = 'latest_news'
 _LOG_LATEST_VISUALIZATION_METADATA_NAME = 'latest_news_metadata'
-_S3_BUCKET = 'public-newvelles-data'
+_S3_BUCKET = 'newvelles-data'
+_S3_PUBLIC_BUCKET = 'public-newvelles-data'
 
 
 def _current_datetime():
@@ -39,6 +40,10 @@ def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool
     with open(log_path, 'w') as f:
         json.dump(visualization_data, f)
 
+    if s3:
+        upload_to_s3(_S3_BUCKET, f'{viz_file_name}_{current_datetime}.json',
+                     json.dumps(visualization_data).encode('utf-8'))
+
     log_path_latest = f"{_LATEST_PATH}/{_LOG_LATEST_VISUALIZATION_NAME}.json"
     with open(log_path_latest, 'w') as f:
         json.dump(visualization_data, f)
@@ -48,8 +53,8 @@ def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool
         json.dump(visualization_data, f)
 
     if s3:
-        upload_to_s3(_S3_BUCKET, f'{_LOG_LATEST_VISUALIZATION_NAME}.json',
-                     json.dumps(visualization_data).encode('utf-8'))
+        upload_to_s3(_S3_PUBLIC_BUCKET, f'{_LOG_LATEST_VISUALIZATION_NAME}.json',
+                     json.dumps(visualization_data).encode('utf-8'), public_read=True)
 
     latest_metadata = {
         'datetime': current_datetime,
