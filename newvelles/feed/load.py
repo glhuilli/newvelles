@@ -4,11 +4,9 @@ from typing import Any, Dict, List
 
 from dateutil import parser as date_parser
 
-
 from newvelles.feed.log import log_entries
 from newvelles.feed.parser import parse_feed
 from newvelles.feed import NewsEntry
-
 
 _DATE_RANGE_DAYS = 14
 
