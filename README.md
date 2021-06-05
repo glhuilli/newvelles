@@ -62,6 +62,7 @@ Note that you need to run the `newvelles` command before launching the webapp so
 * Added link, date, and full title to each visualized news item. 
 
 
-#### v0.0.4 (2021-06-05)
+#### v0.0.5 (2021-06-06)
 
 * Upload data to S3 so it can be visualized by `newvelles_web`.
+* Only consider news published no more than 2 weeks ago. 
