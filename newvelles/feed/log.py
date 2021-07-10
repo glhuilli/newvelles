@@ -12,8 +12,8 @@ _LOG_GROUPED_NAME = 'all_grouped_entries'
 _LOG_VISUALIZATION_NAME = 'newvelles_visualization'
 _LOG_LATEST_VISUALIZATION_NAME = 'latest_news'
 _LOG_LATEST_VISUALIZATION_METADATA_NAME = 'latest_news_metadata'
-_S3_BUCKET = 'newvelles-data'
-_S3_PUBLIC_BUCKET = 'public-newvelles-data'
+_S3_BUCKET = 'newvelles-data-bucket'
+_S3_PUBLIC_BUCKET = 'public-newvelles-data-bucket'
 
 
 def _current_datetime():
