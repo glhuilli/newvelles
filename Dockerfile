@@ -10,7 +10,7 @@ ADD setup.py ${LAMBDA_TASK_ROOT}
 RUN cd ${LAMBDA_TASK_ROOT} && python setup.py install
 
 # Copy handler function
-COPY  app.py ${LAMBDA_TASK_ROOT}
+COPY  handler.py ${LAMBDA_TASK_ROOT}
 
 # Overwrite the command by providing a different command directly in the template.
 CMD ["handler.handler"]
