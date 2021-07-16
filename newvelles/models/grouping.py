@@ -1,3 +1,4 @@
+import os
 import json
 from collections import defaultdict
 from typing import Dict, List, Tuple
@@ -10,7 +11,12 @@ from newvelles.utils.text import get_top_words, group_sentences, load_embedding_
 # changes are done to the visualization files below.
 VISUALIZATION_VERSION = '0.2.1'
 DEBUG = debug()
-_EMBEDDING_MODEL = load_embedding_model()
+
+
+if os.environ['AWS_LAMBDA']:
+    _EMBEDDING_MODEL = load_embedding_model('./universal_encoder/00000001/')
+else:
+    _EMBEDDING_MODEL = load_embedding_model()
 
 
 def generate_top_words(groups_indexes, similar_sets, sentences):

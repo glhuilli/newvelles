@@ -139,8 +139,8 @@ def process_content(sentence: str, terms_mapping: Optional[Dict[str, str]] = Non
     return list(_remove_stopwords(_tokenizer(_clean_text(sentence))))
 
 
-def load_embedding_model():  # pragma: no cover
-    return hub.KerasLayer(_EMBEDDINGS_PATH)
+def load_embedding_model(embeddings_path: Optional[str] = _EMBEDDINGS_PATH):  # pragma: no cover
+    return hub.KerasLayer(embeddings_path)
 
 
 def similarity(embed_model, sentence1: str, sentence2: str) -> float:  # pragma: no cover
