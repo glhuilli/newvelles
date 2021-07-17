@@ -22,16 +22,10 @@ def load_rss(rss_file_path) -> List[str]:  # pragma: no cover
             yield line.strip()
 
 
-def build_data_from_rss_feeds(rss_file: str) -> Dict[str, NewsEntry]:
-    """
-    Builds from RSS feeds, which is basically {title: link} for now.
-
-    TODO: consider using much richer metadata object to expand UX (e.g., images).
-    """
-    feeds = load_rss(rss_file)
+def build_data_from_rss_feeds_list(rss_list: List[str], log: bool = True) -> Dict[str, NewsEntry]:
     title_data = {}
     news_data: Dict[str, Any] = defaultdict(list)
-    for feed_title, entry in parse_feed(feeds):
+    for feed_title, entry in parse_feed(rss_list):
         try:
             if _within_date_range(entry):
                 news_entry = NewsEntry(
@@ -44,8 +38,19 @@ def build_data_from_rss_feeds(rss_file: str) -> Dict[str, NewsEntry]:
                 news_data[feed_title].append(entry)
         except Exception:
             continue
-    log_entries(news_data)
+    if log:
+        log_entries(news_data)
     return title_data
+
+
+def build_data_from_rss_feeds(rss_file: str) -> Dict[str, NewsEntry]:
+    """
+    Builds from RSS feeds, which is basically {title: link} for now.
+
+    TODO: consider using much richer metadata object to expand UX (e.g., images).
+    """
+    feeds = load_rss(rss_file)
+    return build_data_from_rss_feeds_list(feeds)
 
 
 def _within_date_range(entry) -> bool:
