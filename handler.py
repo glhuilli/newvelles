@@ -8,7 +8,7 @@ from newvelles.models.grouping import build_visualization
 
 CONFIG = config()
 
-
+# TODO: Load these from file -- maybe download from S3.
 RSS_LINKS = [
     'https://finance.yahoo.com/rss/',
     'http://www.nytimes.com/services/xml/rss/nyt/HomePage.xml',

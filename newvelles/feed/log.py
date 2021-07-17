@@ -74,8 +74,7 @@ def log_s3(visualization_data) -> str:
     current_datetime = _current_datetime()
     viz_file_name = f'{_LOG_VISUALIZATION_NAME}_{VISUALIZATION_VERSION}'
     s3_file_name = f'{viz_file_name}_{current_datetime}.json'
-    upload_to_s3(_S3_BUCKET, s3_file_name,
-                 json.dumps(visualization_data).encode('utf-8'))
+    upload_to_s3(_S3_BUCKET, s3_file_name, json.dumps(visualization_data).encode('utf-8'))
     upload_to_s3(_S3_PUBLIC_BUCKET,
                  f'{_LOG_LATEST_VISUALIZATION_NAME}.json',
                  json.dumps(visualization_data).encode('utf-8'),
