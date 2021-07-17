@@ -13,7 +13,7 @@ VISUALIZATION_VERSION = '0.2.1'
 DEBUG = debug()
 
 
-if os.environ['AWS_LAMBDA']:
+if os.environ.get('AWS_LAMBDA', None):
     _EMBEDDING_MODEL = load_embedding_model('./universal_encoder/00000001/')
 else:
     _EMBEDDING_MODEL = load_embedding_model()

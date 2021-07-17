@@ -7,7 +7,7 @@ import tensorflow_hub as hub
 from scipy.spatial import distance
 from sklearn.metrics.pairwise import cosine_similarity
 
-_EMBEDDINGS_PATH = '/var/data/universal-sentence-encoder_4'
+_EMBEDDINGS_PATH = '/var/data/00000001'  # '/var/data/universal-sentence-encoder_4'
 _STOPWORDS = frozenset({
     "a", "about", "above", "after", "again", "against", "ain", "all", "am", "an", "and", "any",
     "are", "aren", "aren't", "as", "at", "be", "because", "been", "before", "being", "below",
@@ -140,17 +140,18 @@ def process_content(sentence: str, terms_mapping: Optional[Dict[str, str]] = Non
 
 
 def load_embedding_model(embeddings_path: Optional[str] = _EMBEDDINGS_PATH):  # pragma: no cover
-    return hub.KerasLayer(embeddings_path)
+    return hub.load("https://tfhub.dev/google/universal-sentence-encoder/3")
+    # return hub.KerasLayer(embeddings_path, signature="word_embeddings", output_key="word_embeddings")
 
 
 def similarity(embed_model, sentence1: str, sentence2: str) -> float:  # pragma: no cover
-    e1 = embed_model([sentence1])
-    e2 = embed_model([sentence2])
+    e1 = embed_model([sentence1])['output']
+    e2 = embed_model([sentence2])['output']
     return 1.0 - distance.cosine(e1[0], e2[0])
 
 
 def group_sentences(embed_model, sentences: List[str], threshold: float = 0.5):  # pragma: no cover
-    sparse_matrix = embed_model(sentences)
+    sparse_matrix = embed_model(sentences)['outputs']
     similarities = cosine_similarity(sparse_matrix)
     similar = np.where(similarities >= threshold)
     similar_sets = [(i, similar[1][similar[0] == i]) for i in np.unique(similar[0])]

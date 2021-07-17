@@ -14,11 +14,6 @@ ADD data/rss_source_short.txt ${LAMBDA_TASK_ROOT}
 RUN cd ${LAMBDA_TASK_ROOT} && python setup.py install
 
 
-# Download content from TfHub
-ADD docker/download_encoder.py ${LAMBDA_TASK_ROOT}
-RUN python download_encoder.py
-
-
 # Copy handler function
 COPY  handler.py ${LAMBDA_TASK_ROOT}
 
