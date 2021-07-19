@@ -8,8 +8,12 @@ import tensorflow_hub as hub
 from sklearn.metrics.pairwise import cosine_similarity
 import sentencepiece as spm
 import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
-tf.compat.v1.enable_eager_execution()
+if os.environ.get('AWS_LAMBDA'):
+    tf.enable_eager_execution()
+    tf.disable_v2_behavior()
+else:
+    tf.disable_v2_behavior()
+    tf.enable_eager_execution()
 
 _EMBEDDINGS_PATH_LITE = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
 _EMBEDDINGS_PATH = 'https://tfhub.dev/google/universal-sentence-encoder/3'
@@ -181,7 +185,7 @@ def load_embedding_model(embeddings_path: Optional[str] = _EMBEDDINGS_PATH):  # 
 def group_sentences_lite(sp,
                          module,
                          sentences: List[str],
-                         threshold: float = 0.5):  # pragma: no cover):
+                         threshold: float = 0.75):  # pragma: no cover):
     """
     Method based on https://tfhub.dev/google/universal-sentence-encoder-lite/2
     """
