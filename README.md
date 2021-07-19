@@ -66,3 +66,9 @@ Note that you need to run the `newvelles` command before launching the webapp so
 
 * Upload data to S3 so it can be visualized by `newvelles_web`.
 * Only consider news published no more than 2 weeks ago. 
+
+
+#### v0.0.6 (2021-07-19)
+
+* Added new modeling alternative using universal-sentence-encoder-lite to be used for AWS Lambda.  
+

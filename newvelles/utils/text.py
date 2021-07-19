@@ -1,3 +1,4 @@
+import os
 import re
 from collections import Counter
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -5,7 +6,12 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import numpy as np
 import tensorflow_hub as hub
 from sklearn.metrics.pairwise import cosine_similarity
+import sentencepiece as spm
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+tf.compat.v1.enable_eager_execution()
 
+_EMBEDDINGS_PATH_LITE = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
 _EMBEDDINGS_PATH = 'https://tfhub.dev/google/universal-sentence-encoder/3'
 _STOPWORDS = frozenset({
     "a", "about", "above", "after", "again", "against", "ain", "all", "am", "an", "and", "any",
@@ -91,6 +97,21 @@ _STOPWORDS = frozenset({
 })
 
 
+def _process_to_IDs_in_sparse_format(sp, sentences):
+    """
+    Method from https://tfhub.dev/google/universal-sentence-encoder-lite/2
+
+    An utility method that processes sentences with the sentence piece processor
+    'sp' and returns the results in tf.SparseTensor-similar format: (values, indices, dense_shape)
+    """
+    ids = [sp.EncodeAsIds(x) for x in sentences]
+    max_len = max(len(x) for x in ids)
+    dense_shape = (len(ids), max_len)
+    values = [item for sublist in ids for item in sublist]
+    indices = [[row, col] for row in range(len(ids)) for col in range(len(ids[row]))]
+    return values, indices, dense_shape
+
+
 def _clean_text(text):
     """
     General cleanup of anything that might not match a word.
@@ -138,12 +159,57 @@ def process_content(sentence: str, terms_mapping: Optional[Dict[str, str]] = Non
     return list(_remove_stopwords(_tokenizer(_clean_text(sentence))))
 
 
+def load_embedding_model_lite(
+        embeddings_path: Optional[str] = _EMBEDDINGS_PATH_LITE):  # pragma: no cover
+    """
+    Based on https://www.tensorflow.org/hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder_lite
+    """
+    module = hub.Module(embeddings_path)
+    with tf.Session() as sess:
+        spm_path = sess.run(module(signature="spm_path"))
+
+    sp = spm.SentencePieceProcessor()
+    with tf.io.gfile.GFile(spm_path, mode="rb") as f:
+        sp.LoadFromSerializedProto(f.read())
+    return sp, module
+
+
 def load_embedding_model(embeddings_path: Optional[str] = _EMBEDDINGS_PATH):  # pragma: no cover
     return hub.load(embeddings_path)
 
 
+def group_sentences_lite(sp,
+                         module,
+                         sentences: List[str],
+                         threshold: float = 0.5):  # pragma: no cover):
+    """
+    Method based on https://tfhub.dev/google/universal-sentence-encoder-lite/2
+    """
+    input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])
+    encodings = module(inputs=dict(values=input_placeholder.values,
+                                   indices=input_placeholder.indices,
+                                   dense_shape=input_placeholder.dense_shape))
+
+    values, indices, dense_shape = _process_to_IDs_in_sparse_format(sp, sentences)
+    with tf.Session() as session:
+        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+        message_embeddings = session.run(encodings,
+                                         feed_dict={
+                                             input_placeholder.values: values,
+                                             input_placeholder.indices: indices,
+                                             input_placeholder.dense_shape: dense_shape
+                                         })
+
+        sparse_matrix = np.array(message_embeddings)
+        return _group_sentences(sparse_matrix, threshold)
+
+
 def group_sentences(embed_model, sentences: List[str], threshold: float = 0.5):  # pragma: no cover
     sparse_matrix = embed_model(sentences)['outputs']
+    return _group_sentences(sparse_matrix.numpy(), threshold)
+
+
+def _group_sentences(sparse_matrix, threshold):
     similarities = cosine_similarity(sparse_matrix)
     similar = np.where(similarities >= threshold)
     similar_sets = [(i, similar[1][similar[0] == i]) for i in np.unique(similar[0])]
