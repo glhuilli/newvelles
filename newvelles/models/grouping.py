@@ -1,17 +1,21 @@
+import os
 import json
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
 from newvelles.config import debug
 from newvelles.feed import NewsEntry
-from newvelles.utils.text import get_top_words, group_sentences, load_embedding_model
+from newvelles.utils.text import get_top_words, group_sentences, load_embedding_model, load_embedding_model_lite, group_sentences_lite
 
 # This version needs to be updated in case major
 # changes are done to the visualization files below.
 VISUALIZATION_VERSION = '0.2.1'
 DEBUG = debug()
 
-_EMBEDDING_MODEL = load_embedding_model()
+if os.environ.get('AWS_LAMBDA'):
+    _EMBEDDING_SP, _EMBEDDING_MODULE = load_embedding_model_lite()
+else:
+    _EMBEDDING_MODEL = load_embedding_model()
 
 
 def generate_top_words(groups_indexes, similar_sets, sentences):
@@ -47,7 +51,13 @@ def build_visualization(
     TODO: Use the limit to generate only top N news
     """
     titles = [x[0] for x in title_data.items()]
-    similar_sets, unique_sets = group_sentences(_EMBEDDING_MODEL, titles)
+
+    # Depending on whether we are on AWS Lambda or not, we use different clustering algorithm
+    if os.environ.get('AWS_LAMBDA'):
+        similar_sets, unique_sets = group_sentences_lite(_EMBEDDING_SP, _EMBEDDING_MODULE, titles)
+    else:
+        similar_sets, unique_sets = group_sentences(_EMBEDDING_MODEL, titles)
+
     # TODO: consider removing title_groups (currently only used for debugging)
     title_groups = defaultdict(list)
     title_groups_indexes = defaultdict(list)

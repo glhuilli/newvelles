@@ -1,6 +1,8 @@
 # Set base image (host OS)
 FROM public.ecr.aws/lambda/python:3.8
 
+ENV AWS_LAMBDA=true
+
 # Copy the dependencies file to the working directory
 ADD newvelles ${LAMBDA_TASK_ROOT}/newvelles
 ADD requirements.txt ${LAMBDA_TASK_ROOT}
