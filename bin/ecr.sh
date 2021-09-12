@@ -1,5 +1,5 @@
-aws_region=us-west-2
-aws_account_id=617641631577
+aws_region=$1
+aws_account_id=$2
 
 aws ecr get-login-password \
     --region $aws_region \

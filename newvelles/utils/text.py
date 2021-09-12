@@ -6,8 +6,6 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import spacy
-from spacy.matcher import Matcher
-from spacy.util import filter_spans
 import sentencepiece as spm
 import tensorflow_hub as hub
 import tensorflow.compat.v1 as tf
@@ -18,14 +16,7 @@ else:
     tf.disable_v2_behavior()
     tf.enable_eager_execution()
 
-# From https://stackoverflow.com/questions/47856247/extract-verb-phrases-using-spacy
-VERB_PATTERNS = [
-                    [{'POS': 'VERB'}, {'OP': '?'}],
-                    [{'POS': 'ADV'}, {'OP': '*'}],
-                    [{'POS': 'VERB'}, {'OP': '+'}]]
 NLP = spacy.load("en_core_web_sm")
-MATCHER = Matcher(NLP.vocab)
-MATCHER.add("Verb phrase", VERB_PATTERNS)
 
 _EMBEDDINGS_PATH_LITE = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
 _EMBEDDINGS_PATH = 'https://tfhub.dev/google/universal-sentence-encoder/3'
@@ -285,44 +276,63 @@ def get_top_words(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]
 
 
 def get_top_words_spacy(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]]:
-    words = Counter()
+    """
+    Simple algorithm to fetch top relevant words from a collection of sentences using Spacy.
+
+    Algorithm is roughly the following:
+    1. Extract verbs and nouns from a each sentence.
+    2. Count repeated terms (could be more than 1 word per term).
+    3. Group terms already included in larger terms and adjust frequency.
+    """
+    terms = Counter()
     for sentence in sentences:
-        words.update(_get_nouns_and_verbs(sentence))
-    output = sorted(words.items(), key=lambda x: x[1], reverse=True)[:top_n]
-    output = _remove_duplicates(output)
+        terms.update(_get_nouns_and_verbs(sentence))
+    output = _remove_duplicates(sorted(terms.items(), key=lambda x: x[1], reverse=True)[:top_n])
     return output
 
 
 def _get_nouns_and_verbs(sentence: str) -> List[str]:
+    """
+    Use Spacy to process a document and extract Verbs and Nouns.
+    - Use lemmas whenever a term is not multi-worded.
+    """
     doc = NLP(sentence)
-    tokens = [x for x in _get_verbs(doc) + _get_nouns(doc) if x not in _STOPWORDS]
-    return tokens
+    terms = list(set([x for x in _get_verbs(doc) + _get_nouns(doc) if x not in _STOPWORDS]))
+    final_terms = []
+    for term in terms:
+        if len(term.split(' ')) > 1:  # no lemma for multi-words tokens
+            final_terms.append(term)
+        else:
+            for token in doc:
+                if term == token.text:
+                    final_terms.append(token.lemma_)
+    return final_terms
 
 
 def _get_nouns(spacy_doc):
+    """
+    Get nouns from a Spacy doc.
+    """
     return [chunk.text for chunk in spacy_doc.noun_chunks]
 
 
 def _get_verbs(spacy_doc):
+    """
+    Get verbs from a Spacy doc.
+    """
     return list([chunk.root.head.text for chunk in spacy_doc.noun_chunks])
 
 
-def _remove_duplicates(words_counter):
-    words = {k: v for k, v in words_counter}
-    sorted_words = sorted(list(words.keys()), key=lambda x: len(x.split(' ')), reverse=False)
-    remove_words = set()
-    words_extra = set()
-    for i in range(0, len(sorted_words)):
-        for j in range(i+1, len(sorted_words)):
-            if sorted_words[i] in sorted_words[j]:
-                remove_words.add(sorted_words[i])
-                words_extra.add(sorted_words[j])
-    final_words = []
-    for word, freq in words.items():
-        if word in remove_words:
-            continue
-        if word in words_extra:
-            final_words.append((word, words[word] + 1))
-        else:
-            final_words.append((word, words[word]))
-    return final_words
+def _remove_duplicates(terms_counter):
+    """
+    Given a list of
+    """
+    terms = {k: v for k, v in terms_counter}
+    sorted_terms = sorted(list(terms.keys()), key=lambda x: len(x.split(' ')), reverse=False)
+    for i in range(0, len(sorted_terms)):
+        for j in range(i+1, len(sorted_terms)):
+            if sorted_terms[i] in sorted_terms[j]:
+                del terms[sorted_terms[i]]
+                terms[sorted_terms[j]] += 1
+    final_terms = [(k, v) for k, v in terms.items()]
+    return final_terms
