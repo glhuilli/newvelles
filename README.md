@@ -72,3 +72,8 @@ Note that you need to run the `newvelles` command before launching the webapp so
 
 * Added new modeling alternative using universal-sentence-encoder-lite to be used for AWS Lambda.  
 
+
+#### v0.0.7 (2021-09-12)
+
+* Added Spacy NLP layer (using nouns and verbs) to generate a better summary header for a group of news.  
+
