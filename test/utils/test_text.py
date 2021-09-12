@@ -487,8 +487,8 @@ class TestUtilText(unittest.TestCase):
         sentences = ['Apple is looking at buying U.K. startup for $1 billion',
                      'Apple, located in Cupertino, buying startup in the U.K for billions']
         output = get_top_words_spacy(sentences)
-        expected = [('Apple', 2), ('buy', 2), ('U.K. startup', 2), ('Cupertino', 1), ('the U.K', 1), ('billion', 1)]
-        self.assertCountEqual(output, expected)
+        expected = [('U.K. startup', 2), ('Apple', 2), ('buy', 2), ('the U.K', 1), ('billion', 1)]
+        self.assertEqual(output, expected)
 
     def test_get_top_words_spacy_no_sentences(self):
         sentences = []

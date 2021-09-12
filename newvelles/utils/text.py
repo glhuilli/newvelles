@@ -275,20 +275,36 @@ def get_top_words(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]
     return sorted(words.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
 
+class reversor:
+    """
+    Class to reverse the sorting criteria.
+    """
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __eq__(self, other):
+        return other.obj == self.obj
+
+    def __lt__(self, other):
+        return other.obj < self.obj
+
+
 def get_top_words_spacy(sentences: List[str], top_n: int = 5) -> List[Tuple[str, int]]:
     """
     Simple algorithm to fetch top relevant words from a collection of sentences using Spacy.
 
     Algorithm is roughly the following:
     1. Extract verbs and nouns from a each sentence.
-        1.1. Sort by terms by Frequency and by number of terms.
+        1.1. Sort by terms by Frequency (high to low),
+            by number of terms (high to low), and alphabetical order (low to high), in that priority.
     2. Count repeated terms (could be more than 1 word per term).
     3. Group terms already included in larger terms and adjust frequency.
     """
     terms = Counter()
     for sentence in sentences:
         terms.update(_get_nouns_and_verbs(sentence))
-    output = _remove_duplicates(sorted(terms.items(), key=lambda x: (x[1], len(x[0].split(' '))), reverse=True)[:top_n])
+    output = sorted(_remove_duplicates(terms.items()),
+                    key=lambda x: (x[1], len(x[0].split(' ')), reversor(x[0].lower())), reverse=True)[:top_n]
     return output
 
 
@@ -336,8 +352,7 @@ def _remove_duplicates(terms_counter):
                 if sorted_terms[i] in terms:
                     del terms[sorted_terms[i]]
                 terms[sorted_terms[j]] += 1
-    final_terms = [(k, v) for k, v in terms.items()]
-    return final_terms
+    return terms.items()
 
 
 def _term_in_term(term1, term2):
