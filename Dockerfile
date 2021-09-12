@@ -12,6 +12,9 @@ ADD data/rss_source_short.txt ${LAMBDA_TASK_ROOT}
 # Install dependencies
 RUN cd ${LAMBDA_TASK_ROOT} && python setup.py install
 
+# Download library for NLP 
+RUN python -m spacy download en_core_web_sm 
+
 # Copy handler function
 COPY  handler.py ${LAMBDA_TASK_ROOT}
 

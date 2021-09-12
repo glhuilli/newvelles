@@ -4,9 +4,12 @@ from collections import Counter
 from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
-import tensorflow_hub as hub
 from sklearn.metrics.pairwise import cosine_similarity
+import spacy
+from spacy.matcher import Matcher
+from spacy.util import filter_spans
 import sentencepiece as spm
+import tensorflow_hub as hub
 import tensorflow.compat.v1 as tf
 if os.environ.get('AWS_LAMBDA'):
     tf.enable_eager_execution()
@@ -14,6 +17,15 @@ if os.environ.get('AWS_LAMBDA'):
 else:
     tf.disable_v2_behavior()
     tf.enable_eager_execution()
+
+# From https://stackoverflow.com/questions/47856247/extract-verb-phrases-using-spacy
+VERB_PATTERNS = [
+                    [{'POS': 'VERB'}, {'OP': '?'}],
+                    [{'POS': 'ADV'}, {'OP': '*'}],
+                    [{'POS': 'VERB'}, {'OP': '+'}]]
+NLP = spacy.load("en_core_web_sm")
+MATCHER = Matcher(NLP.vocab)
+MATCHER.add("Verb phrase", VERB_PATTERNS)
 
 _EMBEDDINGS_PATH_LITE = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
 _EMBEDDINGS_PATH = 'https://tfhub.dev/google/universal-sentence-encoder/3'
@@ -270,3 +282,47 @@ def get_top_words(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]
     for sentence in sentences:
         words.update(process_content(sentence))
     return sorted(words.items(), key=lambda x: x[1], reverse=True)[:top_n]
+
+
+def get_top_words_spacy(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]]:
+    words = Counter()
+    for sentence in sentences:
+        words.update(_get_nouns_and_verbs(sentence))
+    output = sorted(words.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    output = _remove_duplicates(output)
+    return output
+
+
+def _get_nouns_and_verbs(sentence: str) -> List[str]:
+    doc = NLP(sentence)
+    tokens = [x for x in _get_verbs(doc) + _get_nouns(doc) if x not in _STOPWORDS]
+    return tokens
+
+
+def _get_nouns(spacy_doc):
+    return [chunk.text for chunk in spacy_doc.noun_chunks]
+
+
+def _get_verbs(spacy_doc):
+    return list([chunk.root.head.text for chunk in spacy_doc.noun_chunks])
+
+
+def _remove_duplicates(words_counter):
+    words = {k: v for k, v in words_counter}
+    sorted_words = sorted(list(words.keys()), key=lambda x: len(x.split(' ')), reverse=False)
+    remove_words = set()
+    words_extra = set()
+    for i in range(0, len(sorted_words)):
+        for j in range(i+1, len(sorted_words)):
+            if sorted_words[i] in sorted_words[j]:
+                remove_words.add(sorted_words[i])
+                words_extra.add(sorted_words[j])
+    final_words = []
+    for word, freq in words.items():
+        if word in remove_words:
+            continue
+        if word in words_extra:
+            final_words.append((word, words[word] + 1))
+        else:
+            final_words.append((word, words[word]))
+    return final_words
