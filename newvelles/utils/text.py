@@ -275,19 +275,20 @@ def get_top_words(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]
     return sorted(words.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
 
-def get_top_words_spacy(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]]:
+def get_top_words_spacy(sentences: List[str], top_n: int = 5) -> List[Tuple[str, int]]:
     """
     Simple algorithm to fetch top relevant words from a collection of sentences using Spacy.
 
     Algorithm is roughly the following:
     1. Extract verbs and nouns from a each sentence.
+        1.1. Sort by terms by Frequency and by number of terms.
     2. Count repeated terms (could be more than 1 word per term).
     3. Group terms already included in larger terms and adjust frequency.
     """
     terms = Counter()
     for sentence in sentences:
         terms.update(_get_nouns_and_verbs(sentence))
-    output = _remove_duplicates(sorted(terms.items(), key=lambda x: x[1], reverse=True)[:top_n])
+    output = _remove_duplicates(sorted(terms.items(), key=lambda x: (x[1], len(x[0].split(' '))), reverse=True)[:top_n])
     return output
 
 
@@ -297,7 +298,7 @@ def _get_nouns_and_verbs(sentence: str) -> List[str]:
     - Use lemmas whenever a term is not multi-worded.
     """
     doc = NLP(sentence)
-    terms = list(set([x for x in _get_verbs(doc) + _get_nouns(doc) if x not in _STOPWORDS]))
+    terms = list(set([x for x in _get_verbs(doc) + _get_nouns(doc) if x.lower() not in _STOPWORDS]))
     final_terms = []
     for term in terms:
         if len(term.split(' ')) > 1:  # no lemma for multi-words tokens
@@ -325,14 +326,25 @@ def _get_verbs(spacy_doc):
 
 def _remove_duplicates(terms_counter):
     """
-    Given a list of
+    Given a list of terms, remove all that are already included within other terms.
     """
     terms = {k: v for k, v in terms_counter}
     sorted_terms = sorted(list(terms.keys()), key=lambda x: len(x.split(' ')), reverse=False)
     for i in range(0, len(sorted_terms)):
-        for j in range(i+1, len(sorted_terms)):
-            if sorted_terms[i] in sorted_terms[j]:
-                del terms[sorted_terms[i]]
+        for j in range(i + 1, len(sorted_terms)):
+            if _term_in_term(sorted_terms[i], sorted_terms[j]):
+                if sorted_terms[i] in terms:
+                    del terms[sorted_terms[i]]
                 terms[sorted_terms[j]] += 1
     final_terms = [(k, v) for k, v in terms.items()]
     return final_terms
+
+
+def _term_in_term(term1, term2):
+    """
+    Simple method to check if a term is within a term.
+    """
+    for term in term2.split(' '):
+        if term.lower() == term1.lower():
+            return True
+    return False
