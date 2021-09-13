@@ -4,9 +4,10 @@ from collections import Counter
 from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
-import tensorflow_hub as hub
 from sklearn.metrics.pairwise import cosine_similarity
+import spacy
 import sentencepiece as spm
+import tensorflow_hub as hub
 import tensorflow.compat.v1 as tf
 if os.environ.get('AWS_LAMBDA'):
     tf.enable_eager_execution()
@@ -14,6 +15,8 @@ if os.environ.get('AWS_LAMBDA'):
 else:
     tf.disable_v2_behavior()
     tf.enable_eager_execution()
+
+NLP = spacy.load("en_core_web_sm")
 
 _EMBEDDINGS_PATH_LITE = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
 _EMBEDDINGS_PATH = 'https://tfhub.dev/google/universal-sentence-encoder/3'
@@ -270,3 +273,93 @@ def get_top_words(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]
     for sentence in sentences:
         words.update(process_content(sentence))
     return sorted(words.items(), key=lambda x: x[1], reverse=True)[:top_n]
+
+
+class reversor:
+    """
+    Class to reverse the sorting criteria.
+    """
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __eq__(self, other):
+        return other.obj == self.obj
+
+    def __lt__(self, other):
+        return other.obj < self.obj
+
+
+def get_top_words_spacy(sentences: List[str], top_n: int = 5) -> List[Tuple[str, int]]:
+    """
+    Simple algorithm to fetch top relevant words from a collection of sentences using Spacy.
+
+    Algorithm is roughly the following:
+    1. Extract verbs and nouns from a each sentence.
+        1.1. Sort by terms by Frequency (high to low),
+            by number of terms (high to low), and alphabetical order (low to high), in that priority.
+    2. Count repeated terms (could be more than 1 word per term).
+    3. Group terms already included in larger terms and adjust frequency.
+    """
+    terms = Counter()
+    for sentence in sentences:
+        terms.update(_get_nouns_and_verbs(sentence))
+    output = sorted(_remove_duplicates(terms.items()),
+                    key=lambda x: (x[1], len(x[0].split(' ')), reversor(x[0].lower())), reverse=True)[:top_n]
+    return output
+
+
+def _get_nouns_and_verbs(sentence: str) -> List[str]:
+    """
+    Use Spacy to process a document and extract Verbs and Nouns.
+    - Use lemmas whenever a term is not multi-worded.
+    """
+    doc = NLP(sentence)
+    terms = list(set([x for x in _get_verbs(doc) + _get_nouns(doc) if x.lower() not in _STOPWORDS]))
+    final_terms = []
+    for term in terms:
+        if len(term.split(' ')) > 1:  # no lemma for multi-words tokens
+            final_terms.append(term)
+        else:
+            for token in doc:
+                if term == token.text:
+                    final_terms.append(token.lemma_)
+    return final_terms
+
+
+def _get_nouns(spacy_doc):
+    """
+    Get nouns from a Spacy doc.
+    """
+    return [chunk.text for chunk in spacy_doc.noun_chunks]
+
+
+def _get_verbs(spacy_doc):
+    """
+    Get verbs from a Spacy doc.
+    """
+    return list([chunk.root.head.text for chunk in spacy_doc.noun_chunks])
+
+
+def _remove_duplicates(terms_counter):
+    """
+    Given a list of terms, remove all that are already included within other terms.
+    """
+    terms = {k: v for k, v in terms_counter}
+    sorted_terms = sorted(list(terms.keys()), key=lambda x: len(x.split(' ')), reverse=False)
+    for i in range(0, len(sorted_terms)):
+        for j in range(i + 1, len(sorted_terms)):
+            if _term_in_term(sorted_terms[i], sorted_terms[j]):
+                if sorted_terms[i] in terms:
+                    del terms[sorted_terms[i]]
+                terms[sorted_terms[j]] += 1
+    return terms.items()
+
+
+def _term_in_term(term1, term2):
+    """
+    Simple method to check if a term is within a term.
+    """
+    for term in term2.split(' '):
+        if term.lower() == term1.lower():
+            return True
+    return False

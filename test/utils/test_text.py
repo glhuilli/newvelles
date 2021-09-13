@@ -4,6 +4,8 @@ from numpy import array
 
 from newvelles.utils.text import process_content
 from newvelles.utils.text import remove_subsets, remove_similar_subsets
+from newvelles.utils.text import get_top_words_spacy
+
 
 TEST_CASES = {
     'Limbic is a package.': ['limbic', 'package'],
@@ -480,3 +482,28 @@ class TestUtilText(unittest.TestCase):
         for test in TEST_SET_CASES:
             print(test[0], test[1])
             self.assertEquals(remove_similar_subsets(test[0]), test[1])
+
+    def test_get_top_words_spacy(self):
+        sentences = ['Apple is looking at buying U.K. startup for $1 billion',
+                     'Apple, located in Cupertino, buying startup in the U.K for billions']
+        output = get_top_words_spacy(sentences)
+        expected = [('U.K. startup', 2), ('Apple', 2), ('buy', 2), ('the U.K', 1), ('billion', 1)]
+        self.assertEqual(output, expected)
+
+    def test_get_top_words_spacy_no_sentences(self):
+        sentences = []
+        output = get_top_words_spacy(sentences)
+        expected = []
+        self.assertCountEqual(output, expected)
+
+    def test_get_top_words_spacy_one_sentence(self):
+        sentences = ['Apple is looking at buying U.K. startup for $1 billion']
+        output = get_top_words_spacy(sentences)
+        expected = [('buy', 1), ('Apple', 1), ('U.K. startup', 1)]
+        self.assertCountEqual(output, expected)
+
+    def test_get_top_words_spacy_one_sentence_no_nouns_verbs(self):
+        sentences = ['the at']
+        output = get_top_words_spacy(sentences)
+        expected = []
+        self.assertCountEqual(output, expected)

@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 
 from newvelles.config import debug
 from newvelles.feed import NewsEntry
-from newvelles.utils.text import get_top_words, group_sentences, load_embedding_model, load_embedding_model_lite, group_sentences_lite
+from newvelles.utils.text import get_top_words_spacy, group_sentences, load_embedding_model, load_embedding_model_lite, group_sentences_lite
 
 # This version needs to be updated in case major
 # changes are done to the visualization files below.
@@ -32,11 +32,11 @@ def generate_top_words(groups_indexes, similar_sets, sentences):
                                 grp_sentences.add(sentences[gidx])
                                 all_sentences.add(sentences[gidx])
         if DEBUG:
-            print(get_top_words(list(grp_sentences)))
-        top_words_group[idx] = ' '.join([x[0] for x in get_top_words(list(grp_sentences))])
+            print(get_top_words_spacy(list(grp_sentences)))
+        top_words_group[idx] = ' '.join([x[0] for x in get_top_words_spacy(list(grp_sentences))])
     if DEBUG:
         print(f'Total news articles: {len(all_sentences)}')
-        print(get_top_words(list(all_sentences), top_n=50))
+        print(get_top_words_spacy(list(all_sentences), top_n=50))
 
     return top_words_group
 
@@ -50,7 +50,7 @@ def build_visualization(
     TODO: refactor this method so it's easier to understand.
     TODO: Use the limit to generate only top N news
     """
-    titles = [x[0] for x in title_data.items()]
+    titles = [x[0] for x in title_data.items() if x[0]]
 
     # Depending on whether we are on AWS Lambda or not, we use different clustering algorithm
     if os.environ.get('AWS_LAMBDA'):
@@ -111,5 +111,5 @@ def get_top_words_gidx(grp_idx, group_indexes, similar_sets, titles):
                 if grp_idx2 in ss[1] and grp_idx != grp_idx2:
                     group_titles.append(titles[grp_idx2])
                     added.add(grp_idx2)
-    grp_idx_header = ' '.join([x[0] for x in get_top_words(group_titles, top_n=5)])
+    grp_idx_header = ' '.join([x[0] for x in get_top_words_spacy(group_titles, top_n=5)])
     return grp_idx_header, group_titles
