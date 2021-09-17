@@ -67,6 +67,12 @@ def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool
     with open(log_path_latest_metadata, 'w') as f:
         json.dump(latest_metadata, f)
 
+    if s3:
+        upload_to_s3(_S3_PUBLIC_BUCKET,
+                     f'{_LOG_LATEST_VISUALIZATION_METADATA_NAME}.json',
+                     json.dumps(latest_metadata).encode('utf-8'),
+                     public_read=True)
+
     return log_path
 
 
