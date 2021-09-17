@@ -275,7 +275,7 @@ def get_top_words(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]
     return sorted(words.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
 
-class reversor:
+class Reversor:
     """
     Class to reverse the sorting criteria.
     """
@@ -287,6 +287,13 @@ class reversor:
 
     def __lt__(self, other):
         return other.obj < self.obj
+
+
+def _clean_term(term: str) -> str:
+    """
+    Return lower case removing all keeping all alphanumeric or spaces.
+    """
+    return re.sub(r'[^A-Za-z0-9 ]+', '', term.lower()).strip()
 
 
 def get_top_words_spacy(sentences: List[str], top_n: int = 5) -> List[Tuple[str, int]]:
@@ -304,7 +311,8 @@ def get_top_words_spacy(sentences: List[str], top_n: int = 5) -> List[Tuple[str,
     for sentence in sentences:
         terms.update(_get_nouns_and_verbs(sentence))
     output = sorted(_remove_duplicates(terms.items()),
-                    key=lambda x: (x[1], len(x[0].split(' ')), reversor(x[0].lower())), reverse=True)[:top_n]
+                    key=lambda x: (x[1], len(x[0].split(' ')), Reversor(x[0].lower())), reverse=True)[:top_n]
+    output = [(f'[{_clean_term(term)}]', freq) for term, freq in output]
     return output
 
 
