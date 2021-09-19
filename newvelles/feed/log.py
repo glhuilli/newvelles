@@ -85,4 +85,14 @@ def log_s3(visualization_data) -> str:
                  f'{_LOG_LATEST_VISUALIZATION_NAME}.json',
                  json.dumps(visualization_data).encode('utf-8'),
                  public_read=True)
+
+    latest_metadata = {
+        'datetime': current_datetime,
+        'version': VISUALIZATION_VERSION
+    }
+    upload_to_s3(_S3_PUBLIC_BUCKET,
+                 f'{_LOG_LATEST_VISUALIZATION_METADATA_NAME}.json',
+                 json.dumps(latest_metadata).encode('utf-8'),
+                 public_read=True)
+
     return s3_file_name
