@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
       name='newvelles',
-      version='0.1.0',
+      version='0.1.1',
       description='Command line tool fetch news with a Twist.',
       url='https://github.com/glhuilli/newvelles',
       author="Gaston L'Huillier",
