@@ -309,10 +309,10 @@ def get_top_words_spacy(sentences: List[str], top_n: int = 5) -> List[Tuple[str,
     """
     terms = Counter()
     for sentence in sentences:
-        terms.update(_get_nouns_and_verbs(sentence))
+        terms.update([_clean_term(term) for term in _get_nouns_and_verbs(sentence)])
     output = sorted(_remove_duplicates(terms.items()),
                     key=lambda x: (x[1], len(x[0].split(' ')), Reversor(x[0].lower())), reverse=True)[:top_n]
-    output = [(f'[{_clean_term(term)}]', freq) for term, freq in output]
+    output = [(f'[{term}]', freq) for term, freq in output]
     return output
 
 
