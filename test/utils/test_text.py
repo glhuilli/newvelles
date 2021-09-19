@@ -1,9 +1,10 @@
 import unittest
+from collections import Counter
 
 from numpy import array
 
 from newvelles.utils.text import process_content
-from newvelles.utils.text import remove_subsets, remove_similar_subsets
+from newvelles.utils.text import remove_subsets, remove_similar_subsets, _remove_duplicates
 from newvelles.utils.text import get_top_words_spacy
 
 
@@ -487,7 +488,7 @@ class TestUtilText(unittest.TestCase):
         sentences = ['Apple is looking at buying U.K. startup for $1 billion',
                      'Apple, located in Cupertino, buying startup in the U.K for billions']
         output = get_top_words_spacy(sentences)
-        expected = [('U.K. startup', 2), ('Apple', 2), ('buy', 2), ('the U.K', 1), ('billion', 1)]
+        expected = [('[uk startup]', 2), ('[apple]', 2), ('[buy]', 2), ('[the uk]', 1), ('[billion]', 1)]
         self.assertEqual(output, expected)
 
     def test_get_top_words_spacy_no_sentences(self):
@@ -499,7 +500,7 @@ class TestUtilText(unittest.TestCase):
     def test_get_top_words_spacy_one_sentence(self):
         sentences = ['Apple is looking at buying U.K. startup for $1 billion']
         output = get_top_words_spacy(sentences)
-        expected = [('buy', 1), ('Apple', 1), ('U.K. startup', 1)]
+        expected = [('[buy]', 1), ('[apple]', 1), ('[uk startup]', 1)]
         self.assertCountEqual(output, expected)
 
     def test_get_top_words_spacy_one_sentence_no_nouns_verbs(self):
@@ -507,3 +508,10 @@ class TestUtilText(unittest.TestCase):
         output = get_top_words_spacy(sentences)
         expected = []
         self.assertCountEqual(output, expected)
+
+    def test__remove_duplicates(self):
+        counter_terms = Counter()
+        counter_terms.update(['uk startup', 'uk startup'])
+        output = _remove_duplicates(counter_terms.items())
+        expected = {'uk startup': 2}.items()
+        self.assertEqual(output, expected)
