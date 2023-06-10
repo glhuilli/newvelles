@@ -1,6 +1,8 @@
 from collections import defaultdict
 import json
+import os
 import pickle
+import uuid
 from typing import Dict, Iterable, NamedTuple, List
 
 import click
@@ -130,15 +132,17 @@ def get_concepts_and_weights(
     for chatgpt_concepts in chatgpt_data:
         preprocessed_concepts = list(set(chatgpt_concepts.terms))
         categories = chatgpt_concepts.categories
-        for chatgpt_concept in preprocessed_concepts:
-            if chatgpt_concept in concepts:
+        for term in preprocessed_concepts:
+            if term in concepts:
                 # means that we already processed this concept, should be skipped.
                 continue
-            raw_concept_freq = raw_concepts.get(chatgpt_concept)
+            raw_concept_freq = raw_concepts.get(term, 0)
+            if raw_concept_freq == 0:
+                print(f'had raw_concept frequency 0 : {term}')
             raw_concept_weight = raw_concept_freq/total_freq
-            concept_weights[chatgpt_concept] = raw_concept_weight
-            concept_categories[chatgpt_concept].append(categories)
-            concepts[chatgpt_concept] = None
+            concept_weights[term] = raw_concept_weight
+            concept_categories[term].append(categories)
+            concepts[term] = None
     for concept, categories_list in concept_categories.items():
         unique_categories = []
         for categories in categories_list:
@@ -180,8 +184,47 @@ def _join_raw_concepts(raw_concepts_list: List[Dict[str, int]]) -> Dict[str, int
     final = defaultdict(int)
     for raw_concepts in raw_concepts_list:
         for concept, frequency in raw_concepts.items():
-            final[concept] = final.get(concept) + frequency
+            final[concept] = final.get(concept, 0) + frequency
     return final
+
+
+def load_all_pickles(directory):
+    # Create an empty list to store the contents of the pickle files
+    data = []
+
+    # Loop over all files in the directory
+    for filename in os.listdir(directory):
+        # Check if the file is a pickle file
+        if filename.endswith(".pkl"):
+            # Construct the full file path
+            file_path = os.path.join(directory, filename)
+
+            # Open the pickle file and add its contents to the list
+            with open(file_path, 'rb') as f:
+                data.append(pickle.load(f))
+
+    return data
+
+
+def _load_processed_titles(directory):
+    titles = {}
+    all_data = load_all_pickles(directory)
+    for data in all_data:
+        if data.get('processed_titles') and type(data.get('processed_titles')) == dict:
+            if data.get('processed_titles').get('title_chunk'):
+                for title in data.get('processed_titles').get('title_chunk'):
+                    titles[title] = 1
+    return titles
+
+
+def _load_raw_concepts(directory):
+    raw_concepts_list = []
+    all_data = load_all_pickles(directory)
+    for data in all_data:
+        if data.get('processed_titles') and type(data.get('processed_titles')) == dict:
+            if data.get('processed_titles').get('raw_concepts'):
+                raw_concepts_list.append(data.get('processed_titles').get('raw_concepts'))
+    return raw_concepts_list
 
 
 def get_concepts_openai(titles: List[str], max_title_words: int = 100):
@@ -202,9 +245,15 @@ def get_concepts_openai(titles: List[str], max_title_words: int = 100):
     raw_concepts_list = []
     final_chatgpt_data = []
 
+    titles_cache = _load_processed_titles('./data/analysis/chatgpt_data/')
+    titles_to_process = [t for t in titles if t not in titles_cache ]
+    print(f'titles to process: {len(titles_to_process)}')
+
     for k, title_chunk in enumerate(
-            tqdm(_split_titles(titles, max_title_words=max_title_words), 'Processing title groups')):
+            tqdm(_split_titles(titles_to_process, max_title_words=max_title_words), 'Processing title groups')):
+
         # TODO: check if title chunk was already processed in pickle files and skip
+
         prompt_format = f'\n\n Extract terms and potential categories and ' \
             f'only provide a RFC8259 compliant JSON using this json schema: {JSON_SCHEMA}'
 
@@ -215,7 +264,7 @@ def get_concepts_openai(titles: List[str], max_title_words: int = 100):
         prompt = f'Process the following summarized titles:\n{analysis_string}'
         chatgpt_data = ask_chatgpt_with_retries(prompt, prompt_format, get_concepts, retries=3)
         if chatgpt_data.get('parsed_response'):
-            with open(f'./data/analysis/chatgpt_data/title_chunk_{k}.pkl', 'wb') as f:
+            with open(f'./data/analysis/chatgpt_data/title_chunk_{str(uuid.uuid4())}.pkl', 'wb') as f:
                 chatgpt_data['processed_titles'] = {'title_chunk': title_chunk,
                                                     'summaries': summaries,
                                                     'raw_concepts': raw_concepts,
@@ -224,6 +273,7 @@ def get_concepts_openai(titles: List[str], max_title_words: int = 100):
             final_chatgpt_data += chatgpt_data.get('parsed_response')
 
     final_raw_concepts = _join_raw_concepts(raw_concepts_list)
+    print(final_raw_concepts)
     return get_concepts_and_weights(final_chatgpt_data, final_raw_concepts)
 
 
