@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import date
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Iterable
 
 from dateutil import parser as date_parser
 
@@ -11,7 +11,7 @@ from newvelles.feed import NewsEntry
 _DATE_RANGE_DAYS = 14
 
 
-def load_rss(rss_file_path) -> List[str]:  # pragma: no cover
+def load_rss(rss_file_path) -> Iterable[str]:  # pragma: no cover
     """
     Given a file, yield all RSS links
 

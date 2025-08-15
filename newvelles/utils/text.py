@@ -6,20 +6,12 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import spacy
-import sentencepiece as spm
-import tensorflow_hub as hub
-import tensorflow.compat.v1 as tf
-if os.environ.get('AWS_LAMBDA'):
-    tf.enable_eager_execution()
-    tf.disable_v2_behavior()
-else:
-    tf.disable_v2_behavior()
-    tf.enable_eager_execution()
+import spacy_universal_sentence_encoder
 
 NLP = spacy.load("en_core_web_sm")
+NLP_USE = spacy_universal_sentence_encoder.load_model('en_use_lg')
 
-_EMBEDDINGS_PATH_LITE = 'https://tfhub.dev/google/universal-sentence-encoder-lite/2'
-_EMBEDDINGS_PATH = 'https://tfhub.dev/google/universal-sentence-encoder/3'
+
 _STOPWORDS = frozenset({
     "a", "about", "above", "after", "again", "against", "ain", "all", "am", "an", "and", "any",
     "are", "aren", "aren't", "as", "at", "be", "because", "been", "before", "being", "below",
@@ -104,21 +96,6 @@ _STOPWORDS = frozenset({
 })
 
 
-def _process_to_IDs_in_sparse_format(sp, sentences):
-    """
-    Method from https://tfhub.dev/google/universal-sentence-encoder-lite/2
-
-    An utility method that processes sentences with the sentence piece processor
-    'sp' and returns the results in tf.SparseTensor-similar format: (values, indices, dense_shape)
-    """
-    ids = [sp.EncodeAsIds(x) for x in sentences]
-    max_len = max(len(x) for x in ids)
-    dense_shape = (len(ids), max_len)
-    values = [item for sublist in ids for item in sublist]
-    indices = [[row, col] for row in range(len(ids)) for col in range(len(ids[row]))]
-    return values, indices, dense_shape
-
-
 def _clean_text(text):
     """
     General cleanup of anything that might not match a word.
@@ -166,25 +143,6 @@ def process_content(sentence: str, terms_mapping: Optional[Dict[str, str]] = Non
     return list(_remove_stopwords(_tokenizer(_clean_text(sentence))))
 
 
-def load_embedding_model_lite(
-        embeddings_path: Optional[str] = _EMBEDDINGS_PATH_LITE):  # pragma: no cover
-    """
-    Based on https://www.tensorflow.org/hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder_lite
-    """
-    module = hub.Module(embeddings_path)
-    with tf.Session() as sess:
-        spm_path = sess.run(module(signature="spm_path"))
-
-    sp = spm.SentencePieceProcessor()
-    with tf.io.gfile.GFile(spm_path, mode="rb") as f:
-        sp.LoadFromSerializedProto(f.read())
-    return sp, module
-
-
-def load_embedding_model(embeddings_path: Optional[str] = _EMBEDDINGS_PATH):  # pragma: no cover
-    return hub.load(embeddings_path)
-
-
 def group_sentences_lite(sp,
                          module,
                          sentences: List[str],
@@ -212,6 +170,43 @@ def group_sentences_lite(sp,
 
 
 def group_sentences(embed_model, sentences: List[str], threshold: float = 0.5):  # pragma: no cover
+    docs = [NLP_USE(sentence) for sentence in sentences]
+    similarities = []
+    for i in range(len(docs)):
+        for j in range(i+1, len(docs)):
+            similarity = docs[i].similarity(docs[j])
+            similarities.append((i, j, similarity))
+    
+    similarities.sort(key=lambda x: x[2], reverse=True)
+    
+    # Group similar sentences above the threshold
+    grouped_sentences = {}
+    for i, j, sim in similarities:
+        if sim >= threshold:
+            if i not in grouped_sentences and j not in grouped_sentences:
+                grouped_sentences[i] = {i, j}
+            elif i in grouped_sentences:
+                grouped_sentences[i].add(j)
+            elif j in grouped_sentences:
+                grouped_sentences[j].add(i)
+    
+    # Merge overlapping groups
+    final_groups = []
+    for group in grouped_sentences.values():
+        merged = False
+        for existing_group in final_groups:
+            if existing_group.intersection(group):
+                existing_group.update(group)
+                merged = True
+                break
+        if not merged:
+            final_groups.append(group)
+    
+    for i, j, sim in similarities:
+        print(f"Similarity between sentence {i} and sentence {j}: {sim}")
+    
+    return similarities  # Or process further as needed
+
     sparse_matrix = embed_model(sentences)['outputs']
     return _group_sentences(sparse_matrix.numpy(), threshold)
 
