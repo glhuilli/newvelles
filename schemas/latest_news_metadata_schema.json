@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://newvelles.com/schemas/latest_news_metadata.json",
+  "title": "Newvelles Latest News Metadata",
+  "description": "Schema for the metadata file accompanying latest news data",
+  "type": "object",
+  "properties": {
+    "datetime": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+      "description": "ISO 8601 timestamp without timezone (YYYY-MM-DDTHH:mm:ss)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version number (major.minor.patch)"
+    }
+  },
+  "required": ["datetime", "version"],
+  "additionalProperties": false
+}

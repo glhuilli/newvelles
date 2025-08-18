@@ -4,7 +4,7 @@ from typing import Dict, List
 
 def print_sorted_grouped_titles(group_sentences: Dict[int, List[str]]) -> None:
     for _, sentences in group_sentences.items():
-        print('*' * 50)
+        print("*" * 50)
         for sentence in sentences:
             print(sentence)
     # if stats:
