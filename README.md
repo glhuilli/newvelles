@@ -1,19 +1,39 @@
 # Newvelles
 
-Simple tool to get summarized news from RSS feeds.  
+Simple tool to get summarized news from RSS feeds.
 
-## Usage 
+## Requirements
+
+- Python 3.12 or higher
+- Docker (for containerized deployment)
+
+## Installation
+
+### Local Development
 
 First you need to create a log folder where the latest news will be stored, together with some metadata.   
 
-``bash
+```bash
 mkdir /var/data/newvelles
-``
+```
 
-Then, create a virtualenv where you can install the `newvelles` python command,  
+Then, create a virtual environment where you can install the `newvelles` python command:
 
 ```bash
-python setup.py install 
+# Create virtual environment
+python3.12 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install the package
+pip install -e .
+```
+
+### Docker Deployment
+
+Build the Docker image:
+
+```bash
+docker build -t newvelles:latest .
 ```
 
 Then, run the script to pull the news and generate the visualization data. 
@@ -75,5 +95,13 @@ Note that you need to run the `newvelles` command before launching the webapp so
 
 #### v0.0.7 (2021-09-12)
 
-* Added Spacy NLP layer (using nouns and verbs) to generate a better summary header for a group of news.  
+* Added Spacy NLP layer (using nouns and verbs) to generate a better summary header for a group of news.
+
+#### v1.1.0 (2025-01-16)
+
+* **BREAKING CHANGE**: Upgraded from Python 3.8 to Python 3.12
+* Updated all dependencies to latest compatible versions
+* Improved Docker build process using Amazon Linux 2023
+* Removed TensorFlow dependencies for lighter container image
+* Updated Lambda runtime to Python 3.12  
 

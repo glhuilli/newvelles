@@ -1,22 +1,17 @@
 import json
-import os
-import re
 from collections import defaultdict
 from typing import Dict, List, Tuple
-
-import numpy as np
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from newvelles.config import debug
 from newvelles.feed import NewsEntry
-from newvelles.utils.text import (get_top_words_spacy, group_sentences,
-                                group_sentences_lite, process_content)
+from newvelles.utils.text import process_content
 
 # This version needs to be updated in case major
 # changes are done to the visualization files below.
-VISUALIZATION_VERSION = '0.2.1'
+VISUALIZATION_VERSION = "0.2.1"
 DEBUG = debug()
 
 # if os.environ.get('AWS_LAMBDA'):
@@ -25,77 +20,82 @@ DEBUG = debug()
 #     _EMBEDDING_MODEL = load_embedding_model()
 
 
-'''
+"""
 1. Use a similarity measure to group similar titles
     1.1. Cosine similarity with TF-IDF (TODO: try embeddings)
     1.2. Preprocess the titles (remove stop words, numbers, etc.)
 3. Cluster the groups into top-level groups based on context similarity
 4. Extract common substrings for lower-level and top-level groups
 5. Filter out groups with fewer than 2 titles
-'''
+"""
+
 
 def group_similar_titles(titles: List[str], similarity_threshold: float = 0.7) -> List[List[int]]:
     # Group similar titles using TF-IDF and cosine similarity
-    preprocessed_titles = [' '.join(process_content(title)) for title in titles]
+    preprocessed_titles = [" ".join(process_content(title)) for title in titles]
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(preprocessed_titles)
     similarity_matrix = cosine_similarity(tfidf_matrix)
-    
+
     groups = []
     used_indices = set()  # Used to avoid duplicate groups
-    
+
     for i in range(len(titles)):
         if i in used_indices:
             continue
-        
+
         group = [i]
         used_indices.add(i)
-        
+
         for j in range(i + 1, len(titles)):
             if j in used_indices:
                 continue
-            
+
             if similarity_matrix[i, j] >= similarity_threshold:
                 group.append(j)
                 used_indices.add(j)
-        
+
         if len(group) >= 2:  # Groups with less than 2 titles are not interesting
             groups.append(group)
-    
+
     return groups
 
 
-def cluster_groups(groups: List[List[int]], titles: List[str], context_similarity_threshold: float = 0.5) -> List[List[List[int]]]:
+def cluster_groups(
+    groups: List[List[int]],
+    titles: List[str],
+    context_similarity_threshold: float = 0.5,
+) -> List[List[List[int]]]:
     # Cluster groups into top-level groups based on context similarity
     group_representations = []
     for group in groups:
-        group_text = ' '.join([titles[i] for i in group])  # Join group titles
-        group_representations.append(' '.join(process_content(group_text)))  # Preprocess and join
-    
+        group_text = " ".join([titles[i] for i in group])  # Join group titles
+        group_representations.append(" ".join(process_content(group_text)))  # Preprocess and join
+
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(group_representations)
     similarity_matrix = cosine_similarity(tfidf_matrix)
-    
+
     top_level_groups = []
     used_groups = set()
-    
-    for i in range(len(groups)):
+
+    for i, group_i in enumerate(groups):
         if i in used_groups:  # Avoid duplicate groups
             continue
-        
-        top_level_group = [groups[i]]
+
+        top_level_group = [group_i]
         used_groups.add(i)
-        
+
         for j in range(i + 1, len(groups)):
             if j in used_groups:
                 continue
-            
+
             if similarity_matrix[i, j] >= context_similarity_threshold:
                 top_level_group.append(groups[j])
                 used_groups.add(j)
-        
+
         top_level_groups.append(top_level_group)
-    
+
     return top_level_groups
 
 
@@ -106,46 +106,48 @@ def extract_common_substrings(titles: List[str], min_length: int = 3) -> List[st
         for i in range(len(s1)):
             for j in range(i + min_length, len(s1) + 1):
                 substring = s1[i:j]
-                if substring in s2 and len(substring) >= min_length:  # Substrings must be at least min_length characters
+                if (
+                    substring in s2 and len(substring) >= min_length
+                ):  # Substrings must be at least min_length characters
                     common.append(substring)
         return common
 
     common_substrings = set()
-    for i in range(len(titles)):
+    for i, title_i in enumerate(titles):
         for j in range(i + 1, len(titles)):
-            common_substrings.update(find_common_substrings(titles[i], titles[j]))
-    
+            common_substrings.update(find_common_substrings(title_i, titles[j]))
+
     return sorted(list(common_substrings), key=len, reverse=True)
 
 
 def identify_group(titles: List[str]) -> str:
     # Identify a group by the most common substrings
     common_substrings = extract_common_substrings(titles)
-    return ' '.join(common_substrings[:3])  # Use top 3 common substrings
+    return " ".join(common_substrings[:3])  # Use top 3 common substrings
 
 
 def build_news_groups(titles: List[str]) -> Dict[str, Dict[str, List[str]]]:
     # Main function to build the news groups
     groups = group_similar_titles(titles)
     top_level_groups = cluster_groups(groups, titles)
-    
-    result = {}
+
+    result: Dict[str, Dict[str, List[str]]] = {}
     for top_group in top_level_groups:
         top_level_titles = [titles[i] for group in top_group for i in group]
         top_level_identifier = identify_group(top_level_titles)
-        
+
         result[top_level_identifier] = {}
         for group in top_group:
             group_titles = [titles[i] for i in group]
             group_identifier = identify_group(group_titles)
             result[top_level_identifier][group_identifier] = group_titles
-    
+
     return result
 
 
 def build_visualization(
-        title_data: Dict[str, NewsEntry],
-        cluster_limit: int = 0) -> Tuple[Dict[str, Dict[str, Dict[str, Dict[str, str]]]], Dict[int, List[str]]]:
+    title_data: Dict[str, NewsEntry], cluster_limit: int = 0  # pylint: disable=unused-argument
+) -> Tuple[Dict[str, Dict[str, Dict[str, Dict[str, str]]]], Dict[int, List[str]]]:
     """
     data is defined by {sentence: link}
 
@@ -157,27 +159,50 @@ def build_visualization(
     # Use the news grouping algorithm
     news_groups = build_news_groups(titles)
 
-    visualization = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(str))))
+    visualization: defaultdict = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(str)))
+    )
     for top_level_group, lower_level_groups in news_groups.items():
         for lower_level_group, group_titles in lower_level_groups.items():
             for title in group_titles:
                 entry = title_data[title]
                 # Handle both NewsEntry and list cases
-                if hasattr(entry, '_asdict'):
+                if hasattr(entry, "_asdict"):
                     entry_dict = entry._asdict()
+                    # Transform field names for consistency with output format
+                    if "published" in entry_dict:
+                        entry_dict["timestamp"] = entry_dict.pop("published")
+                    if "title_detail_base" in entry_dict:
+                        entry_dict["source"] = entry_dict.pop("title_detail_base")
                 else:
                     # Assuming the list contains the same fields as NewsEntry in order
+                    # NewsEntry order: title, link, published, title_detail_base
                     entry_dict = {
-                        'title': entry[0] if len(entry) > 0 else '',
-                        'link': entry[1] if len(entry) > 1 else '',
-                        'timestamp': entry[2] if len(entry) > 3 else '',
-                        'source': entry[3] if len(entry) > 2 else ''
+                        "title": entry[0] if len(entry) > 0 else "",
+                        "link": entry[1] if len(entry) > 1 else "",
+                        "timestamp": entry[2] if len(entry) > 2 else "",  # published -> timestamp
+                        "source": entry[3] if len(entry) > 3 else "",  # title_detail_base -> source
                     }
-                # TODO: build a better top_level_group using get_top_words_spacy and algo similar to generate_top_words
+                # TODO: build a better top_level_group using get_top_words_spacy
+                # and algo similar to generate_top_words
                 visualization[top_level_group][lower_level_group][title] = entry_dict
     if DEBUG:
         print(json.dumps(visualization, indent=2))
-    return visualization, {}  # Return an empty dict for title_groups as it's no longer used
+
+    # Convert defaultdict to regular dict for proper typing
+    result_dict = dict(visualization)
+    for k1, v1 in result_dict.items():
+        result_dict[k1] = dict(v1)
+        for k2, v2 in result_dict[k1].items():
+            result_dict[k1][k2] = dict(v2)
+            for k3, v3 in result_dict[k1][k2].items():
+                if isinstance(v3, defaultdict):
+                    result_dict[k1][k2][k3] = dict(v3)
+
+    return (
+        result_dict,
+        {},
+    )  # Return an empty dict for title_groups as it's no longer used
 
 
 # def generate_top_words(groups_indexes, similar_sets, sentences):
@@ -204,12 +229,11 @@ def build_visualization(
 
 
 def build_visualization_lite(
-        title_data: Dict[str, NewsEntry],
-        cluster_limit: int = 0) -> Tuple[Dict[int, Dict[str, List[str]]], Dict[int, List[str]]]:
+    title_data: Dict[str, NewsEntry], cluster_limit: int = 0
+) -> Tuple[Dict[str, Dict[str, Dict[str, Dict[str, str]]]], Dict[int, List[str]]]:
     """
     data is defined by {sentence: link}
     """
-    titles = [x[0] for x in title_data.items() if x[0]]
     return build_visualization(title_data, cluster_limit)
 
 
@@ -242,7 +266,9 @@ def build_visualization_lite(
 #             title_groups_indexes[idx].append(title_idx)
 
 #     top_words_group = generate_top_words(title_groups_indexes, similar_sets, titles)
-#     visualization = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(str))))
+#     visualization = defaultdict(
+#         lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(str)))
+#     )
 #     for idx, group_indexes in title_groups_indexes.items():
 #         grp_top_words = top_words_group[idx]
 #         if len(group_indexes) > cluster_limit:
