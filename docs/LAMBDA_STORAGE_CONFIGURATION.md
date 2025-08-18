@@ -171,7 +171,7 @@ aws logs filter-log-events \
 resource "aws_lambda_function" "newvelles_qa" {
   function_name = "RunNewvelles-qa"
   package_type  = "Image"
-  image_uri     = "617641631577.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:py312-latest"
+  image_uri     = "$AWS_ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:py312-latest"
   
   # ML-optimized configuration
   memory_size = 2048
@@ -198,7 +198,7 @@ NewvellesQAFunction:
     FunctionName: RunNewvelles-qa
     PackageType: Image
     Code:
-      ImageUri: 617641631577.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:py312-latest
+      ImageUri: $AWS_ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:py312-latest
     MemorySize: 2048
     Timeout: 900
     EphemeralStorage:

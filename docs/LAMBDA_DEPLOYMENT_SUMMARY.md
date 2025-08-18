@@ -16,7 +16,7 @@
 
 **Your latest image is ready:**
 ```
-617641631577.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:v2-py312-20250817-181418
+$AWS_ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:v2-py312-20250817-181418
 ```
 
 ---
@@ -122,7 +122,7 @@ aws logs tail /aws/lambda/RunNewvelles-test --follow
 
 Your Docker image with timestamp `v2-py312-20250817-181418` is:
 - ✅ **Built successfully** with timestamp-based naming
-- ✅ **Pushed to ECR** in your account (617641631577)
+- ✅ **Pushed to ECR** in your account ($AWS_ACCOUNT_ID)
 - ✅ **Production-safe** (doesn't overwrite 'latest' tag)
 - ✅ **Ready for deployment** to any environment
 

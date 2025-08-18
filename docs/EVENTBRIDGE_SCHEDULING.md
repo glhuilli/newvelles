@@ -39,7 +39,7 @@ The `make prod-deploy` command automatically:
    ```bash
    aws events put-targets \
        --rule newvelles-event \
-       --targets "Id"="1","Arn"="arn:aws:lambda:us-west-2:617641631577:function:RunNewvelles"
+       --targets "Id"="1","Arn"="arn:aws:lambda:us-west-2:$AWS_ACCOUNT_ID:function:RunNewvelles"
    ```
 
 3. **Grants EventBridge Permission**:
@@ -49,7 +49,7 @@ The `make prod-deploy` command automatically:
        --statement-id allow-eventbridge \
        --action lambda:InvokeFunction \
        --principal events.amazonaws.com \
-       --source-arn "arn:aws:events:us-west-2:617641631577:rule/newvelles-event"
+       --source-arn "arn:aws:events:us-west-2:$AWS_ACCOUNT_ID:rule/newvelles-event"
    ```
 
 ## 📊 Monitoring & Management
@@ -132,7 +132,7 @@ aws events describe-rule --name newvelles-event --query 'State'
    # Update target if function name changed
    aws events put-targets \
        --rule newvelles-event \
-       --targets "Id"="1","Arn"="arn:aws:lambda:us-west-2:617641631577:function:RunNewvelles"
+       --targets "Id"="1","Arn"="arn:aws:lambda:us-west-2:$AWS_ACCOUNT_ID:function:RunNewvelles"
    ```
 
 3. **Permission Denied**:
@@ -143,7 +143,7 @@ aws events describe-rule --name newvelles-event --query 'State'
        --statement-id allow-eventbridge \
        --action lambda:InvokeFunction \
        --principal events.amazonaws.com \
-       --source-arn "arn:aws:events:us-west-2:617641631577:rule/newvelles-event"
+       --source-arn "arn:aws:events:us-west-2:$AWS_ACCOUNT_ID:rule/newvelles-event"
    ```
 
 ### **Manual Testing**

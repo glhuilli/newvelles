@@ -7,7 +7,7 @@ set -e
 
 ENVIRONMENT=$1
 IMAGE_TAG=$2
-AWS_ACCOUNT_ID=${3:-617641631577}
+AWS_ACCOUNT_ID=${3:-$AWS_ACCOUNT_ID}
 
 if [ -z "$ENVIRONMENT" ] || [ -z "$IMAGE_TAG" ]; then
     echo "❌ Usage: $0 <environment> <image-tag> [aws-account-id]"
@@ -19,7 +19,16 @@ if [ -z "$ENVIRONMENT" ] || [ -z "$IMAGE_TAG" ]; then
     echo ""
     echo "📝 Examples:"
     echo "  $0 qa v2-py312-20250817-181418"
-    echo "  $0 prod v2-py312-20250817-181418 617641631577"
+    echo "  $0 prod v2-py312-20250817-181418 \$AWS_ACCOUNT_ID"
+    exit 1
+fi
+
+# Validate AWS_ACCOUNT_ID is set
+if [ -z "$AWS_ACCOUNT_ID" ]; then
+    echo "❌ Error: AWS_ACCOUNT_ID is required"
+    echo "   Please set environment variable: export AWS_ACCOUNT_ID=your-account-id"
+    echo "   Or provide as third parameter: $0 $ENVIRONMENT $IMAGE_TAG your-account-id"
+    echo "   Find your account ID: aws sts get-caller-identity --query Account --output text"
     exit 1
 fi
 
@@ -306,7 +315,7 @@ if [ "$ENVIRONMENT" = "prod" ] || [ "$ENVIRONMENT" = "production" ]; then
     # Ensure Lambda has the right target
     aws events put-targets \
         --rule newvelles-event \
-        --targets "Id"="1","Arn"="arn:aws:lambda:us-west-2:617641631577:function:$LAMBDA_FUNCTION"
+        --targets "Id"="1","Arn"="arn:aws:lambda:us-west-2:${AWS_ACCOUNT_ID}:function:$LAMBDA_FUNCTION"
     
     if [ $? -eq 0 ]; then
         echo "✅ EventBridge target updated successfully"
@@ -320,7 +329,7 @@ if [ "$ENVIRONMENT" = "prod" ] || [ "$ENVIRONMENT" = "production" ]; then
         --statement-id allow-eventbridge \
         --action lambda:InvokeFunction \
         --principal events.amazonaws.com \
-        --source-arn "arn:aws:events:us-west-2:617641631577:rule/newvelles-event" \
+        --source-arn "arn:aws:events:us-west-2:${AWS_ACCOUNT_ID}:rule/newvelles-event" \
         2>/dev/null || echo "✅ Lambda permission already exists"
 fi
 
