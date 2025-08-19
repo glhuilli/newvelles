@@ -4,8 +4,7 @@
 
 set -e
 
-# Configuration
-DEFAULT_ACCOUNT="617641631577"
+# Configuration - requires environment variable
 DEFAULT_REGION="us-west-2"
 REPO_NAME="newvelles-docker-lambda"
 
@@ -17,7 +16,7 @@ show_usage() {
     echo ""
     echo "Options:"
     echo "  --tag SUFFIX        Custom tag suffix (default: auto-generated timestamp)"
-    echo "  --account ID        AWS account ID (default: ${DEFAULT_ACCOUNT})"
+    echo "  --account ID        AWS account ID (required if \$AWS_ACCOUNT_ID not set)"
     echo "  --region REGION     AWS region (default: ${DEFAULT_REGION})" 
     echo "  --push              Push to ECR after build"
     echo "  --no-cache          Build without using Docker cache"
@@ -32,7 +31,7 @@ show_usage() {
 
 # Parse arguments
 CUSTOM_TAG=""
-ACCOUNT_ID=$DEFAULT_ACCOUNT
+ACCOUNT_ID="$AWS_ACCOUNT_ID"
 REGION=$DEFAULT_REGION
 PUSH_TO_ECR=false
 NO_CACHE=false
@@ -75,6 +74,15 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Validate AWS_ACCOUNT_ID is set
+if [ -z "$ACCOUNT_ID" ]; then
+    echo "❌ Error: AWS_ACCOUNT_ID environment variable is required"
+    echo "   Please set it with: export AWS_ACCOUNT_ID=your-account-id"
+    echo "   Or provide it with: $0 --account your-account-id"
+    echo "   Find your account ID: aws sts get-caller-identity --query Account --output text"
+    exit 1
+fi
 
 # Generate tag
 if [ -n "$CUSTOM_TAG" ]; then

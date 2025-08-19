@@ -109,13 +109,13 @@ aws lambda update-function-configuration \
     "AWS_S3_BUCKET":"newvelles-qa-bucket",
     "AWS_S3_PUBLIC_BUCKET":"public-newvelles-qa-bucket"
   }' \
-  --image-uri 617641631577.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:v2-py312-20250817-181418
+  --image-uri $AWS_ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:v2-py312-20250817-181418
 
 # Production Environment Deployment  
 aws lambda update-function-configuration \
   --function-name RunNewvelles \
   --environment Variables='{}' \
-  --image-uri 617641631577.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:v2-py312-20250817-181418
+  --image-uri $AWS_ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:v2-py312-20250817-181418
 ```
 
 ---
@@ -124,7 +124,7 @@ aws lambda update-function-configuration \
 
 | Environment | Lambda Function | Private Bucket | Public Bucket | Python Version | Storage | Image URI | Env Vars |
 |-------------|----------------|----------------|---------------|----------------|---------|-----------|----------|
-| **Production** | `RunNewvelles` | `newvelles-data-bucket` | `public-newvelles-data-bucket` | 3.12.11 | 1024MB | `617641631577.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:py312-nocache-20250817-233736` | None (uses config)<br/>**84 RSS sources** |
+| **Production** | `RunNewvelles` | `newvelles-data-bucket` | `public-newvelles-data-bucket` | 3.12.11 | 1024MB | `$AWS_ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:py312-nocache-20250817-233736` | None (uses config)<br/>**84 RSS sources** |
 | **QA/Shadow** | `RunNewvelles-qa` | `newvelles-qa-bucket` | `public-newvelles-qa-bucket` | 3.12.11 | 1024MB | Same image | `AWS_S3_BUCKET=newvelles-qa-bucket`<br/>`AWS_S3_PUBLIC_BUCKET=public-newvelles-qa-bucket`<br/>**13 RSS sources** |
 | **Testing** | `RunNewvelles-test` | `newvelles-test-bucket` | `public-newvelles-test-bucket` | 3.12.11 | 1024MB | Same image | `AWS_S3_BUCKET=newvelles-test-bucket`<br/>`AWS_S3_PUBLIC_BUCKET=public-newvelles-test-bucket`<br/>**13 RSS sources** |
 
@@ -144,7 +144,7 @@ make test-local-complete
 make qa-full-test
 
 # Or manual QA deployment
-./bin/deploy-to-environment.sh qa py312-final-20250817-204444 617641631577
+./bin/deploy-to-environment.sh qa py312-final-20250817-204444 $AWS_ACCOUNT_ID
 ```
 
 ### **3. Validate QA Results**
@@ -163,7 +163,7 @@ aws s3 sync s3://public-newvelles-qa-bucket s3://qa-validation-bucket --dryrun
 make prod-deploy
 
 # Or manual production deployment (applies same config as QA)
-./bin/deploy-to-environment.sh prod py312-final-20250817-204444 617641631577
+./bin/deploy-to-environment.sh prod py312-final-20250817-204444 $AWS_ACCOUNT_ID
 ```
 
 **🎯 What `prod-deploy` now includes:**
@@ -176,6 +176,27 @@ make prod-deploy
 - **📊 S3 Verification**: Confirms bucket updates after test run
 - **🔧 Complete Verification**: End-to-end deployment validation
 - **🔄 Auto-Resume**: Automatically resumes scheduling after successful deployment
+
+### **🔄 Production Rollback** (if issues arise)
+```bash
+# Interactive rollback to previous version
+make rollback-prod
+
+# List available rollback targets
+make list-prod-images
+
+# Emergency manual rollback
+aws lambda update-function-code \
+  --function-name RunNewvelles \
+  --image-uri $AWS_ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:py312-nocache-20250817-233736
+```
+
+**🎯 Rollback features:**
+- **🔍 Interactive Selection**: Choose from 25+ available images with timestamps
+- **🛡️ Safety Checks**: Automatic EventBridge pause, test invocation, error recovery
+- **📋 Clear Information**: Shows current version, available options, and change impact
+- **⚡ Quick Recovery**: Complete rollback process in under 2 minutes
+- **📚 Full Documentation**: See `docs/PRODUCTION_ROLLBACK_GUIDE.md` for details
 
 ---
 

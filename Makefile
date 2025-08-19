@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-coverage test-coverage-html install-dev lint format clean help test-s3-schema test-s3-schema-utils test-s3-schema-monitoring test-s3-schema-all test-s3-schema-simple test-end-to-end test-full-pipeline test-quick test-local-complete test-local-quick docker-build docker-deploy docker-deploy-safe deploy-to-env invoke-lambda docker-list docker-cleanup docker-stop qa-build qa-deploy qa-test qa-full-test qa-invoke qa-check-s3 prod-deploy
+.PHONY: test test-unit test-coverage test-coverage-html install-dev lint format clean help test-s3-schema test-s3-schema-utils test-s3-schema-monitoring test-s3-schema-all test-s3-schema-simple test-end-to-end test-full-pipeline test-quick test-local-complete test-local-quick docker-build docker-deploy docker-deploy-safe deploy-to-env invoke-lambda docker-list docker-cleanup docker-stop qa-build qa-deploy qa-test qa-full-test qa-invoke qa-check-s3 prod-deploy rollback-prod list-prod-images
 
 # Virtual environment activation helper
 VENV_ACTIVATE = if [ -f ".python/newvelles/bin/activate" ]; then . .python/newvelles/bin/activate; fi
@@ -36,7 +36,7 @@ help:
 	@echo ""
 	@echo "Docker Management:"
 	@echo "  docker-build   Build Docker image with timestamp-based naming"
-	@echo "  docker-deploy  Build and push to ECR (requires ACCOUNT=123456789012)"
+	@echo "  docker-deploy  Build and push to ECR (requires ACCOUNT=\$$AWS_ACCOUNT_ID)"
 	@echo "  docker-deploy-safe  Production-safe ECR push (timestamped only)"
 	@echo "  deploy-to-env  Deploy image to environment (ENV=prod|qa|test TAG=image-tag)"
 	@echo "  invoke-lambda  Invoke Lambda and monitor logs (FUNCTION=RunNewvelles-qa)"
@@ -52,6 +52,8 @@ help:
 	@echo "  qa-invoke      Invoke QA Lambda function and monitor logs"
 	@echo "  qa-check-s3    Check QA S3 buckets for uploaded files"
 	@echo "  prod-deploy    Deploy to production (ML config + EventBridge + test + S3 verification)"
+	@echo "  rollback-prod  Roll back production to a previous Docker image (interactive)"
+	@echo "  list-prod-images List available production images for rollback"
 	@echo "  check-eventbridge Check EventBridge scheduling configuration"
 	@echo "  pause-eventbridge Pause EventBridge scheduling (emergency stop)"
 	@echo "  resume-eventbridge Resume EventBridge scheduling"
@@ -362,7 +364,7 @@ docker-build:
 
 # Build Docker image and push to ECR (requires AWS account ID)
 docker-deploy:
-	@echo "Usage: make docker-deploy ACCOUNT=123456789012"
+	@echo "Usage: make docker-deploy ACCOUNT=\$$AWS_ACCOUNT_ID"
 	@if [ -z "$(ACCOUNT)" ]; then \
 		echo "❌ Please specify ACCOUNT parameter: make docker-deploy ACCOUNT=your-aws-account-id"; \
 		exit 1; \
@@ -371,7 +373,7 @@ docker-deploy:
 
 # Production-safe ECR deployment (timestamped only, no 'latest' overwrite)
 docker-deploy-safe:
-	@echo "Usage: make docker-deploy-safe ACCOUNT=123456789012"
+	@echo "Usage: make docker-deploy-safe ACCOUNT=\$$AWS_ACCOUNT_ID"
 	@if [ -z "$(ACCOUNT)" ]; then \
 		echo "❌ Please specify ACCOUNT parameter: make docker-deploy-safe ACCOUNT=your-aws-account-id"; \
 		exit 1; \
@@ -380,7 +382,7 @@ docker-deploy-safe:
 
 # Deploy to specific environment (prod, qa, test)
 deploy-to-env:
-	@echo "Usage: make deploy-to-env ENV=qa TAG=v2-py312-20250817-181418 [ACCOUNT=617641631577]"
+	@echo "Usage: make deploy-to-env ENV=qa TAG=v2-py312-20250817-181418 [ACCOUNT=\$$AWS_ACCOUNT_ID]"
 	@if [ -z "$(ENV)" ] || [ -z "$(TAG)" ]; then \
 		echo "❌ Please specify ENV and TAG parameters"; \
 		echo "   ENV options: prod, qa, test"; \
@@ -452,10 +454,11 @@ qa-deploy:
 		exit 1; \
 	fi
 	@IMAGE_TAG=$$(cat .last-qa-build.txt) && \
-	ECR_TAG="617641631577.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:$${IMAGE_TAG}" && \
+	if [ -z "$$AWS_ACCOUNT_ID" ]; then echo "❌ AWS_ACCOUNT_ID environment variable required. Set with: export AWS_ACCOUNT_ID=your-account-id"; exit 1; fi && \
+	ECR_TAG="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:$${IMAGE_TAG}" && \
 	echo "📤 Deploying QA image: $${IMAGE_TAG}" && \
 	docker tag docker-lambda-newvelles:$${IMAGE_TAG} $${ECR_TAG} && \
-	aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 617641631577.dkr.ecr.us-west-2.amazonaws.com && \
+	aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin $${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com && \
 	DOCKER_CONTENT_TRUST=0 docker push $${ECR_TAG} && \
 	aws lambda update-function-code --function-name RunNewvelles-qa --image-uri $${ECR_TAG} && \
 	echo "✅ QA Lambda updated with image: $${IMAGE_TAG}"
@@ -505,7 +508,8 @@ prod-deploy:
 	read -p "Are you sure you want to deploy to PRODUCTION? (yes/no): " confirm && \
 	if [ "$$confirm" = "yes" ]; then \
 		echo "🚀 Deploying to production..." && \
-		./bin/deploy-to-environment.sh prod $${IMAGE_TAG} 617641631577 && \
+		if [ -z "$$AWS_ACCOUNT_ID" ]; then echo "❌ AWS_ACCOUNT_ID environment variable required. Set with: export AWS_ACCOUNT_ID=your-account-id"; exit 1; fi && \
+		./bin/deploy-to-environment.sh prod $${IMAGE_TAG} $$AWS_ACCOUNT_ID && \
 		echo "✅ Production deployment completed"; \
 	else \
 		echo "❌ Production deployment cancelled"; \
@@ -530,3 +534,20 @@ resume-eventbridge:
 diagnose-lambda:
 	@echo "🔍 Diagnosing Lambda conflicts..."
 	./bin/diagnose-lambda-conflicts.sh
+
+# Roll back production Lambda to a previous Docker image
+rollback-prod:
+	@echo "🔄 Starting production rollback..."
+	./bin/rollback-production.sh
+
+# List available production images for rollback
+list-prod-images:
+	@echo "📦 Available Production Images:"
+	@echo "=============================="
+	@aws ecr describe-images \
+		--repository-name newvelles-docker-lambda \
+		--query 'sort_by(imageDetails[?imageTags], &imagePushedAt) | reverse(@)' \
+		--output table \
+		--max-items 15
+	@echo ""
+	@echo "💡 Use 'make rollback-prod' for interactive rollback"

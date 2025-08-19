@@ -35,7 +35,7 @@ if [ -z "$TARGETS" ] || [ "$(echo "$TARGETS" | jq '.Targets | length')" -eq 0 ];
     echo "❌ No targets configured for EventBridge rule"
     echo ""
     echo "💡 To add target, run:"
-    echo "   aws events put-targets --rule newvelles-event --targets 'Id=1,Arn=arn:aws:lambda:us-west-2:617641631577:function:RunNewvelles'"
+    echo "   aws events put-targets --rule newvelles-event --targets 'Id=1,Arn=arn:aws:lambda:us-west-2:\$AWS_ACCOUNT_ID:function:RunNewvelles'"
 else
     echo "✅ EventBridge targets found"
     echo "$TARGETS" | jq '.Targets[] | {Id: .Id, Function: .Arn | split(":") | last}'
@@ -56,7 +56,7 @@ else
         echo "❌ EventBridge permission not found in Lambda policy"
         echo ""
         echo "💡 To add permission, run:"
-        echo "   aws lambda add-permission --function-name RunNewvelles --statement-id allow-eventbridge --action lambda:InvokeFunction --principal events.amazonaws.com --source-arn 'arn:aws:events:us-west-2:617641631577:rule/newvelles-event'"
+        echo "   aws lambda add-permission --function-name RunNewvelles --statement-id allow-eventbridge --action lambda:InvokeFunction --principal events.amazonaws.com --source-arn 'arn:aws:events:us-west-2:\$AWS_ACCOUNT_ID:rule/newvelles-event'"
     else
         echo "✅ EventBridge has permission to invoke Lambda (Statement: $EVENTBRIDGE_PERMISSION)"
     fi

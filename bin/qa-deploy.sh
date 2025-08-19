@@ -4,10 +4,18 @@
 
 set -e
 
-# Configuration
-AWS_ACCOUNT_ID="617641631577"
+# Configuration - requires environment variable
 AWS_REGION="us-west-2"
 FUNCTION_NAME="RunNewvelles-qa"
+
+# Validate AWS_ACCOUNT_ID is set
+if [ -z "$AWS_ACCOUNT_ID" ]; then
+    echo "❌ Error: AWS_ACCOUNT_ID environment variable is required"
+    echo "   Please set it with: export AWS_ACCOUNT_ID=your-account-id"
+    echo "   Find your account ID: aws sts get-caller-identity --query Account --output text"
+    exit 1
+fi
+
 ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/newvelles-docker-lambda"
 
 # Generate timestamp-based tag

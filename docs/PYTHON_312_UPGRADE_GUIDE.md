@@ -204,7 +204,7 @@ tzname EST identified but not understood
 # If issues arise, rollback to Python 3.8
 aws lambda update-function-code \
   --function-name RunNewvelles-qa \
-  --image-uri 617641631577.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:python38-stable
+  --image-uri $AWS_ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/newvelles-docker-lambda:python38-stable
 ```
 
 ## 🎉 Success Metrics
