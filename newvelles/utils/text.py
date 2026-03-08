@@ -846,11 +846,156 @@ def _tokenizer(sentence: str) -> Iterable[str]:
     yield from sentence.split(" ")
 
 
-def _remove_stopwords(sentence_tokens: Iterable[str]) -> Iterable[str]:
+def remove_stopwords(sentence_tokens: Iterable[str]) -> Iterable[str]:
     """
     Exclude any stop word in the input set of tokens
     """
     yield from [x for x in sentence_tokens if x.lower() not in _STOPWORDS]
+
+
+def get_total_info_value(word: str) -> float:
+    """
+    Calculate an "information value" for a given word, based on its rarity, letter structure,
+    and length. This score is intended to estimate how "distinctive" or "informative" a word is.
+
+    Scoring components:
+      1. Letter rarity: Each letter has a rarity value (similar to Scrabble), and a word with more rare letters
+         (e.g., 'q', 'z', 'x') scores higher.
+      2. Structure: Assesses the ratio of vowels to consonants. Words with more consonants
+         (lower vowel-to-consonant ratio) receive a higher structure score.
+      3. Length: Longer words are considered more informative, but this factor is logarithmically scaled.
+
+    The final score is a weighted combination:
+      - 40% letter rarity
+      - 40% structure
+      - 20% word length
+
+    Returns a float between 0 and 1 (rounded to 4 decimals), or 0 if the word is shorter than 2 letters.
+
+    Args:
+        word (str): The word to evaluate.
+
+    Returns:
+        float: Information value score of the word.
+
+    TODO-claude: Add unit tests for this function and improve the documentation.
+    """
+    word = word.lower().strip(".,!?;:()\"'")
+    if len(word) < 2:
+        return 0
+
+    # 1. Full Letter Rarity Score
+    rarity_table = {
+        'a': 1, 'b': 5, 'c': 3, 'd': 2, 'e': 1, 'f': 3, 'g': 5, 'h': 2, 'i': 1, 'j': 9,
+        'k': 5, 'l': 2, 'm': 3, 'n': 1, 'o': 1, 'p': 3, 'q': 10, 'r': 2, 's': 2, 't': 1,
+        'u': 2, 'v': 5, 'w': 3, 'x': 9, 'y': 3, 'z': 10
+    }
+
+    # Calculate average rarity of the word's characters
+    raw_rarity = sum(rarity_table.get(c, 1) for c in word) / len(word)
+    # Normalize: A word with 'z' and 'q' should approach 1.0
+    factor_rarity = min(raw_rarity / 6, 1.0)
+
+    # 2. Vowel-to-Consonant Ratio
+    vowels = "aeiou"
+    v_count = sum(1 for c in word if c in vowels)
+    c_count = sum(1 for c in word if c.isalpha() and c not in vowels)
+    v_to_c = v_count / (c_count if c_count > 0 else 0.5)
+    # Lower ratio (more consonants) = higher structure score
+    factor_structure = 1 / (1 + v_to_c)
+
+    # 3. Final Composite (40% Rarity, 40% Structure, 20% Length)
+    import math
+    factor_length = min(math.log(len(word), 12), 1.0)  # Scale based on length
+
+    final_score = (factor_rarity * 0.4) + (factor_structure * 0.4) + (factor_length * 0.2)
+    return round(final_score, 4)
+
+
+def get_final_weighted_score(word: str, is_start_of_sentence: bool = False) -> float:
+    """
+    Calculate a weighted score for a given word, based on its rarity, letter structure,
+    length, and capitalization.
+
+    Args:
+        word (str): The word to evaluate.
+        is_start_of_sentence (bool): Whether the word is the start of a sentence.
+
+    Returns:
+        float: Weighted score of the word (rounded to 4 decimals).
+
+    TODO-claude: Add unit tests for this function and improve the documentation.
+    """
+    word_clean = word.strip(".,!?;:()\"'")
+    if len(word_clean) < 2: return 0
+    
+    # 1. Base Score (Rarity + Structure + Length)
+    # Using the logic from our previous implementation
+    base_val = get_total_info_value(word_clean) 
+    
+    # 2. Capitalization Weight Logic
+    multiplier = 1.0
+    
+    # Is it ALL CAPS (Acronym)?
+    if word_clean.isupper() and len(word_clean) > 1:
+        multiplier = 2.5
+    # Is it Capitalized?
+    elif word_clean[0].isupper():
+        if is_start_of_sentence:
+            # Common sentence starters to ignore capitalization on
+            starters = {"The", "A", "An", "In", "On", "It", "They", "This"}
+            multiplier = 1.1 if word_clean in starters else 1.5
+        else:
+            # Middle of sentence capitalization is a high-value Entity
+            multiplier = 2.0
+            
+    return round(base_val * multiplier, 4)
+
+
+def get_sentence_score(sentence: str) -> float:
+    """
+    Compute an information score for a sentence based on its most informative words and the proportion of less informative ("noisy") words.
+    
+    The sentence score is calculated as follows:
+      1. For each word in the sentence, compute an information value using `get_total_info_value()`.
+      2. Take the sum of the top 3 most informative word scores ("signal").
+      3. Determine the "noise" ratio: the proportion of words with a score below 0.45.
+      4. Apply a penalty: reduce the signal by up to 20% depending on the noise ratio.
+         (Score = signal * (1 - 0.2 * noise_ratio)).
+
+    Args:
+        sentence (str): The input sentence to score.
+
+    Returns:
+        float: Aggregated sentence information score (rounded to 4 decimals).
+    
+    TODO-claude: Add unit tests for this function and improve the documentation.
+    """
+    words = sentence.lower().split()
+    if not words: return 0
+    
+    # Use our previous word-level function to get scores for every word
+    # (Assuming get_total_info_value is defined as before)
+    word_scores = [get_final_weighted_score(w) for w in words]
+    word_scores.sort(reverse=True)
+    
+    # 1. THE SIGNAL: Sum of the top 3 most informative words
+    # This ensures one or two 'power words' can carry a sentence.
+    top_k = word_scores[:3]
+    signal = sum(top_k)
+    
+    # 2. THE NOISE PENALTY: 
+    # How much of the sentence is "filler"?
+    # We define noise as any word with a score below 0.45
+    noise_count = sum(1 for s in word_scores if s < 0.45)
+    noise_ratio = noise_count / len(words)
+    
+    # 3. FINAL AGGREGATION:
+    # We multiply the signal by a penalty factor that 
+    # reduces the score by up to 20% if the sentence is pure fluff.
+    final_sentence_score = signal * (1 - (noise_ratio * 0.2))
+    
+    return round(final_sentence_score, 4)
 
 
 def process_content(sentence: str, terms_mapping: Optional[Dict[str, str]] = None) -> List[str]:
@@ -861,7 +1006,7 @@ def process_content(sentence: str, terms_mapping: Optional[Dict[str, str]] = Non
     if terms_mapping:
         for term, mapping in terms_mapping.items():
             sentence = re.sub(rf"\b{term}\b", mapping, sentence, flags=re.I)
-    return list(_remove_stopwords(_tokenizer(_clean_text(sentence))))
+    return list(remove_stopwords(_tokenizer(_clean_text(sentence))))
 
 
 def _process_to_IDs_in_sparse_format(sp: Any, sentences: List[str]) -> Tuple[Any, Any, Any]:

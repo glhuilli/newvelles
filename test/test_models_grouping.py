@@ -242,8 +242,10 @@ class TestIdentifyGroup:
 
         result = identify_group(titles)
 
-        # Should use top 3 common substrings
-        expected = "Apple iPhone Apple iPhone"
+        # Should filter overlapping substrings and remove stop words
+        # "Apple" and "iPhone" are filtered as overlapping with "Apple iPhone"
+        # Result should be non-redundant with bracket format
+        expected = "[Apple iPhone] [new]"
         assert result == expected
 
     @patch("newvelles.models.grouping.extract_common_substrings")
@@ -255,8 +257,8 @@ class TestIdentifyGroup:
 
         result = identify_group(titles)
 
-        # Should use all available substrings
-        expected = "Apple iPhone"
+        # Should use all available substrings with bracket format
+        expected = "[Apple] [iPhone]"
         assert result == expected
 
     @patch("newvelles.models.grouping.extract_common_substrings")

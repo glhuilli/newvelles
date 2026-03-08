@@ -52,16 +52,16 @@ class TestSchemaValidation:
         
         # Create sample data that matches the expected structure
         sample_data = {
-            "breaking news politics": {
-                "trump administration": {
-                    "Trump picks new attorney general": {
-                        "title": "Trump picks new attorney general",
-                        "link": "https://example.com/news1", 
+            "breaking news technology": {
+                "tech leadership": {
+                    "Company appoints new chief officer": {
+                        "title": "Company appoints new chief officer",
+                        "link": "https://example.com/news1",
                         "timestamp": "Mon, 25 Nov 2024 08:03:10 +0000",
                         "source": "https://example.com/rss"
                     },
-                    "Cabinet appointments continue": {
-                        "title": "Cabinet appointments continue",
+                    "Executive appointments continue": {
+                        "title": "Executive appointments continue",
                         "link": "https://example.com/news2",
                         "timestamp": "Sun, 24 Nov 2024 19:12:50 +0000", 
                         "source": "https://example.com/rss"
