@@ -1,0 +1,41 @@
+---
+description: General behavior when creating or working with unit tests 
+globs:
+alwaysApply: false
+---
+- The purpose of a unit test is to validate that code behaves correctly and as expected.
+- Do not assume the code needs to be change to make the unit test pass. Plan correctly what the code should be doing and then make sure it's tested.
+- Make sure you test not only the happy path, but also explore edge cases. 
+- Do not write placeholder tests that assert expected true behavior. These are not valid tests.
+- Only consider a test complete when it verifies meaningful behavior of the target code.
+- When testing writing tests, first, (unless prompted to otherwise) list out the required test cases based on the function's expected behavior and edge cases.
+- Then implement one test case at a time, ensuring it fails before the feature is implemented (if test-driven) or passes only when the feature works correctly.
+- Do not skip test cases or stub them unless instructed to do so.
+- Focus on observable behavior. Do not assert internal implementation details unless testing internal utilities.
+- Test both success and failure paths where applicable.
+- Use clear and descriptive test names that explain the scenario being tested.
+- Avoid over-mocking or mocking code under test.
+- Keep test logic minimal and readable.
+- Do not suppress or ignore test output or errors.
+- Fail loudly and clearly when assertions fail—this is expected during test development.
+- Aim for minimum 90% coverage on business logic
+- Test all user-facing components
+- Focus on testing behavior rather than implementation details
+- Keep tests simple and focused on a single behavior
+- Use descriptive test names that explain the expected behavior
+- Only mock external dependencies (e.g., network calls, databases, third-party libraries).
+- Do not mock internal application logic unless unavoidable.
+- Mock time, randomness, or other non-deterministic behavior only if it affects test performance or reliability.
+- Avoid mocking business logic or pure functions from the same codebase.
+- Do not mock framework behavior unless testing integrations.
+- Do not mock simple utility functions unless strictly necessary.
+- Only mock methods actually used in the test.
+- Do not assert on internal implementation details unless required.
+- Use mock factories to reduce duplication.
+- Reset or clear mocks between tests.
+- Keep mocks readable and minimal.
+- Extract complex mocks into helpers or factories.
+- Use real implementations if they are lightweight and deterministic.
+- Do not mock the unit under test.
+- Avoid mocking all dependencies by default.
+- Avoid stale or unused mocks.

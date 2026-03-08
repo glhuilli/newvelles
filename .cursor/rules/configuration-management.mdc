@@ -1,0 +1,10 @@
+---
+description: Configuration rules and management
+globs:
+alwaysApply: false
+---
+
+- Always use environment variables.
+- Assume environment variables are already set. Do not unset them when running commands unless I specifically say so.
+- When introducing a new environment variable or creating a , keep track of this in a docs/ENVIRONMENT.md file.
+- Always refer to the docs/ENVIRONMENT.md file for a detailed description of which variables are used and how. 
