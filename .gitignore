@@ -9,6 +9,10 @@ TODO.txt
 Untitled.ipynb
 latest_news.json
 
+# Monitoring cache
+.monitor_cache/*.json
+.monitor_cache/raw_data/
+
 # coverage
 cover/
 
