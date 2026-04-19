@@ -1083,10 +1083,23 @@ class TestGroupSentencesPytest:
 
     def test_group_sentences_functions_exist(self):
         """Test that group_sentences functions are importable."""
-        # These functions use TensorFlow and advanced spaCy features
-        # They are marked with pragma: no cover, so we just test they exist
+        # These functions are deprecated and not used in production
+        # They require spacy-universal-sentence-encoder (optional dependency)
+        # Just verify they're importable - actual functionality not tested
         assert callable(group_sentences)
         assert callable(group_sentences_lite)
+
+        # Verify helpful error if dependency missing
+        try:
+            import spacy_universal_sentence_encoder  # noqa: F401
+            has_encoder = True
+        except ImportError:
+            has_encoder = False
+
+        if not has_encoder:
+            # Verify function raises helpful error when dependency missing
+            with pytest.raises(ImportError, match="spacy-universal-sentence-encoder"):
+                group_sentences(None, ["test sentence"], 0.5)
 
 
 class TestRemoveSubsetsPytest:

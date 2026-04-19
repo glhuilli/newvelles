@@ -150,10 +150,18 @@ class TestDisplaySummaryStats:
         console = Console(file=StringIO(), width=120)
         stats = {
             "total_updates": 8614,
-            "first_update": "2021-07-10 06:00:00",
-            "latest_update": "2026-04-16 13:14:38",
-            "avg_articles_per_update": 150.2,
-            "avg_groups_per_update": 45.8,
+            "date_range": {
+                "start": "2021-07-10",
+                "end": "2026-04-16"
+            },
+            "articles": {
+                "mean": 150.2,
+                "median": 142.3
+            },
+            "groups": {
+                "mean": 45.8,
+                "median": 44.0
+            },
         }
 
         display_summary_stats(console, stats)
@@ -161,8 +169,8 @@ class TestDisplaySummaryStats:
 
         assert "Overall Statistics" in output
         assert "8,614" in output
-        assert "2021-07-10 06:00:00" in output
-        assert "2026-04-16 13:14:38" in output
+        assert "2021-07-10" in output
+        assert "2026-04-16" in output
         assert "150.2" in output
         assert "45.8" in output
 
