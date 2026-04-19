@@ -15,7 +15,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # Third-party imports (after environment configuration)
 import numpy as np  # pylint: disable=wrong-import-position  # noqa: E402
 import spacy  # pylint: disable=wrong-import-position  # noqa: E402
-import spacy_universal_sentence_encoder  # pylint: disable=wrong-import-position  # noqa: E402
 from sklearn.metrics.pairwise import cosine_similarity  # pylint: disable=wrong-import-position  # noqa: E402
 
 # TensorFlow imports for legacy USE functions (if available)
@@ -25,8 +24,6 @@ except ImportError:
     tf = None
 
 NLP = spacy.load("en_core_web_sm")
-
-NLP_USE = spacy_universal_sentence_encoder.load_model("en_use_lg")
 
 
 _STOPWORDS = frozenset(
@@ -1058,7 +1055,27 @@ def group_sentences_lite(
 def group_sentences(
     embed_model: Any, sentences: List[str], threshold: float = 0.5  # pylint: disable=unused-argument
 ) -> List[Tuple[int, int, float]]:  # pragma: no cover
-    docs = [NLP_USE(sentence) for sentence in sentences]
+    """DEPRECATED: Legacy function using Universal Sentence Encoder.
+
+    This function is not used in production. The production code uses TF-IDF
+    based similarity in grouping.py instead. Kept for backward compatibility.
+
+    Requires: spacy-universal-sentence-encoder (104MB, not in default requirements)
+    """
+    # Lazy-load universal sentence encoder (requires optional dependency)
+    # pylint: disable=import-outside-toplevel
+    try:
+        import spacy_universal_sentence_encoder
+    except ImportError as e:
+        raise ImportError(
+            "group_sentences requires spacy-universal-sentence-encoder (not installed by default). "
+            "This function is deprecated and not used in production. "
+            "Install with: pip install spacy-universal-sentence-encoder"
+        ) from e
+
+    nlp_use = spacy_universal_sentence_encoder.load_model("en_use_lg")
+
+    docs = [nlp_use(sentence) for sentence in sentences]
     similarities: List[Tuple[int, int, float]] = []
     for i, doc_i in enumerate(docs):
         for j in range(i + 1, len(docs)):
