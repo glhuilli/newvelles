@@ -79,6 +79,27 @@ make pause-eventbridge           # Emergency stop
 make resume-eventbridge          # Resume scheduling
 ```
 
+### Production Monitoring
+```bash
+# Display monitoring dashboard
+python scripts/monitor.py dashboard              # Last 30 days (default)
+python scripts/monitor.py dashboard --days 7     # Last 7 days
+
+# Update cache without displaying dashboard
+python scripts/monitor.py update
+
+# Quick statistics (no plots)
+python scripts/monitor.py stats
+
+# Detailed trend analysis
+python scripts/monitor.py analyze --days 7
+
+# Clear local cache
+python scripts/monitor.py clear-cache
+```
+
+See `docs/MONITORING_DASHBOARD.md` for complete documentation.
+
 ## Architecture
 
 ### Core Data Flow
