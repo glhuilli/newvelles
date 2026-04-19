@@ -170,15 +170,16 @@ Use this when:
 
 ```
              Overall Statistics
-┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
-┃ Metric              ┃ Value               ┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩
-│ Total Updates       │ 8,614               │
-│ First Update        │ 2021-07-10 06:00:00 │
-│ Latest Update       │ 2026-04-18 10:30:00 │
-│ Avg Articles/Update │ 150.2               │
-│ Avg Groups/Update   │ 45.8                │
-└─────────────────────┴─────────────────────┘
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
+┃ Metric                       ┃ Value               ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩
+│ Total Updates                │ 8,614               │
+│ First Update                 │ 2021-07-10 06:00:00 │
+│ Latest Update                │ 2026-04-18 10:30:00 │
+│ Avg Articles/Update          │ 150.2               │
+│ Median Articles/Update (p50) │ 135.5               │
+│ Avg Groups/Update            │ 45.8                │
+└──────────────────────────────┴─────────────────────┘
 ```
 
 ### Terminal Plots
@@ -198,10 +199,19 @@ Plots use Unicode braille characters for smooth curves and auto-scale based on y
 ```
 .monitor_cache/
 ├── file_index.json          # Processed S3 files index
-└── daily_metrics.json       # Aggregated daily statistics
+├── daily_metrics.json       # Aggregated daily statistics
+└── raw_data/                # Raw visualization data (organized by year/month)
+    ├── 2021/
+    │   ├── 07/
+    │   │   └── newvelles_visualization_0.2.1_2021-07-10T01:55:22.json
+    │   └── 08/
+    ├── 2022/
+    └── 2026/
+        └── 04/
+            └── newvelles_visualization_0.2.1_2026-04-18T10:30:00.json
 ```
 
-**Note:** Cache files are excluded from git (already in `.gitignore`).
+**Note:** Cache files and raw data are excluded from git (already in `.gitignore`).
 
 ### Cache Structure
 
@@ -247,17 +257,44 @@ Plots use Unicode braille characters for smooth curves and auto-scale based on y
 
 **First Run:**
 - Downloads all historical files from S3 (8,614+ files)
+- Saves raw data to `.monitor_cache/raw_data/YYYY/MM/`
 - Takes 5-10 minutes depending on connection
 - Shows progress indicators
 
 **Subsequent Runs:**
 - Only fetches new files since last run
+- Saves new raw files locally
 - Typically completes in seconds
 - Updates cache incrementally
 
 **Refresh:**
 - Use `--refresh` flag to rebuild entire cache
+- Raw data files are preserved (not deleted)
 - Useful after S3 changes or cache corruption
+
+### Raw Data Persistence
+
+**Automatic Saving:**
+- Every file downloaded from S3 is automatically saved to local cache
+- Files are organized by year and month: `.monitor_cache/raw_data/YYYY/MM/filename.json`
+- Raw files are never deleted (persist across cache refreshes)
+
+**Benefits:**
+- Re-analyze data without re-downloading from S3
+- Faster iterations when testing metrics changes
+- Historical backup of all processed data
+- Organized structure for easy access
+
+**Duplicate Prevention:**
+- Daily metrics automatically prevent duplicate updates
+- Updates with same timestamp are skipped
+- Safe to re-process the same data multiple times
+
+**Storage Considerations:**
+- Raw data files are ~250-500 KB each
+- 8,614 files ≈ 2-4 GB total storage
+- Organized by year/month for easy cleanup if needed
+- Excluded from git to avoid repository bloat
 
 ## Metrics Tracked
 

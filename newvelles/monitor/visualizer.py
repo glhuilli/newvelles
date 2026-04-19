@@ -103,25 +103,45 @@ def display_summary_stats(console: Console, stats: dict):
 
     Args:
         console: Rich Console instance for output
-        stats: Dictionary containing overall statistics with keys:
+        stats: Dictionary containing overall statistics from get_overall_statistics():
             - total_updates: Total number of updates (int)
-            - first_update: First update timestamp (str)
-            - latest_update: Latest update timestamp (str)
-            - avg_articles_per_update: Average articles per update (float)
-            - avg_groups_per_update: Average groups per update (float)
+            - date_range: Dict with 'start' and 'end' dates
+            - articles: Dict with 'mean', 'median' and other stats
+            - groups: Dict with 'mean', 'median' for top-level groups only
+            - subgroups_per_top_group: Dict with 'mean', 'median' for sub-groups per top group
     """
     table = Table(title="Overall Statistics", border_style="blue")
 
     table.add_column("Metric", style="cyan", no_wrap=True)
     table.add_column("Value", style="green")
 
-    table.add_row("Total Updates", f"{stats.get('total_updates', 0):,}")
-    table.add_row("First Update", stats.get("first_update", "Unknown"))
-    table.add_row("Latest Update", stats.get("latest_update", "Unknown"))
-    table.add_row(
-        "Avg Articles/Update", f"{stats.get('avg_articles_per_update', 0.0):.1f}"
-    )
-    table.add_row("Avg Groups/Update", f"{stats.get('avg_groups_per_update', 0.0):.1f}")
+    # Extract values from nested structure
+    total_updates = stats.get('total_updates', 0)
+    date_range = stats.get('date_range', {})
+    first_update = date_range.get('start', 'Unknown')
+    latest_update = date_range.get('end', 'Unknown')
+
+    articles_stats = stats.get('articles', {})
+    avg_articles = articles_stats.get('mean', 0.0)
+    median_articles = articles_stats.get('median', 0.0)
+
+    groups_stats = stats.get('groups', {})
+    avg_groups = groups_stats.get('mean', 0.0)
+    median_groups = groups_stats.get('median', 0.0)
+
+    subgroups_stats = stats.get('subgroups_per_top_group', {})
+    avg_subgroups = subgroups_stats.get('mean', 0.0)
+    median_subgroups = subgroups_stats.get('median', 0.0)
+
+    table.add_row("Total Updates", f"{total_updates:,}")
+    table.add_row("First Update", first_update)
+    table.add_row("Latest Update", latest_update)
+    table.add_row("Avg Articles/Update", f"{avg_articles:.1f}")
+    table.add_row("Median Articles/Update (p50)", f"{median_articles:.1f}")
+    table.add_row("Avg Top-Level Groups/Update", f"{avg_groups:.1f}")
+    table.add_row("Median Top-Level Groups/Update (p50)", f"{median_groups:.1f}")
+    table.add_row("Avg Sub-Groups per Top Group", f"{avg_subgroups:.1f}")
+    table.add_row("Median Sub-Groups per Top Group (p50)", f"{median_subgroups:.1f}")
 
     console.print(table)
     console.print()

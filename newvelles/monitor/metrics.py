@@ -23,9 +23,10 @@ def extract_file_metrics(data: Dict[str, Any], filename: str) -> Dict[str, Any]:
         Dictionary containing:
         - timestamp: ISO timestamp extracted from filename
         - total_articles: Total number of articles
-        - total_groups: Total number of groups (top-level + sub-groups)
+        - total_groups: Number of top-level groups (not including sub-groups)
         - top_level_groups: Number of top-level groups
         - sub_groups: Number of sub-groups
+        - subgroups_per_top_group: Average sub-groups per top-level group
         - unique_sources: Number of unique RSS sources
         - articles_per_group: Distribution statistics (mean, median, min, max, stdev)
         - top_level_group_sizes: Distribution of articles per top-level group
@@ -99,12 +100,16 @@ def extract_file_metrics(data: Dict[str, Any], filename: str) -> Dict[str, Any]:
             'stdev': round(stdev(all_group_sizes), 2) if len(all_group_sizes) > 1 else 0.0
         }
 
+    # Calculate sub-groups per top-level group
+    subgroups_per_top_group = round(sub_group_count / top_level_count, 2) if top_level_count > 0 else 0.0
+
     return {
         'timestamp': timestamp,
         'total_articles': total_articles,
-        'total_groups': top_level_count + sub_group_count,
+        'total_groups': top_level_count,  # Changed: now only top-level groups
         'top_level_groups': top_level_count,
         'sub_groups': sub_group_count,
+        'subgroups_per_top_group': subgroups_per_top_group,  # New metric
         'unique_sources': len(unique_sources),
         'articles_per_group': articles_per_group_stats,
         'top_level_group_sizes': top_level_group_sizes,
@@ -125,9 +130,10 @@ def aggregate_daily_metrics(file_metrics: List[Dict[str, Any]]) -> Dict[str, Dic
         - date: The date string
         - updates_count: Number of updates that day
         - total_articles: Stats (mean, median, min, max) for article counts
-        - total_groups: Stats for group counts
+        - total_groups: Stats for top-level group counts (not including sub-groups)
         - top_level_groups: Stats for top-level group counts
         - sub_groups: Stats for sub-group counts
+        - subgroups_per_top_group: Stats for sub-groups per top-level group ratio
         - unique_sources: Stats for unique source counts
         - articles_per_group_mean: Stats for articles per group mean
         - timestamps: List of all update timestamps that day
@@ -160,6 +166,7 @@ def aggregate_daily_metrics(file_metrics: List[Dict[str, Any]]) -> Dict[str, Dic
         groups = [m['total_groups'] for m in metrics_list]
         top_level = [m['top_level_groups'] for m in metrics_list]
         sub_groups = [m['sub_groups'] for m in metrics_list]
+        subgroups_per_top = [m.get('subgroups_per_top_group', 0.0) for m in metrics_list]
         sources = [m['unique_sources'] for m in metrics_list]
         articles_per_group_means = [m['articles_per_group']['mean'] for m in metrics_list]
         timestamps = [m['timestamp'] for m in metrics_list]
@@ -171,6 +178,7 @@ def aggregate_daily_metrics(file_metrics: List[Dict[str, Any]]) -> Dict[str, Dic
             'total_groups': _calculate_stats(groups),
             'top_level_groups': _calculate_stats(top_level),
             'sub_groups': _calculate_stats(sub_groups),
+            'subgroups_per_top_group': _calculate_stats(subgroups_per_top),
             'unique_sources': _calculate_stats(sources),
             'articles_per_group_mean': _calculate_stats(articles_per_group_means),
             'timestamps': timestamps
@@ -254,8 +262,9 @@ def get_overall_statistics(daily_metrics: Dict[str, Dict[str, Any]]) -> Dict[str
         - total_updates: Total number of updates
         - date_range: First and last dates
         - articles: All-time statistics for article counts
-        - groups: All-time statistics for group counts
+        - groups: All-time statistics for top-level group counts (not including sub-groups)
         - sources: All-time statistics for source counts (if available)
+        - subgroups_per_top_group: All-time statistics for sub-groups per top-level group (if available)
         - avg_updates_per_day: Average number of updates per day
     """
     if not daily_metrics:
@@ -267,6 +276,7 @@ def get_overall_statistics(daily_metrics: Dict[str, Dict[str, Any]]) -> Dict[str
     all_articles = []
     all_groups = []
     all_sources = []
+    all_subgroups_per_top = []
     total_updates = 0
 
     for date in sorted_dates:
@@ -280,6 +290,8 @@ def get_overall_statistics(daily_metrics: Dict[str, Dict[str, Any]]) -> Dict[str
             all_groups.append(metrics['total_groups']['mean'])
             if 'unique_sources' in metrics:
                 all_sources.append(metrics['unique_sources']['mean'])
+            if 'subgroups_per_top_group' in metrics:
+                all_subgroups_per_top.append(metrics['subgroups_per_top_group']['mean'])
         else:
             # Cache format (from CacheManager.update_daily_metrics)
             # Calculate averages from updates list
@@ -295,6 +307,11 @@ def get_overall_statistics(daily_metrics: Dict[str, Dict[str, Any]]) -> Dict[str
                 if avg_sources > 0:
                     all_sources.append(avg_sources)
 
+                # Calculate avg subgroups per top group
+                avg_subgroups_per_top = sum(u.get('subgroups_per_top_group', 0) for u in updates) / len(updates)
+                if avg_subgroups_per_top > 0:
+                    all_subgroups_per_top.append(avg_subgroups_per_top)
+
     result = {
         'total_days': len(sorted_dates),
         'total_updates': total_updates,
@@ -303,13 +320,17 @@ def get_overall_statistics(daily_metrics: Dict[str, Dict[str, Any]]) -> Dict[str
             'end': sorted_dates[-1]
         },
         'articles': _calculate_stats(all_articles),
-        'groups': _calculate_stats(all_groups),
+        'groups': _calculate_stats(all_groups),  # Now only top-level groups
         'avg_updates_per_day': round(total_updates / len(sorted_dates), 2) if sorted_dates else 0.0
     }
 
     # Add sources stats if available
     if all_sources:
         result['sources'] = _calculate_stats(all_sources)
+
+    # Add subgroups per top group stats if available
+    if all_subgroups_per_top:
+        result['subgroups_per_top_group'] = _calculate_stats(all_subgroups_per_top)
 
     return result
 

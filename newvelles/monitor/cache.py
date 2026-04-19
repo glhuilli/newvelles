@@ -226,6 +226,9 @@ class CacheManager:
         """
         Update daily metrics with new update data.
 
+        Appends update data to the date's updates list and recalculates aggregations.
+        Prevents duplicate updates by checking timestamp.
+
         Args:
             date: Date string in YYYY-MM-DD format
             update_data: Dictionary containing update metrics with keys:
@@ -249,6 +252,14 @@ class CacheManager:
                     "daily_total_groups": 0,
                     "daily_avg_articles_per_update": 0.0
                 }
+
+            # Check if update with this timestamp already exists (prevent duplicates)
+            timestamp = update_data.get("timestamp", "")
+            existing_timestamps = {u.get("timestamp") for u in metrics[date]["updates"]}
+
+            if timestamp in existing_timestamps:
+                logger.debug(f"Update with timestamp {timestamp} already exists for {date}, skipping")
+                return
 
             # Add update to the list
             metrics[date]["updates"].append(update_data)

@@ -15,6 +15,9 @@ from newvelles.monitor.config import (
 from newvelles.monitor.fetcher import (
     fetch_incremental_data,
     get_latest_metadata,
+    save_raw_file,
+    load_raw_file,
+    has_raw_file,
 )
 from newvelles.monitor.metrics import (
     aggregate_daily_metrics,
@@ -75,6 +78,9 @@ def dashboard(days: int, refresh: bool, bucket: str):
 
             # Process each new file
             for filename, data in new_data:
+                # Save raw file to cache (organized by year/month)
+                save_raw_file(filename, data)
+
                 # Extract metrics
                 file_metrics = extract_file_metrics(data, filename)
 
@@ -138,6 +144,9 @@ def update(bucket: str):
 
         # Process each new file
         for filename, data in new_data:
+            # Save raw file to cache (organized by year/month)
+            save_raw_file(filename, data)
+
             # Extract metrics
             file_metrics = extract_file_metrics(data, filename)
 

@@ -64,9 +64,10 @@ class TestMonitoringIntegration:
 
         # Verify extracted metrics
         assert metrics["total_articles"] == 2
-        assert metrics["total_groups"] == 3  # 1 top-level + 2 sub-groups
+        assert metrics["total_groups"] == 1  # Only top-level groups (not including sub-groups)
         assert metrics["top_level_groups"] == 1
         assert metrics["sub_groups"] == 2
+        assert metrics["subgroups_per_top_group"] == 2.0  # 2 sub-groups / 1 top-level = 2.0
 
         # Add to cache
         cache.add_file(filename, {
@@ -218,7 +219,8 @@ class TestMonitoringIntegration:
 
         assert day_data["updates_count"] == 5
         assert day_data["total_articles"]["mean"] == 2.0  # All files have 2 articles
-        assert day_data["total_groups"]["mean"] == 3.0  # All files have 3 groups
+        assert day_data["total_groups"]["mean"] == 1.0  # All files have 1 top-level group
+        assert day_data["subgroups_per_top_group"]["mean"] == 2.0  # All files have 2 sub-groups per top group
 
 
 class TestMonitoringErrorHandling:

@@ -12,6 +12,7 @@ PUBLIC_QA_BUCKET = "public-newvelles-qa-bucket"
 # Cache Configuration
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 CACHE_DIR = PROJECT_ROOT / ".monitor_cache"
+RAW_DATA_DIR = CACHE_DIR / "raw_data"
 FILE_INDEX_PATH = CACHE_DIR / "file_index.json"
 DAILY_METRICS_PATH = CACHE_DIR / "daily_metrics.json"
 

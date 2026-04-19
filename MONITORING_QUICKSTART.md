@@ -70,15 +70,16 @@ python scripts/monitor.py --debug dashboard
 ╚══════════════════════════════════════════════════════════════╝
 
              Overall Statistics
-┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
-┃ Metric              ┃ Value               ┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩
-│ Total Updates       │ 8,614               │
-│ First Update        │ 2021-07-10 06:00:00 │
-│ Latest Update       │ 2026-04-18 10:30:00 │
-│ Avg Articles/Update │ 150.2               │
-│ Avg Groups/Update   │ 45.8                │
-└─────────────────────┴─────────────────────┘
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
+┃ Metric                       ┃ Value               ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩
+│ Total Updates                │ 8,614               │
+│ First Update                 │ 2021-07-10 06:00:00 │
+│ Latest Update                │ 2026-04-18 10:30:00 │
+│ Avg Articles/Update          │ 150.2               │
+│ Median Articles/Update (p50) │ 135.5               │
+│ Avg Groups/Update            │ 45.8                │
+└──────────────────────────────┴─────────────────────┘
 
 [Terminal plots showing 30-day trends]
 ```
@@ -88,8 +89,16 @@ python scripts/monitor.py --debug dashboard
 All cache files are stored in `.monitor_cache/`:
 - `file_index.json` - Tracks processed S3 files
 - `daily_metrics.json` - Aggregated daily statistics
+- `raw_data/YYYY/MM/` - Raw visualization data files (organized by year/month)
 
 Cache is automatically managed (no manual intervention needed).
+
+**Raw Data Persistence:**
+- All downloaded files are saved to `.monitor_cache/raw_data/`
+- Organized by year and month for easy access
+- Never deleted (persist across cache refreshes)
+- ~2-4 GB total for all historical data
+- Excluded from git
 
 ## Troubleshooting
 

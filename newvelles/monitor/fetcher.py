@@ -15,9 +15,12 @@ import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
 from newvelles.monitor.config import (AWS_REGION, BATCH_SIZE, MAX_PARALLEL_DOWNLOADS,
-                                      PRODUCTION_BUCKET, PUBLIC_BUCKET)
+                                      PRODUCTION_BUCKET, PUBLIC_BUCKET, RAW_DATA_DIR)
 
 logger = logging.getLogger(__name__)
+
+# Ensure raw data directory exists
+RAW_DATA_DIR.mkdir(exist_ok=True)
 
 
 def list_s3_files(bucket: str, prefix: str = "") -> List[str]:
@@ -293,3 +296,107 @@ def get_file_count(bucket: str, prefix: str = "") -> int:
     except ClientError as e:
         logger.error(f"Error counting files in s3://{bucket}/{prefix}: {e}")
         raise
+
+
+def save_raw_file(filename: str, data: Dict) -> None:
+    """
+    Save raw visualization data to local cache organized by year/month.
+
+    Files are stored in: .monitor_cache/raw_data/YYYY/MM/filename.json
+
+    Args:
+        filename: Name of the file (e.g., newvelles_visualization_0.2.1_2026-04-18T10:00:00.json)
+        data: Raw JSON data dictionary to save
+
+    Example:
+        >>> save_raw_file("newvelles_visualization_0.2.1_2026-04-18T10:00:00.json", {...})
+        # Saves to: .monitor_cache/raw_data/2026/04/newvelles_visualization_0.2.1_2026-04-18T10:00:00.json
+    """
+    # Parse filename to extract date
+    parsed = parse_visualization_filename(filename)
+    if not parsed:
+        logger.warning(f"Cannot save raw file with invalid filename: {filename}")
+        return
+
+    # Extract year and month from datetime
+    dt = parsed["datetime"]
+    year = str(dt.year)
+    month = f"{dt.month:02d}"
+
+    # Create directory structure: raw_data/YYYY/MM/
+    save_dir = RAW_DATA_DIR / year / month
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save file
+    file_path = save_dir / filename
+    try:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        logger.debug(f"Saved raw file to {file_path}")
+    except Exception as e:
+        logger.error(f"Failed to save raw file {filename}: {e}")
+
+
+def load_raw_file(filename: str) -> Optional[Dict]:
+    """
+    Load raw visualization data from local cache.
+
+    Looks for file in: .monitor_cache/raw_data/YYYY/MM/filename.json
+
+    Args:
+        filename: Name of the file to load
+
+    Returns:
+        Parsed JSON data dictionary, or None if file not found
+
+    Example:
+        >>> data = load_raw_file("newvelles_visualization_0.2.1_2026-04-18T10:00:00.json")
+    """
+    # Parse filename to extract date
+    parsed = parse_visualization_filename(filename)
+    if not parsed:
+        logger.debug(f"Cannot load raw file with invalid filename: {filename}")
+        return None
+
+    # Extract year and month from datetime
+    dt = parsed["datetime"]
+    year = str(dt.year)
+    month = f"{dt.month:02d}"
+
+    # Construct file path
+    file_path = RAW_DATA_DIR / year / month / filename
+
+    if not file_path.exists():
+        logger.debug(f"Raw file not found: {file_path}")
+        return None
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        logger.debug(f"Loaded raw file from {file_path}")
+        return data
+    except Exception as e:
+        logger.error(f"Failed to load raw file {filename}: {e}")
+        return None
+
+
+def has_raw_file(filename: str) -> bool:
+    """
+    Check if raw file exists in local cache.
+
+    Args:
+        filename: Name of the file to check
+
+    Returns:
+        True if file exists in cache, False otherwise
+    """
+    parsed = parse_visualization_filename(filename)
+    if not parsed:
+        return False
+
+    dt = parsed["datetime"]
+    year = str(dt.year)
+    month = f"{dt.month:02d}"
+
+    file_path = RAW_DATA_DIR / year / month / filename
+    return file_path.exists()
