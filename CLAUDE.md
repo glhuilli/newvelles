@@ -114,10 +114,11 @@ See `docs/MONITORING_DASHBOARD.md` for complete documentation.
    - Extracts nouns/verbs using spaCy for better grouping summaries
 
 3. **Clustering** (`newvelles/models/grouping.py`)
-   - Groups similar news using TF-IDF + cosine similarity (threshold: 0.7)
-   - Hierarchical clustering: first groups similar titles, then clusters groups by context
+   - Groups similar news using TF-IDF + cosine similarity (title threshold: 0.25)
+   - Two-level greedy grouping: first groups similar titles (0.25), then clusters
+     those groups by context similarity (0.2) into top-level groups
    - Extracts common substrings for group headers
-   - Filters groups with fewer than 2 titles
+   - Filters groups with fewer than 2 titles (`MIN_GROUP_SIZE`)
 
 4. **Visualization** (`newvelles/display/show.py`)
    - Generates JSON output with grouped news structure
@@ -227,7 +228,7 @@ newvelles/
 ## Key Files
 
 - `handler.py:23-32` - Environment detection logic (prod vs QA RSS selection)
-- `newvelles/models/grouping.py:33` - `group_similar_titles()` uses TF-IDF + cosine similarity
+- `newvelles/models/grouping.py:37` - `group_similar_titles()` uses TF-IDF + cosine similarity
 - `newvelles/utils/s3.py:9` - `upload_to_s3()` handles S3 uploads with optional public ACLs
 - `newvelles/feed/log.py` - S3 upload orchestration
 - `schemas/latest_news_schema.json` - Visualization data schema
@@ -261,7 +262,7 @@ newvelles/
 ## Additional Documentation
 
 Refer to `docs/` for detailed guides:
-- `GROUPING_ALGORITHM.md` - Detailed explanation of the hierarchical clustering algorithm
+- `GROUPING_ALGORITHM.md` - Detailed explanation of the two-level grouping algorithm
 - `ENVIRONMENT.md` - Environment variables reference
 - `LOCAL_TESTING_GUIDE.md` - Testing workflows
 - `LAMBDA_DEPLOYMENT_SUMMARY.md` - Deployment commands

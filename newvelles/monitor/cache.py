@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Set, Optional
 
@@ -67,7 +67,7 @@ class CacheManager:
         if not self.file_index_path.exists():
             logger.debug("File index not found, returning empty structure")
             return {
-                "last_updated": datetime.utcnow().isoformat(),
+                "last_updated": datetime.now(timezone.utc).isoformat(),
                 "total_files": 0,
                 "files": {}
             }
@@ -80,14 +80,14 @@ class CacheManager:
         except json.JSONDecodeError as e:
             logger.error(f"Failed to decode file index JSON: {e}")
             return {
-                "last_updated": datetime.utcnow().isoformat(),
+                "last_updated": datetime.now(timezone.utc).isoformat(),
                 "total_files": 0,
                 "files": {}
             }
         except Exception as e:
             logger.error(f"Failed to load file index: {e}")
             return {
-                "last_updated": datetime.utcnow().isoformat(),
+                "last_updated": datetime.now(timezone.utc).isoformat(),
                 "total_files": 0,
                 "files": {}
             }
@@ -104,7 +104,7 @@ class CacheManager:
         """
         try:
             # Update last_updated timestamp and total_files count
-            index["last_updated"] = datetime.utcnow().isoformat()
+            index["last_updated"] = datetime.now(timezone.utc).isoformat()
             index["total_files"] = len(index.get("files", {}))
 
             with open(self.file_index_path, 'w', encoding='utf-8') as f:

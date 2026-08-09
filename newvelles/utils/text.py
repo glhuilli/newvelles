@@ -1,27 +1,9 @@
 # pylint: disable=too-many-lines
-import os
 import re
 from collections import Counter
-from typing import Dict, Iterable, List, Optional, Tuple, Any
+from typing import Dict, Iterable, List, Optional, Tuple
 
-# Configure TensorFlow Hub before any imports that might use it
-# Use pre-downloaded model in Docker image, fallback to tmp for local development
-if os.path.exists('/opt/tfhub_models'):
-    os.environ['TFHUB_CACHE_DIR'] = '/opt/tfhub_models'
-else:
-    os.environ['TFHUB_CACHE_DIR'] = '/tmp/tfhub_cache'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-# Third-party imports (after environment configuration)
-import numpy as np  # pylint: disable=wrong-import-position  # noqa: E402
-import spacy  # pylint: disable=wrong-import-position  # noqa: E402
-from sklearn.metrics.pairwise import cosine_similarity  # pylint: disable=wrong-import-position  # noqa: E402
-
-# TensorFlow imports for legacy USE functions (if available)
-try:
-    import tensorflow as tf  # pylint: disable=wrong-import-position  # noqa: E402
-except ImportError:
-    tf = None
+import spacy
 
 NLP = spacy.load("en_core_web_sm")
 
@@ -874,8 +856,6 @@ def get_total_info_value(word: str) -> float:
 
     Returns:
         float: Information value score of the word.
-
-    TODO-claude: Add unit tests for this function and improve the documentation.
     """
     word = word.lower().strip(".,!?;:()\"'")
     if len(word) < 2:
@@ -920,8 +900,6 @@ def get_final_weighted_score(word: str, is_start_of_sentence: bool = False) -> f
 
     Returns:
         float: Weighted score of the word (rounded to 4 decimals).
-
-    TODO-claude: Add unit tests for this function and improve the documentation.
     """
     word_clean = word.strip(".,!?;:()\"'")
     if len(word_clean) < 2: return 0
@@ -965,8 +943,6 @@ def get_sentence_score(sentence: str) -> float:
 
     Returns:
         float: Aggregated sentence information score (rounded to 4 decimals).
-    
-    TODO-claude: Add unit tests for this function and improve the documentation.
     """
     words = sentence.lower().split()
     if not words: return 0
@@ -1004,165 +980,6 @@ def process_content(sentence: str, terms_mapping: Optional[Dict[str, str]] = Non
         for term, mapping in terms_mapping.items():
             sentence = re.sub(rf"\b{term}\b", mapping, sentence, flags=re.I)
     return list(remove_stopwords(_tokenizer(_clean_text(sentence))))
-
-
-def _process_to_IDs_in_sparse_format(sp: Any, sentences: List[str]) -> Tuple[Any, Any, Any]:
-    """Helper function to process sentences to sparse format for TensorFlow."""
-    # This is a placeholder implementation - the actual function would depend on
-    # the specific SentencePiece processor being used
-    if sp is None:
-        # Return dummy values if no processor available
-        return [], [], [len(sentences), 1]
-    # Real implementation would use sp.encode_as_ids() or similar
-    return [], [], [len(sentences), 1]
-
-
-def group_sentences_lite(
-    sp: Any, module: Any, sentences: List[str], threshold: float = 0.75
-) -> List[List[str]]:  # pragma: no cover
-    """
-    Method based on https://tfhub.dev/google/universal-sentence-encoder-lite/2
-    NOTE: This function requires TensorFlow 1.x and is kept for legacy compatibility.
-    """
-    if tf is None:
-        raise ImportError("TensorFlow is required for group_sentences_lite but not available")
-
-    input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])
-    encodings = module(
-        inputs={
-            "values": input_placeholder.values,
-            "indices": input_placeholder.indices,
-            "dense_shape": input_placeholder.dense_shape,
-        }
-    )
-
-    values, indices, dense_shape = _process_to_IDs_in_sparse_format(sp, sentences)
-    with tf.Session() as session:
-        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        message_embeddings = session.run(
-            encodings,
-            feed_dict={
-                input_placeholder.values: values,
-                input_placeholder.indices: indices,
-                input_placeholder.dense_shape: dense_shape,
-            },
-        )
-
-        sparse_matrix = np.array(message_embeddings)
-        return _group_sentences(sparse_matrix, threshold)
-
-
-def group_sentences(
-    embed_model: Any, sentences: List[str], threshold: float = 0.5  # pylint: disable=unused-argument
-) -> List[Tuple[int, int, float]]:  # pragma: no cover
-    """DEPRECATED: Legacy function using Universal Sentence Encoder.
-
-    This function is not used in production. The production code uses TF-IDF
-    based similarity in grouping.py instead. Kept for backward compatibility.
-
-    Requires: spacy-universal-sentence-encoder (104MB, not in default requirements)
-    """
-    # Lazy-load universal sentence encoder (requires optional dependency)
-    # pylint: disable=import-outside-toplevel
-    try:
-        import spacy_universal_sentence_encoder
-    except ImportError as e:
-        raise ImportError(
-            "group_sentences requires spacy-universal-sentence-encoder (not installed by default). "
-            "This function is deprecated and not used in production. "
-            "Install with: pip install spacy-universal-sentence-encoder"
-        ) from e
-
-    nlp_use = spacy_universal_sentence_encoder.load_model("en_use_lg")
-
-    docs = [nlp_use(sentence) for sentence in sentences]
-    similarities: List[Tuple[int, int, float]] = []
-    for i, doc_i in enumerate(docs):
-        for j in range(i + 1, len(docs)):
-            similarity = doc_i.similarity(docs[j])
-            similarities.append((i, j, similarity))
-
-    similarities.sort(key=lambda x: x[2], reverse=True)
-
-    # Group similar sentences above the threshold
-    grouped_sentences: Dict[int, set] = {}
-    for i, j, sim in similarities:
-        if sim >= threshold:
-            if i not in grouped_sentences and j not in grouped_sentences:
-                grouped_sentences[i] = {i, j}
-            elif i in grouped_sentences:
-                grouped_sentences[i].add(j)
-            elif j in grouped_sentences:
-                grouped_sentences[j].add(i)
-
-    # Merge overlapping groups
-    final_groups: List[set] = []
-    for group in grouped_sentences.values():
-        merged = False
-        for existing_group in final_groups:
-            if existing_group.intersection(group):
-                existing_group.update(group)
-                merged = True
-                break
-        if not merged:
-            final_groups.append(group)
-
-    for i, j, sim in similarities:
-        print(f"Similarity between sentence {i} and sentence {j}: {sim}")
-
-    return similarities  # Or process further as needed
-
-
-def _group_sentences(sparse_matrix, threshold):
-    similarities = cosine_similarity(sparse_matrix)
-    similar = np.where(similarities >= threshold)
-    similar_sets = [(i, similar[1][similar[0] == i]) for i in np.unique(similar[0])]
-    return similar_sets, remove_similar_subsets([x[1] for x in similar_sets])
-
-
-def remove_subsets(all_sets):
-    sets = sorted(all_sets, key=lambda x: len(x), reverse=False)
-    final_sets = []
-    for i, current_set in enumerate(sets):
-        skip = False
-        for s in sets[i + 1:]:
-            if not skip and len(set(current_set).difference(set(s))) == 0:
-                final_sets.append(s)
-                skip = True
-        if not skip:
-            final_sets.append(current_set)
-    return set(map(tuple, final_sets))
-
-
-def _remove_similar_subsets(all_sets):
-    sets = sorted(all_sets, key=lambda x: len(x), reverse=False)
-    final_sets = []
-    for i, current_set in enumerate(sets):
-        skip = False
-        for s in sets[i + 1:]:
-            if not skip and len(set(current_set).intersection(set(s))) > 0:
-                final_sets.append(sorted(set(current_set).union(set(s))))
-                skip = True
-        if not skip:
-            final_sets.append(sorted(current_set))
-    return set(map(tuple, final_sets))
-
-
-def remove_similar_subsets(all_sets):
-    if not all_sets:
-        return set(all_sets)
-    while True:
-        output = _remove_similar_subsets(all_sets)
-        if _compare_sets(output, all_sets):
-            break
-        all_sets = output
-    return all_sets
-
-
-def _compare_sets(set1, set2):
-    sset1 = sorted([sorted(x) for x in set1])
-    sset2 = sorted([sorted(x) for x in set2])
-    return sset1 == sset2
 
 
 def get_top_words(sentences: List[str], top_n: int = 10) -> List[Tuple[str, int]]:
