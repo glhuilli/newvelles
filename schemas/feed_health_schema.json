@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Newvelles Feed Health",
+  "type": "object",
+  "required": ["version", "datetime", "feed_count", "ok_count", "failed_count", "feeds"],
+  "properties": {
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "datetime": {"type": "string"},
+    "feed_count": {"type": "integer", "minimum": 0},
+    "ok_count": {"type": "integer", "minimum": 0},
+    "failed_count": {"type": "integer", "minimum": 0},
+    "feeds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["url", "http_status", "entry_count", "newest_entry_age_days",
+                     "latency_ms", "bozo", "error", "ok"],
+        "properties": {
+          "url": {"type": "string"},
+          "http_status": {"type": ["integer", "null"]},
+          "resolved_url": {"type": ["string", "null"]},
+          "entry_count": {"type": "integer", "minimum": 0},
+          "newest_entry_age_days": {"type": ["integer", "null"]},
+          "latency_ms": {"type": "integer", "minimum": 0},
+          "bozo": {"type": "boolean"},
+          "error": {"type": ["string", "null"]},
+          "ok": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

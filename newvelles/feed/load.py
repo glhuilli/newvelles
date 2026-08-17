@@ -6,13 +6,14 @@ from typing import Any, Dict, Iterable, List
 from dateutil import parser as date_parser
 
 from newvelles.feed import NewsEntry
+from newvelles.feed.health import emit_feed_health
 from newvelles.feed.log import log_entries
 from newvelles.feed.parser import parse_feed
 
 _DATE_RANGE_DAYS = 14
 
 
-def load_rss(rss_file_path) -> Iterable[str]:  # pragma: no cover
+def load_rss(rss_file_path) -> Iterable[str]:
     """
     Given a file, yield all RSS links
 
@@ -20,13 +21,16 @@ def load_rss(rss_file_path) -> Iterable[str]:  # pragma: no cover
     """
     with open(rss_file_path, "r", encoding="utf-8") as f:
         for line in f.readlines():
-            yield line.strip()
+            stripped = line.strip()
+            if stripped:
+                yield stripped
 
 
 def build_data_from_rss_feeds_list(rss_list: List[str], log: bool = True) -> Dict[str, NewsEntry]:
     title_data = {}
     news_data: Dict[str, Any] = defaultdict(list)
-    for feed_title, entry in parse_feed(rss_list):
+    health_records: List[Dict[str, Any]] = []
+    for feed_title, entry in parse_feed(rss_list, health=health_records):
         try:
             # Validate required entry fields
             if not _has_required_fields(entry):
@@ -51,6 +55,7 @@ def build_data_from_rss_feeds_list(rss_list: List[str], log: bool = True) -> Dic
             continue
     if log:
         log_entries(title_data, news_data)
+        emit_feed_health(health_records)
     return title_data
 
 

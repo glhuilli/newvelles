@@ -1,22 +1,33 @@
 import logging
-from typing import Any, Iterable, List, Tuple
+import time
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import feedparser
 
 from newvelles.config import debug
+from newvelles.feed.health import build_health_record, error_health_record
 
 DEBUG = debug()
 logger = logging.getLogger(__name__)
 
 
-def parse_feed(feed_paths: List[str]) -> Iterable[Tuple[str, Any]]:  # pragma: no cover
+def parse_feed(
+    feed_paths: List[str],
+    health: Optional[List[Dict[str, Any]]] = None,
+) -> Iterable[Tuple[str, Any]]:
     """
-    Use the feedparser package to load data from a particular RSS feed path
+    Use the feedparser package to load data from a particular RSS feed path.
+
+    When `health` is a list, one fetch-health record is appended per feed path.
     """
     for feed_path in feed_paths:
+        started = time.monotonic()
         try:
             feed = feedparser.parse(feed_path)
+            latency_ms = int((time.monotonic() - started) * 1000)
+            if health is not None:
+                health.append(build_health_record(feed_path, feed, latency_ms))
 
             # Handle missing or malformed feed title with fallbacks
             feed_title = _get_feed_title(feed, feed_path)
@@ -36,6 +47,9 @@ def parse_feed(feed_paths: List[str]) -> Iterable[Tuple[str, Any]]:  # pragma: n
                 yield (feed_title, entry)
 
         except Exception as e:
+            if health is not None:
+                latency_ms = int((time.monotonic() - started) * 1000)
+                health.append(error_health_record(feed_path, e, latency_ms))
             logger.exception(f"Feed path is raising exceptions: {feed_path}\nException: {str(e)}")
 
 
