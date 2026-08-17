@@ -8,6 +8,7 @@ from newvelles.display.show import print_sorted_grouped_titles, print_viz
 from newvelles.feed.load import build_data_from_rss_feeds
 from newvelles.feed.log import emit_visualization, log_groups
 from newvelles.models.grouping import build_visualization
+from newvelles.models.momentum import apply_momentum, load_state_local, utc_today
 from newvelles.models.stories import build_stories
 
 CONFIG = config()
@@ -21,11 +22,16 @@ def run(rss_file: str, s3: bool) -> None:
         title_data, cluster_limit=cluster_limit
     )
     stories_data = build_stories(visualization_data)
+    stories_data, momentum_doc, momentum_state = apply_momentum(
+        stories_data, load_state_local(), today=utc_today()
+    )
     # log data
     emit_visualization(
         visualization_data,
         writers="both" if s3 else "local",
         stories_data=stories_data,
+        momentum_doc=momentum_doc,
+        momentum_state=momentum_state,
     )
     log_groups(group_sentences)
 

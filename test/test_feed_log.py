@@ -313,7 +313,8 @@ class TestEmitVisualization:
     def test_log_s3_delegates(self, mock_emit):
         mock_emit.return_value = "x.json"
         assert log_s3({}) == "x.json"
-        mock_emit.assert_called_once_with({}, writers="s3", stories_data=None)
+        mock_emit.assert_called_once_with({}, writers="s3", stories_data=None,
+                                          momentum_doc=None, momentum_state=None)
 
 
 class TestEmitStories:
@@ -364,3 +365,83 @@ class TestEmitStories:
         assert json.load(open(tmp_path / "latest" / "stories.json")) == stories
         assert json.load(open(tmp_path / "stories.json")) == stories
         mock_upload.assert_not_called()
+
+
+class TestEmitMomentum:
+    STORIES = {"version": "0.3.0", "story_count": 100, "article_count": 500, "stories": []}
+    MOMENTUM = {"version": "0.3.0", "generated": "2025-01-16T10:30:45", "window_days": 14,
+                "stories": {}}
+    STATE = {"version": "0.3.0", "updated": "2025-01-16", "stories": {}}
+
+    @patch("newvelles.feed.log.read_json_from_s3", return_value=None)
+    @patch("newvelles.feed.log.upload_to_s3")
+    @patch("newvelles.feed.log._current_datetime")
+    def test_momentum_uploads_after_stories(self, mock_datetime, mock_upload, mock_read):
+        from newvelles.feed.log import _S3_BUCKET, emit_visualization
+        mock_datetime.return_value = "2025-01-16T10:30:45"
+
+        emit_visualization({}, writers="s3", stories_data=self.STORIES,
+                           momentum_doc=self.MOMENTUM, momentum_state=self.STATE)
+
+        calls = mock_upload.call_args_list
+        names = [c.kwargs["file_name"] for c in calls]
+        assert names == [
+            "newvelles_visualization_0.2.1_2025-01-16T10:30:45.json",
+            "latest_news.json",
+            "latest_news_metadata.json",
+            "stories.json",
+            "momentum.json",
+            "momentum_state.json",
+        ]
+        momentum_call = calls[4]
+        assert momentum_call.kwargs["bucket_name"] == _S3_PUBLIC_BUCKET
+        assert momentum_call.kwargs["public_read"] is True
+        assert json.loads(momentum_call.kwargs["string_byte"]) == self.MOMENTUM
+        state_call = calls[5]
+        assert state_call.kwargs["bucket_name"] == _S3_BUCKET  # private
+        assert state_call.kwargs.get("public_read", False) is False
+
+    @patch("newvelles.feed.log.read_json_from_s3")
+    @patch("newvelles.feed.log.upload_to_s3")
+    @patch("newvelles.feed.log._current_datetime")
+    def test_blocked_gate_blocks_momentum_and_state_too(self, mock_datetime, mock_upload, mock_read):
+        """An anomalous run must not pollute the identity state."""
+        from newvelles.feed.log import emit_visualization
+        mock_datetime.return_value = "2025-01-16T10:30:45"
+        mock_read.return_value = {"story_count": 175}
+        bad = {"version": "0.3.0", "story_count": 400, "article_count": 500, "stories": []}
+
+        emit_visualization({}, writers="s3", stories_data=bad,
+                           momentum_doc=self.MOMENTUM, momentum_state=self.STATE)
+
+        names = [c.kwargs["file_name"] for c in mock_upload.call_args_list]
+        assert "stories.json" not in names
+        assert "momentum.json" not in names
+        assert "momentum_state.json" not in names
+
+    @patch("newvelles.feed.log.upload_to_s3")
+    @patch("newvelles.feed.log._current_datetime")
+    def test_local_writer_writes_momentum_and_state(self, mock_datetime, mock_upload,
+                                                    tmp_path, monkeypatch):
+        from newvelles.feed import log as log_mod
+        mock_datetime.return_value = "2025-01-16T10:30:45"
+        monkeypatch.setattr(log_mod, "_LATEST_PATH", str(tmp_path / "latest"))
+        monkeypatch.chdir(tmp_path)
+
+        log_mod.emit_visualization({}, writers="local", output_path=str(tmp_path / "logs"),
+                                   stories_data=self.STORIES,
+                                   momentum_doc=self.MOMENTUM, momentum_state=self.STATE)
+
+        assert json.load(open(tmp_path / "momentum.json")) == self.MOMENTUM
+        assert json.load(open(tmp_path / "latest" / "momentum.json")) == self.MOMENTUM
+        assert json.load(open(tmp_path / "cache" / "momentum_state.json")) == self.STATE
+        mock_upload.assert_not_called()
+
+    @patch("newvelles.feed.log.emit_visualization")
+    def test_log_s3_passes_momentum_through(self, mock_emit):
+        mock_emit.return_value = "x.json"
+        log_s3({}, stories_data=self.STORIES, momentum_doc=self.MOMENTUM,
+               momentum_state=self.STATE)
+        mock_emit.assert_called_once_with(
+            {}, writers="s3", stories_data=self.STORIES,
+            momentum_doc=self.MOMENTUM, momentum_state=self.STATE)
