@@ -86,5 +86,19 @@
   "https://www.kron4.com/feed/": {"outlet": "KRON4", "domain": "kron4.com", "section": "Local"},
   "https://www.laweekly.com/feed/": {"outlet": "LA Weekly", "domain": "laweekly.com", "section": "Local"},
   "https://citylimits.org/feed/": {"outlet": "City Limits", "domain": "citylimits.org", "section": "Local"},
-  "https://truenewsblog.com/feed/": {"outlet": "TrueNewsBlog", "domain": "truenewsblog.com", "section": "General"}
+  "https://truenewsblog.com/feed/": {"outlet": "TrueNewsBlog", "domain": "truenewsblog.com", "section": "General"},
+  "https://sports.yahoo.com/rss/": {"outlet": "Yahoo Sports", "domain": "sports.yahoo.com", "section": "General"},
+  "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258": {"outlet": "CNBC", "domain": "cnbc.com", "section": "Markets"},
+  "https://news.yahoo.com/rss/": {"outlet": "Yahoo", "domain": "yahoo.com", "section": "General"},
+  "https://www.amny.com/feed/": {"outlet": "amNY", "domain": "amny.com", "section": "Local"},
+  "https://ww2.kqed.org/news/feed/": {"outlet": "KQED", "domain": "kqed.org", "section": "Local"},
+  "https://rss.wbur.org/wbur/rss": {"outlet": "WBUR", "domain": "wbur.org", "section": "Local"},
+  "https://laist.com/index.atom": {"outlet": "LAist", "domain": "laist.com", "section": "Local"},
+  "https://www.theguardian.com/world/rss": {"outlet": "The Guardian", "domain": "theguardian.com", "section": "World"},
+  "https://feeds.arstechnica.com/arstechnica/index": {"outlet": "Ars Technica", "domain": "arstechnica.com", "section": "Tech"},
+  "https://www.theverge.com/rss/index.xml": {"outlet": "The Verge", "domain": "theverge.com", "section": "Tech"},
+  "https://techcrunch.com/feed/": {"outlet": "TechCrunch", "domain": "techcrunch.com", "section": "Tech"},
+  "https://thehill.com/news/feed/": {"outlet": "The Hill", "domain": "thehill.com", "section": "US politics"},
+  "https://feeds.npr.org/1014/rss.xml": {"outlet": "NPR", "domain": "npr.org", "section": "US politics"},
+  "https://www.pbs.org/newshour/feeds/rss/politics": {"outlet": "PBS", "domain": "pbs.org", "section": "US politics"}
 }

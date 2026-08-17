@@ -1,0 +1,15 @@
+# Feeds removed from active rotation (kept in data/sources.json for the
+# historical backfill). Format: <url>  # retired YYYY-MM-DD: <reason>
+# Evidence: 3 forced prod runs 2026-08-17 (feed_health/ docs) + live tests
+# incl. browser-UA retry; see PR "RSS feed refresh".
+http://www.nytimes.com/services/xml/rss/nyt/HomePage.xml  # retired 2026-08-17: duplicate of https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml (301 redirect)
+https://rss.nytimes.com/services/xml/rss/nyt/Jobs.xml  # retired 2026-08-17: feed alive but newest article 346 days old; contributes nothing inside the 14-day window
+https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml  # retired 2026-08-17: 200 but 0 entries in all runs (NYT sports desk closed); replaced by https://sports.yahoo.com/rss/
+https://rss.politico.com/economy.xml  # retired 2026-08-17: HTTP 404 in all runs; replaced by CNBC Economy (search.cnbc.com id=20910258)
+https://www.yahoo.com/news/rss  # retired 2026-08-17: HTTP 403 in all runs (URL deprecated); replaced by https://news.yahoo.com/rss/
+https://www.cbsnews.com/latest/rss/cbs-essentials  # retired 2026-08-17: feed alive but newest article 631 days old (shopping content, discontinued)
+https://www.cbsnews.com/latest/rss/cbs-reports-custom  # retired 2026-08-17: feed alive but newest article 375 days old (series dormant)
+https://www.nydailynews.com/feed/  # retired 2026-08-17: HTTP 403 in all runs incl. browser-UA retry (MediaNews bot blocking); replaced by https://www.amny.com/feed/
+https://www.mercurynews.com/feed/  # retired 2026-08-17: HTTP 403 in all runs incl. browser-UA retry (MediaNews bot blocking); replaced by https://ww2.kqed.org/news/feed/
+https://www.bostonherald.com/feed/  # retired 2026-08-17: HTTP 403 in all runs incl. browser-UA retry (MediaNews bot blocking); replaced by https://rss.wbur.org/wbur/rss
+https://www.laweekly.com/feed/  # retired 2026-08-17: HTTP 403 in all runs incl. browser-UA retry; replaced by https://laist.com/index.atom

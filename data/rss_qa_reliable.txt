@@ -4,10 +4,10 @@ https://feeds.npr.org/1001/rss.xml
 https://www.wired.com/feed
 https://feeds.bbci.co.uk/news/world/rss.xml
 https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml
-https://lifehacker.com/rss
+https://lifehacker.com/feed/rss
 https://feeds.npr.org/1019/rss.xml
 https://moxie.foxnews.com/google-publisher/politics.xml
 https://rss.politico.com/healthcare.xml
-https://www.yahoo.com/news/rss
+https://news.yahoo.com/rss/
 https://nypost.com/feed/
 https://www.newsweek.com/rss
