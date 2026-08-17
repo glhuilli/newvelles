@@ -540,6 +540,12 @@ rollback-prod:
 	@echo "🔄 Starting production rollback..."
 	./bin/rollback-production.sh
 
+# Seed momentum_state.json + momentum.json from archived production runs
+# (replays the last 14 days through the momentum pipeline). ENV=qa|prod.
+backfill-momentum:
+	@if [ -z "$(ENV)" ]; then echo "Usage: make backfill-momentum ENV=qa|prod"; exit 1; fi
+	@$(VENV_ACTIVATE) && python scripts/backfill_momentum.py --env $(ENV)
+
 # Restore the public latest_news.json from a timestamped private-bucket archive.
 # Pauses EventBridge so the next scheduled run doesn't immediately overwrite the
 # restore; resume with 'make resume-eventbridge' when the pipeline is fixed.
