@@ -82,33 +82,49 @@ def log_groups(
     # Note: Actual outputs are handled by log_s3() which uploads directly to S3
 
 
-def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool = False) -> str:
-    # Create directories if they don't exist
-    os.makedirs(_LATEST_PATH, exist_ok=True)
-    os.makedirs(output_path, exist_ok=True)
+def emit_visualization(
+    visualization_data,
+    writers: str = "local",
+    output_path: str = _LOG_PATH,
+    stories_data=None,
+) -> str:
+    """Single emit path for visualization outputs.
+
+    writers: "local" (CLI), "s3" (Lambda), "both" (CLI --s3).
+    The metadata's latest_log_reference exists only when a local log file
+    exists to reference — preserving the historical difference between the
+    CLI and Lambda outputs.
+    """
+    if writers not in ("local", "s3", "both"):
+        raise ValueError(f"writers must be local|s3|both, got {writers!r}")
+    write_local = writers in ("local", "both")
+    write_s3 = writers in ("s3", "both")
 
     current_datetime = _current_datetime()
     viz_file_name = f"{_LOG_VISUALIZATION_NAME}_{VISUALIZATION_VERSION}"
-    log_path = f"{output_path}/{viz_file_name}_{current_datetime}.json"
-    with open(log_path, "w", encoding="utf-8") as f:
-        json.dump(visualization_data, f)
+    timestamped_name = f"{viz_file_name}_{current_datetime}.json"
+    log_path = f"{output_path}/{timestamped_name}"
 
-    if s3:
+    if write_local:
+        os.makedirs(_LATEST_PATH, exist_ok=True)
+        os.makedirs(output_path, exist_ok=True)
+        with open(log_path, "w", encoding="utf-8") as f:
+            json.dump(visualization_data, f)
+    if write_s3:
         upload_to_s3(
             bucket_name=_S3_BUCKET,
-            file_name=f"{viz_file_name}_{current_datetime}.json",
+            file_name=timestamped_name,
             string_byte=json.dumps(visualization_data).encode("utf-8"),
         )
 
-    log_path_latest = f"{_LATEST_PATH}/{_LOG_LATEST_VISUALIZATION_NAME}.json"
-    with open(log_path_latest, "w", encoding="utf-8") as f:
-        json.dump(visualization_data, f)
-
-    log_path_latest_current = f"./{_LOG_LATEST_VISUALIZATION_NAME}.json"
-    with open(log_path_latest_current, "w", encoding="utf-8") as f:
-        json.dump(visualization_data, f)
-
-    if s3:
+    if write_local:
+        for latest_path in (
+            f"{_LATEST_PATH}/{_LOG_LATEST_VISUALIZATION_NAME}.json",
+            f"./{_LOG_LATEST_VISUALIZATION_NAME}.json",
+        ):
+            with open(latest_path, "w", encoding="utf-8") as f:
+                json.dump(visualization_data, f)
+    if write_s3:
         upload_to_s3(
             bucket_name=_S3_PUBLIC_BUCKET,
             file_name=f"{_LOG_LATEST_VISUALIZATION_NAME}.json",
@@ -116,16 +132,13 @@ def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool
             public_read=True,
         )
 
-    latest_metadata = {
-        "datetime": current_datetime,
-        "version": VISUALIZATION_VERSION,
-        "latest_log_reference": log_path,
-    }
-    log_path_latest_metadata = f"{_LATEST_PATH}/{_LOG_LATEST_VISUALIZATION_METADATA_NAME}.json"
-    with open(log_path_latest_metadata, "w", encoding="utf-8") as f:
-        json.dump(latest_metadata, f)
-
-    if s3:
+    latest_metadata = {"datetime": current_datetime, "version": VISUALIZATION_VERSION}
+    if write_local:
+        latest_metadata["latest_log_reference"] = log_path
+        metadata_path = f"{_LATEST_PATH}/{_LOG_LATEST_VISUALIZATION_METADATA_NAME}.json"
+        with open(metadata_path, "w", encoding="utf-8") as f:
+            json.dump(latest_metadata, f)
+    if write_s3:
         upload_to_s3(
             bucket_name=_S3_PUBLIC_BUCKET,
             file_name=f"{_LOG_LATEST_VISUALIZATION_METADATA_NAME}.json",
@@ -133,39 +146,23 @@ def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool
             public_read=True,
         )
 
-    return log_path
+    if stories_data is not None:
+        _emit_stories(stories_data, write_local=write_local, write_s3=write_s3)
+
+    return log_path if write_local else timestamped_name
 
 
-def log_s3(visualization_data) -> str:
-    current_datetime = _current_datetime()
-    viz_file_name = f"{_LOG_VISUALIZATION_NAME}_{VISUALIZATION_VERSION}"
-    s3_file_name = f"{viz_file_name}_{current_datetime}.json"
+def _emit_stories(stories_data, write_local: bool, write_s3: bool) -> None:
+    """Placeholder until stories emission lands — no-op."""
 
-    # Prepare metadata
-    latest_metadata = {"datetime": current_datetime, "version": VISUALIZATION_VERSION}
 
-    # Upload directly to S3 (skip local file operations for Lambda)
-    # 1. Upload timestamped visualization file to private bucket
-    upload_to_s3(
-        bucket_name=_S3_BUCKET,
-        file_name=s3_file_name,
-        string_byte=json.dumps(visualization_data).encode("utf-8"),
+def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool = False) -> str:
+    return emit_visualization(
+        visualization_data,
+        writers="both" if s3 else "local",
+        output_path=output_path,
     )
 
-    # 2. Upload latest visualization to public bucket
-    upload_to_s3(
-        bucket_name=_S3_PUBLIC_BUCKET,
-        file_name=f"{_LOG_LATEST_VISUALIZATION_NAME}.json",
-        string_byte=json.dumps(visualization_data).encode("utf-8"),
-        public_read=True,
-    )
 
-    # 3. Upload metadata to public bucket
-    upload_to_s3(
-        bucket_name=_S3_PUBLIC_BUCKET,
-        file_name=f"{_LOG_LATEST_VISUALIZATION_METADATA_NAME}.json",
-        string_byte=json.dumps(latest_metadata).encode("utf-8"),
-        public_read=True,
-    )
-
-    return s3_file_name
+def log_s3(visualization_data, stories_data=None) -> str:
+    return emit_visualization(visualization_data, writers="s3", stories_data=stories_data)

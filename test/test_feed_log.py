@@ -229,3 +229,83 @@ class TestLogS3:
         assert "version" in metadata
         assert metadata["datetime"] == "2025-01-16T10:30:45"
         assert metadata["version"] == "0.2.1"
+
+
+class TestEmitVisualization:
+    """The unified emit function must reproduce both legacy paths byte-identically."""
+
+    @patch("newvelles.feed.log.upload_to_s3")
+    @patch("newvelles.feed.log._current_datetime")
+    def test_s3_writer_matches_legacy_log_s3(self, mock_datetime, mock_upload):
+        from newvelles.feed.log import emit_visualization
+        mock_datetime.return_value = "2025-01-16T10:30:45"
+        viz = {"g": {"sg": {"T": {"title": "T", "link": "https://x/1"}}}}
+
+        result = emit_visualization(viz, writers="s3")
+
+        assert result == "newvelles_visualization_0.2.1_2025-01-16T10:30:45.json"
+        assert mock_upload.call_count == 3
+        names = [c.kwargs["file_name"] for c in mock_upload.call_args_list]
+        assert names == [
+            "newvelles_visualization_0.2.1_2025-01-16T10:30:45.json",
+            "latest_news.json",
+            "latest_news_metadata.json",
+        ]
+        # drift preserved: s3-only metadata has NO latest_log_reference
+        meta = json.loads(mock_upload.call_args_list[2].kwargs["string_byte"])
+        assert meta == {"datetime": "2025-01-16T10:30:45", "version": "0.2.1"}
+        # payload bytes identical to legacy json.dumps
+        assert mock_upload.call_args_list[0].kwargs["string_byte"] == json.dumps(viz).encode("utf-8")
+        # public flags
+        assert mock_upload.call_args_list[0].kwargs.get("public_read", False) is False
+        assert mock_upload.call_args_list[1].kwargs["public_read"] is True
+        assert mock_upload.call_args_list[2].kwargs["public_read"] is True
+
+    @patch("newvelles.feed.log.upload_to_s3")
+    @patch("newvelles.feed.log._current_datetime")
+    def test_local_writer_writes_files_and_metadata_reference(
+        self, mock_datetime, mock_upload, tmp_path, monkeypatch
+    ):
+        from newvelles.feed import log as log_mod
+        mock_datetime.return_value = "2025-01-16T10:30:45"
+        monkeypatch.setattr(log_mod, "_LATEST_PATH", str(tmp_path / "latest"))
+        monkeypatch.chdir(tmp_path)
+        viz = {"a": 1}
+
+        result = log_mod.emit_visualization(viz, writers="local", output_path=str(tmp_path / "logs"))
+
+        assert result == str(tmp_path / "logs") + "/newvelles_visualization_0.2.1_2025-01-16T10:30:45.json"
+        assert json.load(open(result)) == viz
+        assert json.load(open(tmp_path / "latest" / "latest_news.json")) == viz
+        assert json.load(open(tmp_path / "latest_news.json")) == viz  # cwd copy
+        meta = json.load(open(tmp_path / "latest" / "latest_news_metadata.json"))
+        assert meta["latest_log_reference"] == result  # local path INCLUDES the reference
+        mock_upload.assert_not_called()
+
+    @patch("newvelles.feed.log.upload_to_s3")
+    @patch("newvelles.feed.log._current_datetime")
+    def test_both_writer_uploads_metadata_with_reference(
+        self, mock_datetime, mock_upload, tmp_path, monkeypatch
+    ):
+        from newvelles.feed import log as log_mod
+        mock_datetime.return_value = "2025-01-16T10:30:45"
+        monkeypatch.setattr(log_mod, "_LATEST_PATH", str(tmp_path / "latest"))
+        monkeypatch.chdir(tmp_path)
+
+        log_mod.emit_visualization({}, writers="both", output_path=str(tmp_path / "logs"))
+
+        meta_call = [c for c in mock_upload.call_args_list
+                     if c.kwargs["file_name"] == "latest_news_metadata.json"][0]
+        meta = json.loads(meta_call.kwargs["string_byte"])
+        assert "latest_log_reference" in meta  # legacy log_visualization(s3=True) behavior
+
+    def test_invalid_writer_raises(self):
+        from newvelles.feed.log import emit_visualization
+        with pytest.raises(ValueError):
+            emit_visualization({}, writers="ftp")
+
+    @patch("newvelles.feed.log.emit_visualization")
+    def test_log_s3_delegates(self, mock_emit):
+        mock_emit.return_value = "x.json"
+        assert log_s3({}) == "x.json"
+        mock_emit.assert_called_once_with({}, writers="s3", stories_data=None)
