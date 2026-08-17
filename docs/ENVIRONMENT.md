@@ -81,6 +81,25 @@ This document describes all environment variables needed to run the Newvelles pr
 - **`ANTHROPIC_API_KEY`** / **`OPENAI_API_KEY`** (Optional)
   - Only for the dormant `anthropic`/`openai` escape-hatch providers — never set in Lambda
 
+#### Bedrock spend guardrails (AWS-side, not env vars)
+- **Alert budget** `newvelles-bedrock-naming`: $10/month, emails at 80%/100%
+- **Hard stop** `newvelles-bedrock-hard-stop`: at $15/month of Bedrock spend, an AWS
+  Budgets action automatically attaches the `newvelles-bedrock-deny` IAM policy to the
+  Lambda role (`aws-newvelles-iam`), blocking `bedrock:InvokeModel`. The pipeline keeps
+  running — stories fall back to real headlines (`headline_source: "fallback"`), visible
+  as a fallback spike in the run logs
+- **Recovery** (the deny does NOT auto-detach at month rollover — reverse it manually
+  after fixing the root cause):
+  ```bash
+  aws budgets execute-budget-action --account-id 617641631577 \
+    --budget-name newvelles-bedrock-hard-stop \
+    --action-id c9aa9dda-6cee-47fb-a788-759dec7a07cf \
+    --execution-type REVERSE_ACTION
+  ```
+- The Lambda role's allow-policy is scoped to `claude-haiku-*` model ARNs only, so a
+  misconfigured `NEWVELLES_NAMING_MODEL` pointing at a pricier model gets AccessDenied,
+  not a bigger bill
+
 ### Publish Sanity Gate (stories.json)
 - **`NEWVELLES_GATE_MAX_DEVIATION`** (Optional)
   - Maximum allowed story-count deviation vs. the previously published `stories.json`
