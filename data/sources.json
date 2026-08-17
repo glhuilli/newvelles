@@ -52,6 +52,7 @@
   "https://www.wired.com/feed": {"outlet": "Wired", "domain": "wired.com", "section": "Tech"},
   "https://nypost.com/feed/": {"outlet": "NY Post", "domain": "nypost.com", "section": "General"},
   "https://www.newsweek.com/rss": {"outlet": "Newsweek", "domain": "newsweek.com", "section": "General"},
+  "https://www.newsweek.com": {"outlet": "Newsweek", "domain": "newsweek.com", "section": "General"},
   "https://www.cbsnews.com/latest/rss/main": {"outlet": "CBS News", "domain": "cbsnews.com", "section": "General"},
   "https://www.cbsnews.com/latest/rss/politics": {"outlet": "CBS News", "domain": "cbsnews.com", "section": "US politics"},
   "https://www.cbsnews.com/latest/rss/world": {"outlet": "CBS News", "domain": "cbsnews.com", "section": "World"},

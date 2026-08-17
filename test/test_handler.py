@@ -61,30 +61,35 @@ class TestHandler:
 class TestRun:
     """Test run function."""
 
+    @patch("handler.build_stories")
     @patch("handler.log_s3")
     @patch("handler.build_visualization")
     @patch("handler.build_data_from_rss_feeds_list")
     @patch("handler.CONFIG")
-    def test_run_success(self, mock_config, mock_build_data, mock_build_viz, mock_log_s3):
+    def test_run_success(self, mock_config, mock_build_data, mock_build_viz, mock_log_s3,
+                         mock_build_stories):
         """Test run function executes pipeline successfully."""
         # Mock configuration
         mock_config.__getitem__.return_value = {"cluster_limit": "5"}
-        
+
         # Mock data building
         mock_title_data = {"Article 1": Mock()}
         mock_build_data.return_value = mock_title_data
-        
+
         # Mock visualization building
         mock_visualization_data = {"group1": {"subgroup1": {"Article 1": {}}}}
         mock_group_sentences = {1: ["Article 1"]}
         mock_build_viz.return_value = (mock_visualization_data, mock_group_sentences)
-        
+        mock_stories = {"version": "0.3.0", "story_count": 0, "kind_counts": {}, "stories": []}
+        mock_build_stories.return_value = mock_stories
+
         result = run()
-        
+
         assert result is True
         mock_build_data.assert_called_once()
         mock_build_viz.assert_called_once_with(mock_title_data, cluster_limit=5)
-        mock_log_s3.assert_called_once_with(mock_visualization_data)
+        mock_build_stories.assert_called_once_with(mock_visualization_data)
+        mock_log_s3.assert_called_once_with(mock_visualization_data, stories_data=mock_stories)
 
     @patch("handler.log_s3")
     @patch("handler.build_visualization")

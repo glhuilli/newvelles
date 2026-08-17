@@ -6,8 +6,9 @@ import click
 from newvelles.config import config, debug
 from newvelles.display.show import print_sorted_grouped_titles, print_viz
 from newvelles.feed.load import build_data_from_rss_feeds
-from newvelles.feed.log import log_groups, log_visualization
+from newvelles.feed.log import emit_visualization, log_groups
 from newvelles.models.grouping import build_visualization
+from newvelles.models.stories import build_stories
 
 CONFIG = config()
 DEBUG = debug()
@@ -19,8 +20,13 @@ def run(rss_file: str, s3: bool) -> None:
     visualization_data, group_sentences = build_visualization(
         title_data, cluster_limit=cluster_limit
     )
+    stories_data = build_stories(visualization_data)
     # log data
-    log_visualization(visualization_data, s3=s3)
+    emit_visualization(
+        visualization_data,
+        writers="both" if s3 else "local",
+        stories_data=stories_data,
+    )
     log_groups(group_sentences)
 
     if DEBUG:

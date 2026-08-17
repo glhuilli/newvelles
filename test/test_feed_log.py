@@ -309,3 +309,50 @@ class TestEmitVisualization:
         mock_emit.return_value = "x.json"
         assert log_s3({}) == "x.json"
         mock_emit.assert_called_once_with({}, writers="s3", stories_data=None)
+
+
+class TestEmitStories:
+    @patch("newvelles.feed.log.upload_to_s3")
+    @patch("newvelles.feed.log._current_datetime")
+    def test_stories_uploaded_to_public_bucket_after_legacy_files(self, mock_datetime, mock_upload):
+        from newvelles.feed.log import emit_visualization
+        mock_datetime.return_value = "2025-01-16T10:30:45"
+        stories = {"version": "0.3.0", "stories": []}
+
+        emit_visualization({}, writers="s3", stories_data=stories)
+
+        names = [c.kwargs["file_name"] for c in mock_upload.call_args_list]
+        assert names == [
+            "newvelles_visualization_0.2.1_2025-01-16T10:30:45.json",
+            "latest_news.json",
+            "latest_news_metadata.json",
+            "stories.json",
+        ]
+        stories_call = mock_upload.call_args_list[3]
+        assert stories_call.kwargs["bucket_name"] == _S3_PUBLIC_BUCKET
+        assert stories_call.kwargs["public_read"] is True
+        assert json.loads(stories_call.kwargs["string_byte"]) == stories
+
+    @patch("newvelles.feed.log.upload_to_s3")
+    @patch("newvelles.feed.log._current_datetime")
+    def test_no_stories_means_no_fourth_upload(self, mock_datetime, mock_upload):
+        from newvelles.feed.log import emit_visualization
+        mock_datetime.return_value = "2025-01-16T10:30:45"
+        emit_visualization({}, writers="s3")
+        assert mock_upload.call_count == 3
+
+    @patch("newvelles.feed.log.upload_to_s3")
+    @patch("newvelles.feed.log._current_datetime")
+    def test_local_writer_writes_stories_file(self, mock_datetime, mock_upload, tmp_path, monkeypatch):
+        from newvelles.feed import log as log_mod
+        mock_datetime.return_value = "2025-01-16T10:30:45"
+        monkeypatch.setattr(log_mod, "_LATEST_PATH", str(tmp_path / "latest"))
+        monkeypatch.chdir(tmp_path)
+        stories = {"version": "0.3.0", "stories": []}
+
+        log_mod.emit_visualization({}, writers="local", output_path=str(tmp_path / "logs"),
+                                   stories_data=stories)
+
+        assert json.load(open(tmp_path / "latest" / "stories.json")) == stories
+        assert json.load(open(tmp_path / "stories.json")) == stories
+        mock_upload.assert_not_called()

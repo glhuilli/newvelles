@@ -16,6 +16,7 @@ _LOG_GROUPED_NAME = "all_grouped_entries"
 _LOG_VISUALIZATION_NAME = "newvelles_visualization"
 _LOG_LATEST_VISUALIZATION_NAME = "latest_news"
 _LOG_LATEST_VISUALIZATION_METADATA_NAME = "latest_news_metadata"
+_LOG_STORIES_NAME = "stories"
 
 # Load S3 bucket names from config with fallbacks
 CONFIG = config()
@@ -153,7 +154,20 @@ def emit_visualization(
 
 
 def _emit_stories(stories_data, write_local: bool, write_s3: bool) -> None:
-    """Placeholder until stories emission lands — no-op."""
+    if write_local:
+        for stories_path in (
+            f"{_LATEST_PATH}/{_LOG_STORIES_NAME}.json",
+            f"./{_LOG_STORIES_NAME}.json",
+        ):
+            with open(stories_path, "w", encoding="utf-8") as f:
+                json.dump(stories_data, f)
+    if write_s3:
+        upload_to_s3(
+            bucket_name=_S3_PUBLIC_BUCKET,
+            file_name=f"{_LOG_STORIES_NAME}.json",
+            string_byte=json.dumps(stories_data).encode("utf-8"),
+            public_read=True,
+        )
 
 
 def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool = False) -> str:

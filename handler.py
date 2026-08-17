@@ -9,6 +9,7 @@ from newvelles.config import config
 from newvelles.feed.load import build_data_from_rss_feeds, build_data_from_rss_feeds_list
 from newvelles.feed.log import log_s3
 from newvelles.models.grouping import build_visualization
+from newvelles.models.stories import build_stories
 
 
 CONFIG = config()
@@ -77,8 +78,15 @@ def run() -> bool:
                                                               cluster_limit=cluster_limit)
     print(f"📈 Generated visualization with {len(visualization_data.get('groups', []))} groups")
     
+    print("📚 Building stories (merge + classify)...")
+    stories_data = build_stories(visualization_data)
+    kind_counts = stories_data.get("kind_counts", {})
+    print(f"📚 {stories_data['story_count']} stories "
+          f"({kind_counts.get('story', 0)} story / {kind_counts.get('roundup', 0)} roundup / "
+          f"{kind_counts.get('deal', 0)} deal) from {len(visualization_data)} groups")
+
     print("📤 Uploading to S3...")
-    log_s3(visualization_data)
+    log_s3(visualization_data, stories_data=stories_data)
     print("✅ S3 upload completed successfully")
     
     return True

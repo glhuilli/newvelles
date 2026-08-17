@@ -120,13 +120,26 @@ See `docs/MONITORING_DASHBOARD.md` for complete documentation.
    - Extracts common substrings for group headers
    - Filters groups with fewer than 2 titles (`MIN_GROUP_SIZE`)
 
-4. **Visualization** (`newvelles/display/show.py`)
+4. **Stories** (`newvelles/models/stories.py`)
+   - Post-processing stage between clustering and upload (schema 0.3.0, `STORIES_VERSION`)
+   - Merges overlapping top-level groups into stories via union-find on
+     normalized-link containment (`|A∩B| / min(|A|,|B|) >= 0.5`)
+   - Resolves feed URLs to outlet/domain/section via `data/sources.json`
+     (`newvelles/utils/sources.py`); normalizes dates to ISO 8601 UTC
+     (`newvelles/utils/dates.py`)
+   - Classifies each story as `story` / `roundup` / `deal` (template-run detection)
+   - Emits `stories.json` beside `latest_news.json`; fallback headlines only
+     (LLM naming is Stage B, not yet implemented)
+
+5. **Visualization** (`newvelles/display/show.py`)
    - Generates JSON output with grouped news structure
    - Schema version: 0.2.1 (defined in `VISUALIZATION_VERSION`)
 
-5. **S3 Upload** (`newvelles/utils/s3.py`, `newvelles/feed/log.py`)
-   - Private bucket: raw data + metadata (`latest_news_metadata.json`)
-   - Public bucket: visualization data (`latest_news.json`)
+6. **S3 Upload** (`newvelles/utils/s3.py`, `newvelles/feed/log.py`)
+   - Single emit path: `emit_visualization()` with writer strategy (`local`/`s3`/`both`);
+     `log_visualization`/`log_s3` are thin wrappers
+   - Private bucket: timestamped visualization runs
+   - Public bucket: `latest_news.json`, `latest_news_metadata.json`, `stories.json`
    - All uploads validated against JSON schemas in `schemas/`
 
 ### Entry Points
@@ -230,9 +243,12 @@ newvelles/
 - `handler.py:23-32` - Environment detection logic (prod vs QA RSS selection)
 - `newvelles/models/grouping.py:37` - `group_similar_titles()` uses TF-IDF + cosine similarity
 - `newvelles/utils/s3.py:9` - `upload_to_s3()` handles S3 uploads with optional public ACLs
-- `newvelles/feed/log.py` - S3 upload orchestration
+- `newvelles/feed/log.py` - S3 upload orchestration (`emit_visualization()`)
+- `newvelles/models/stories.py` - Group merge, classifier, stories.json assembly
+- `data/sources.json` - Feed URL → outlet/domain/section table (kept complete by `test/test_utils_sources.py`)
 - `schemas/latest_news_schema.json` - Visualization data schema
 - `schemas/latest_news_metadata_schema.json` - Metadata schema
+- `schemas/stories_schema.json` - Stories data schema (0.3.0); contract fixture in `test/fixtures/stories_v0.3.0.json`
 
 ## Important Testing Notes
 
