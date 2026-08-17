@@ -238,7 +238,7 @@ def name_stories(
     provider_name = provider_name or resolve_provider()
     today = today or date.today().isoformat()
     stories = stories_data.get("stories", [])
-    stats = {"llm_named": 0, "cache_hits": 0, "fallbacks": 0, "renamed": 0}
+    stats = {"llm_named": 0, "local_named": 0, "cache_hits": 0, "fallbacks": 0, "renamed": 0}
 
     to_name = []
     for story in stories:
@@ -278,6 +278,8 @@ def name_stories(
             stats["renamed"] += 1
         if source == "llm":
             stats["llm_named"] += 1
+        else:
+            stats["local_named"] += 1
         story["headline"] = headline
         story["headline_source"] = source
         new_cache[story["id"]] = {

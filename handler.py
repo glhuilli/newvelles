@@ -101,8 +101,9 @@ def run() -> bool:
     naming_cache = load_naming_cache_s3()
     stories_data, naming_cache, naming_stats = name_stories(stories_data, naming_cache)
     save_naming_cache_s3(naming_cache)
-    print(f"✏️ Naming: {naming_stats['llm_named']} named, {naming_stats['cache_hits']} cached, "
-          f"{naming_stats['renamed']} renamed, {naming_stats['fallbacks']} fallbacks")
+    print(f"✏️ Naming: {naming_stats['llm_named']} llm, {naming_stats['local_named']} local, "
+          f"{naming_stats['cache_hits']} cached, {naming_stats['renamed']} renamed, "
+          f"{naming_stats['fallbacks']} fallbacks")
 
     print("📤 Uploading to S3...")
     log_s3(visualization_data, stories_data=stories_data,
