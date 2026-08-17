@@ -64,8 +64,16 @@ always, full doc to the private bucket at
 health problems never break a news run. Schema:
 `schemas/feed_health_schema.json`; tests: `test/test_feed_health.py`.
 
-**Step 2 — a Claude Code skill** (`.claude/skills/rss-feed-review/SKILL.md`)
-that does a full review when invoked:
+**Step 2 — a Claude Code skill. ✅ DONE (2026-08-17).**
+`.claude/skills/rss-feed-review/SKILL.md` (checked in; `.gitignore` now
+excludes only `.claude/*` except `skills/`). First execution ran the same day:
+PR #38 retired 4 feeds + a duplicate, replaced 7 dead ones (all confirmed
+across 3 forced prod runs + live tests with browser-UA retry), fixed 3
+redirected URLs, and added 7 net-new sources (Guardian World; Ars/Verge/
+TechCrunch; Hill/NPR/PBS politics). Result: 86/86 feeds ok on a local smoke
+run. Retirements recorded in `data/rss_retired.txt`; retired feeds stay in
+`data/sources.json` for the historical backfill. The skill's original spec
+(kept for reference):
 - Live-test every feed in `data/rss_source.txt` + `data/rss_qa_reliable.txt`
   (status, redirects, parseability, article freshness).
 - Read the accumulated `feed_health.json` history and classify feeds:
@@ -77,8 +85,17 @@ that does a full review when invoked:
 
 **Step 3 — run it on a cadence.** Options: `/loop`-style recurring invocation,
 a scheduled cloud agent, or simply triggered when the health log crosses a
-threshold (e.g. >5 feeds dead for 3+ days). Frequency driven by the logging
-from step 1 — build that first.
+threshold (e.g. >5 feeds dead for 3+ days). Health docs now accumulate in
+`s3://newvelles-data-bucket/feed_health/` every run (6h schedule) — after a
+couple of weeks of data, pick the trigger. This is the only remaining piece
+of workstream 1.
+
+**Operational note (2026-08-17):** `make prod-deploy` run from inside the
+backend venv fails at the env-var step — the venv's aws CLI v1 can't parse
+the `--environment` shorthand (same v1/v2 issue as web deploys). Prefix
+`PATH="/opt/homebrew/bin:$PATH"` (aws v2). A failure there is after the image
+update, which still lands; env vars are left untouched (verify with
+`aws lambda get-function --function-name RunNewvelles`).
 
 ### 2. Research vertical: papers alongside news
 
