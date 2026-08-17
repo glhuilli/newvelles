@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/nocturne-dec5c8f3-e439-4b9e-bcb6-5401c1effb10/styles.css">
+<script src="_ds/nocturne-dec5c8f3-e439-4b9e-bcb6-5401c1effb10/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+html,body{margin:0;background:#12141f;font-family:"Inter",system-ui,sans-serif}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(233,233,237,.1);scroll-margin-top:16px;background:#12141f;width:max-content;min-width:100%;box-sizing:border-box}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#9184d9;color:#161826;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 "Inter",system-ui,sans-serif;color:#e9e9ed}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(145,132,217,.18);color:#d2cefd;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "Inter",system-ui,sans-serif;color:rgba(233,233,237,.55)}
+.dv-card{max-width:100%;background:#161826;border:1px solid #3f424d;border-radius:10px;overflow:hidden}
+.dv-opt:target .dv-oid{background:#9184d9;color:#161826}
+.dv-next{margin:22px 0 0;font:12px/1.5 "Inter",system-ui,sans-serif;color:rgba(233,233,237,.5)}
+a{color:#9184d9;text-underline-offset:3px}
+a:hover{color:#b5abfc}
+</style>
+</helmet>
+
+<section class="dv-turn" id="brief" style="background:#161826">
+<div style="max-width:920px;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9184d9">Newvelles · redesign brief</div>
+<h1 style="margin:0;font-size:38px;line-height:1.1;letter-spacing:-.02em;color:#e9e9ed;font-weight:500">The problem isn't the search. It's that 672 articles arrive as 179 near-identical piles.</h1>
+</div>
+
+<p style="margin:0;font-size:15px;line-height:1.6;color:#b2b6ca;max-width:70ch;text-wrap:pretty">I read the repo, the redesign plan and a real <code style="font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#d2cefd">latest_news.json</code>. In that file, the Trump–Putin Alaska summit occupies at least a dozen top-level groupings. The same BBC video about the two leaders meeting appears in eight of them. The tag phrases the clustering produces — <span style="color:#cfd3e5">[next time]</span>, <span style="color:#cfd3e5">[6 takeaways]</span>, <span style="color:#cfd3e5">[moment trump]</span> — are headline fragments, not topics. So the page reads as noise even though the underlying corpus is small and coherent: roughly 30–40 real stories on a given day.</p>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#3f424d;border:1px solid #3f424d;border-radius:8px;overflow:hidden">
+<div style="background:#232532;padding:16px 18px;display:flex;flex-direction:column;gap:4px"><div style="font-size:26px;color:#e9e9ed;letter-spacing:-.02em">179</div><div style="font-size:11px;color:#9397ab;line-height:1.4">top-level groupings today</div></div>
+<div style="background:#232532;padding:16px 18px;display:flex;flex-direction:column;gap:4px"><div style="font-size:26px;color:#e9e9ed;letter-spacing:-.02em">672</div><div style="font-size:11px;color:#9397ab;line-height:1.4">article entries, heavily repeated across groups</div></div>
+<div style="background:#232532;padding:16px 18px;display:flex;flex-direction:column;gap:4px"><div style="font-size:26px;color:#9184d9;letter-spacing:-.02em">~34</div><div style="font-size:11px;color:#9397ab;line-height:1.4">distinct stories once merged — the number the UI should show</div></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-size:15px;color:#e9e9ed;font-weight:500">What I'm assuming</h2>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px;font-size:13.5px;line-height:1.55;color:#b2b6ca;max-width:78ch">
+<li><strong style="color:#e9e9ed;font-weight:500">A story is the unit, not a grouping.</strong> Overlapping clusters merge into one story; an article belongs to exactly one. An LLM names it in five to eight words, once per fetch — a few hundred short calls a day, cents.</li>
+<li><strong style="color:#e9e9ed;font-weight:500">Momentum comes from the archive you already have.</strong> S3 files back to 2021 means a story can carry a day count and a shape without any new collection.</li>
+<li><strong style="color:#e9e9ed;font-weight:500">Everything stays precomputed and static.</strong> No queries at read time: the pipeline writes <code style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:#d2cefd">today.json</code> plus a small rolling <code style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:#d2cefd">momentum.json</code>. The Lightsail micro instance keeps serving one file per view.</li>
+<li><strong style="color:#e9e9ed;font-weight:500">Search stays, demoted.</strong> Browsing leads; the search field filters stories, sources and headlines in place rather than being the front door.</li>
+<li><strong style="color:#e9e9ed;font-weight:500">Anonymous, no accounts.</strong> Nothing here needs a login or stored identity.</li>
+</ul>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-size:15px;color:#e9e9ed;font-weight:500">The system these three share</h2>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+<div style="background:#232532;border:1px solid #3f424d;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:5px"><div style="font-size:12.5px;color:#e9e9ed">Story headline</div><div style="font-size:12px;line-height:1.5;color:#9397ab">Generated, sentence case, no clickbait. The old bracket tags survive as secondary keyword pills.</div></div>
+<div style="background:#232532;border:1px solid #3f424d;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:5px"><div style="font-size:12.5px;color:#e9e9ed">Weight = source count</div><div style="font-size:12px;line-height:1.5;color:#9397ab">How many distinct outlets carry it, not how many articles. Twelve outlets beats twenty Yahoo reposts.</div></div>
+<div style="background:#232532;border:1px solid #3f424d;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:5px"><div style="font-size:12.5px;color:#e9e9ed">Momentum mark</div><div style="font-size:12px;line-height:1.5;color:#9397ab">A seven-day shape in the accent — the one place chroma is spent, as a line, never a fill.</div></div>
+<div style="background:#232532;border:1px solid #3f424d;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:5px"><div style="font-size:12.5px;color:#e9e9ed">One level of depth</div><div style="font-size:12px;line-height:1.5;color:#9397ab">Story → its articles. The three-level drilldown collapses into an expand-in-place row.</div></div>
+</div>
+</div>
+
+<p style="margin:0;font-size:12px;line-height:1.6;color:#75798c;max-width:70ch">Lead-story headlines and sources below are real, taken from the sample fetch of 16 August 2025. Secondary rows are placeholder content of realistic shape. Everything is styled on Nocturne tokens.</p>
+</div>
+</section>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Three directions for the front page, plus the mobile read</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Ranked wire — dense list, expand in place. The conservative read.</div>
+<div class="dv-card" style="width:1040px">
+<div style="background:#161826;padding:22px 26px 26px;display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding-bottom:14px;border-bottom:1px solid rgba(233,233,237,.16)">
+<div style="display:flex;flex-direction:column;gap:3px">
+<div style="font-size:23px;letter-spacing:-.02em;color:#e9e9ed;font-weight:500">newvelles</div>
+<div style="font-size:11.5px;color:#75798c">Saturday 16 August · 34 stories · 672 articles · 41 feeds</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px">
+<div style="display:flex;align-items:center;gap:7px;background:#232532;border:1px solid #3f424d;border-radius:8px;padding:7px 11px;width:270px">
+<i class="ph ph-magnifying-glass" style="font-size:14px;color:#75798c;line-height:1"></i>
+<span style="font-size:12.5px;color:#595d6c">Filter stories, sources, headlines</span>
+</div>
+<button class="btn btn-ghost" style="font-size:12px;padding:6px 10px">Archive</button>
+</div>
+</div>
+
+<div style="display:flex;gap:7px;flex-wrap:wrap">
+<span class="tag tag-accent" style="font-size:11px">All 34</span>
+<span class="tag tag-outline" style="font-size:11px">World 11</span>
+<span class="tag tag-outline" style="font-size:11px">US politics 8</span>
+<span class="tag tag-outline" style="font-size:11px">Markets 5</span>
+<span class="tag tag-outline" style="font-size:11px">Tech 4</span>
+<span class="tag tag-outline" style="font-size:11px">Science 3</span>
+<span class="tag tag-outline" style="font-size:11px">Local 3</span>
+</div>
+
+<div style="display:flex;flex-direction:column">
+
+<div style="display:grid;grid-template-columns:26px 1fr 132px 104px;gap:18px;align-items:start;padding:16px 0;border-top:1px solid rgba(233,233,237,.1);background:linear-gradient(90deg,rgba(145,132,217,.07),transparent 60%)">
+<div style="font:500 13px ui-monospace,Menlo,monospace;color:#9184d9;padding-top:2px">01</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:19px;line-height:1.25;letter-spacing:-.015em;color:#e9e9ed">Trump and Putin meet in Alaska and leave without a ceasefire</div>
+<div style="font-size:12px;color:#9397ab">14 outlets · 31 articles · running 4 days · last update 2h ago</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<span class="tag tag-neutral" style="font-size:10.5px">alaska summit</span>
+<span class="tag tag-neutral" style="font-size:10.5px">ceasefire</span>
+<span class="tag tag-neutral" style="font-size:10.5px">ukraine</span>
+<span class="tag tag-neutral" style="font-size:10.5px">zelensky</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:0;margin-top:4px;border-left:1px solid #3f424d;padding-left:14px">
+<a href="#1a" style="display:flex;align-items:baseline;gap:10px;padding:6px 0;text-decoration:none;color:inherit">
+<span style="font-size:13.5px;line-height:1.4;color:#cfd3e5;flex:1">Trump Bows to Putin's Approach on Ukraine: No Cease-Fire, Deadlines or Sanctions</span>
+<span style="font-size:11px;color:#75798c;white-space:nowrap">nytimes.com · 2h</span>
+</a>
+<a href="#1a" style="display:flex;align-items:baseline;gap:10px;padding:6px 0;text-decoration:none;color:inherit">
+<span style="font-size:13.5px;line-height:1.4;color:#cfd3e5;flex:1">Trump pursues peace deal after leaving Alaska without ceasefire pact</span>
+<span style="font-size:11px;color:#75798c;white-space:nowrap">bbc.com · 10h</span>
+</a>
+<a href="#1a" style="display:flex;align-items:baseline;gap:10px;padding:6px 0;text-decoration:none;color:inherit">
+<span style="font-size:13.5px;line-height:1.4;color:#cfd3e5;flex:1">Ukraine's Zelenskyy to meet Trump on Monday after US-Russia summit secured no halt to fighting</span>
+<span style="font-size:11px;color:#75798c;white-space:nowrap">abc7chicago.com · 1h</span>
+</a>
+<a href="#1a" style="display:flex;align-items:baseline;gap:10px;padding:6px 0;text-decoration:none;color:inherit">
+<span style="font-size:13.5px;line-height:1.4;color:#cfd3e5;flex:1">Melania Trump appeals to Putin about abducted Ukrainian children</span>
+<span style="font-size:11px;color:#75798c;white-space:nowrap">washingtontimes.com · 5h</span>
+</a>
+<div style="font-size:11.5px;color:#9184d9;padding:7px 0">27 more from 11 outlets</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;padding-top:4px">
+<svg width="132" height="34" viewBox="0 0 132 34" fill="none"><polyline points="4,30 25,28 46,22 67,10 88,4 109,7 128,14" stroke="#9184d9" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="88" cy="4" r="2.6" fill="#9184d9"/></svg>
+<div style="font-size:10.5px;color:#75798c">peaked yesterday</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px;padding-top:4px">
+<div style="display:flex;gap:3px;height:5px"><div style="flex:6;background:#9184d9;border-radius:2px"></div><div style="flex:4;background:#5d5294;border-radius:2px"></div><div style="flex:3;background:#423a6a;border-radius:2px"></div><div style="flex:5;background:#3f424d;border-radius:2px"></div></div>
+<div style="font-size:10.5px;line-height:1.45;color:#75798c">BBC 6 · NYT 4<br>Politico 3 · +11</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:26px 1fr 132px 104px;gap:18px;align-items:start;padding:15px 0;border-top:1px solid rgba(233,233,237,.1)">
+<div style="font:500 13px ui-monospace,Menlo,monospace;color:#595d6c;padding-top:2px">02</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font-size:16px;line-height:1.3;color:#e9e9ed">European leaders press for security guarantees before any Ukraine deal</div>
+<div style="font-size:12px;color:#75798c">9 outlets · 17 articles · running 6 days</div>
+</div>
+<svg width="132" height="30" viewBox="0 0 132 30" fill="none" style="margin-top:3px"><polyline points="4,24 25,20 46,21 67,15 88,13 109,11 128,9" stroke="#796cbf" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+<div style="font-size:11px;line-height:1.5;color:#75798c;padding-top:3px">Politico · Reuters<br>Guardian · +6</div>
+</div>
+
+<div style="display:grid;grid-template-columns:26px 1fr 132px 104px;gap:18px;align-items:start;padding:15px 0;border-top:1px solid rgba(233,233,237,.1)">
+<div style="font:500 13px ui-monospace,Menlo,monospace;color:#595d6c;padding-top:2px">03</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font-size:16px;line-height:1.3;color:#e9e9ed">Federal Reserve minutes point to a September rate decision split</div>
+<div style="font-size:12px;color:#75798c">7 outlets · 12 articles · new today</div>
+</div>
+<svg width="132" height="30" viewBox="0 0 132 30" fill="none" style="margin-top:3px"><polyline points="88,26 109,18 128,6" stroke="#796cbf" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+<div style="font-size:11px;line-height:1.5;color:#75798c;padding-top:3px">Bloomberg · WSJ<br>CNBC · +4</div>
+</div>
+
+<div style="display:grid;grid-template-columns:26px 1fr 132px 104px;gap:18px;align-items:start;padding:15px 0;border-top:1px solid rgba(233,233,237,.1)">
+<div style="font:500 13px ui-monospace,Menlo,monospace;color:#595d6c;padding-top:2px">04</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font-size:16px;line-height:1.3;color:#e9e9ed">Wildfire smoke pushes air quality warnings across the Pacific Northwest</div>
+<div style="font-size:12px;color:#75798c">6 outlets · 9 articles · running 3 days</div>
+</div>
+<svg width="132" height="30" viewBox="0 0 132 30" fill="none" style="margin-top:3px"><polyline points="46,8 67,12 88,16 109,19 128,22" stroke="#5d5294" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+<div style="font-size:11px;line-height:1.5;color:#75798c;padding-top:3px">AP · ABC7<br>Seattle Times · +3</div>
+</div>
+
+<div style="border-top:1px solid rgba(233,233,237,.1);padding:14px 0 0;font-size:12px;color:#595d6c">30 more stories</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Morning board — one lead, a coverage grid, and what's being ignored.</div>
+<div class="dv-card" style="width:1040px">
+<div style="background:#161826;display:flex;flex-direction:column">
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 26px;border-bottom:1px solid rgba(233,233,237,.14)">
+<div style="display:flex;align-items:baseline;gap:14px">
+<span style="font-size:19px;letter-spacing:-.02em;color:#e9e9ed;font-weight:500">newvelles</span>
+<span style="font-size:11.5px;color:#75798c">16 Aug · updated 08:12</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px">
+<div style="display:flex;align-items:center;gap:7px;background:#232532;border:1px solid #3f424d;border-radius:8px;padding:6px 11px;width:230px">
+<i class="ph ph-magnifying-glass" style="font-size:14px;color:#75798c;line-height:1"></i>
+<span style="font-size:12.5px;color:#595d6c">Search</span>
+</div>
+<button class="btn btn-ghost" style="font-size:12px;padding:6px 10px">Yesterday</button>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 296px;gap:0">
+<div style="padding:24px 26px;display:flex;flex-direction:column;gap:22px;border-right:1px solid rgba(233,233,237,.1)">
+
+<div style="display:flex;flex-direction:column;gap:14px;background:linear-gradient(160deg,#232532,#1b1d2b);border:1px solid #3f424d;border-radius:10px;padding:22px">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="width:16px;height:1px;background:#9184d9"></span>
+<span style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9184d9">Biggest story today</span>
+</div>
+<div style="font-size:27px;line-height:1.18;letter-spacing:-.022em;color:#e9e9ed">Trump and Putin meet in Alaska and leave without a ceasefire</div>
+<div style="display:flex;gap:26px;align-items:flex-end">
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:22px;color:#e9e9ed">14</span><span style="font-size:10.5px;color:#75798c">outlets</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:22px;color:#e9e9ed">31</span><span style="font-size:10.5px;color:#75798c">articles</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:22px;color:#e9e9ed">4</span><span style="font-size:10.5px;color:#75798c">days running</span></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+<svg width="190" height="42" viewBox="0 0 190 42" fill="none"><path d="M4 38 L35 35 L66 26 L97 10 L128 4 L159 9 L186 17" stroke="#9184d9" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M4 38 L35 35 L66 26 L97 10 L128 4 L159 9 L186 17 L186 42 L4 42 Z" fill="url(#g1b)" opacity=".35"/><defs><linearGradient id="g1b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9184d9" stop-opacity=".5"/><stop offset="1" stop-color="#9184d9" stop-opacity="0"/></linearGradient></defs></svg>
+<span style="font-size:10.5px;color:#75798c">13 Aug — today</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:0;border-top:1px solid rgba(233,233,237,.12);padding-top:12px">
+<a href="#1b" style="display:flex;align-items:baseline;gap:10px;padding:5px 0;text-decoration:none"><span style="font-size:13.5px;color:#cfd3e5;flex:1;line-height:1.4">Trump Bows to Putin's Approach on Ukraine: No Cease-Fire, Deadlines or Sanctions</span><span style="font-size:11px;color:#75798c">nytimes.com</span></a>
+<a href="#1b" style="display:flex;align-items:baseline;gap:10px;padding:5px 0;text-decoration:none"><span style="font-size:13.5px;color:#cfd3e5;flex:1;line-height:1.4">No ceasefire, no deal: What summit means for Trump, Putin and Ukraine</span><span style="font-size:11px;color:#75798c">bbc.com</span></a>
+<a href="#1b" style="display:flex;align-items:baseline;gap:10px;padding:5px 0;text-decoration:none"><span style="font-size:13.5px;color:#cfd3e5;flex:1;line-height:1.4">Trump greets Putin with a red carpet. Ukrainians feel betrayed.</span><span style="font-size:11px;color:#75798c">washingtontimes.com</span></a>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+<div class="card" style="background:#232532;border:1px solid #3f424d;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:15.5px;line-height:1.3;color:#e9e9ed">European leaders press for security guarantees before any Ukraine deal</div>
+<div style="font-size:11.5px;color:#75798c">9 outlets · 6 days</div>
+<svg width="100%" height="22" viewBox="0 0 240 22" preserveAspectRatio="none" fill="none"><polyline points="4,18 44,15 84,16 124,11 164,9 204,6 236,4" stroke="#796cbf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+<div class="card" style="background:#232532;border:1px solid #3f424d;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:15.5px;line-height:1.3;color:#e9e9ed">Federal Reserve minutes point to a September rate decision split</div>
+<div style="font-size:11.5px;color:#75798c">7 outlets · new today</div>
+<svg width="100%" height="22" viewBox="0 0 240 22" preserveAspectRatio="none" fill="none"><polyline points="164,20 204,13 236,3" stroke="#796cbf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+<div class="card" style="background:#232532;border:1px solid #3f424d;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:15.5px;line-height:1.3;color:#e9e9ed">Wildfire smoke pushes air quality warnings across the Pacific Northwest</div>
+<div style="font-size:11.5px;color:#75798c">6 outlets · 3 days</div>
+<svg width="100%" height="22" viewBox="0 0 240 22" preserveAspectRatio="none" fill="none"><polyline points="84,5 124,9 164,13 204,16 236,19" stroke="#5d5294" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+<div class="card" style="background:#232532;border:1px solid #3f424d;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:15.5px;line-height:1.3;color:#e9e9ed">Chip export rules reshape supply deals across Asia</div>
+<div style="font-size:11.5px;color:#75798c">5 outlets · 9 days</div>
+<svg width="100%" height="22" viewBox="0 0 240 22" preserveAspectRatio="none" fill="none"><polyline points="4,12 44,10 84,13 124,9 164,11 204,8 236,10" stroke="#5d5294" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+</div>
+</div>
+
+<div style="padding:24px 22px;display:flex;flex-direction:column;gap:26px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9397ab">Covered by everyone</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:12.5px;color:#cfd3e5;line-height:1.35">Alaska summit</span><div style="height:4px;background:#292b31;border-radius:2px;overflow:hidden"><div style="width:93%;height:100%;background:#9184d9"></div></div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:12.5px;color:#cfd3e5;line-height:1.35">Security guarantees</span><div style="height:4px;background:#292b31;border-radius:2px;overflow:hidden"><div style="width:64%;height:100%;background:#796cbf"></div></div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:12.5px;color:#cfd3e5;line-height:1.35">Fed minutes</span><div style="height:4px;background:#292b31;border-radius:2px;overflow:hidden"><div style="width:50%;height:100%;background:#5d5294"></div></div></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9397ab">One outlet only</div>
+<div style="font-size:11.5px;color:#75798c;line-height:1.5;margin:-4px 0 0">Stories nobody else picked up today.</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:13px;color:#cfd3e5;line-height:1.4">Court filing reopens a decade-old water rights dispute</span><span style="font-size:11px;color:#75798c">politico.com</span></div>
+<div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:13px;color:#cfd3e5;line-height:1.4">Antarctic sea ice extent hits a seasonal record low</span><span style="font-size:11px;color:#75798c">bbc.com</span></div>
+<div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:13px;color:#cfd3e5;line-height:1.4">A regional rail line reopens after eleven years</span><span style="font-size:11px;color:#75798c">abc7news.com</span></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid rgba(233,233,237,.12);padding-top:16px">
+<div style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9397ab">Sources today</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<span class="tag tag-outline" style="font-size:10.5px">BBC 41</span>
+<span class="tag tag-outline" style="font-size:10.5px">NYT 28</span>
+<span class="tag tag-outline" style="font-size:10.5px">Politico 22</span>
+<span class="tag tag-outline" style="font-size:10.5px">Yahoo 19</span>
+<span class="tag tag-outline" style="font-size:10.5px">ABC7 14</span>
+<span class="tag tag-outline" style="font-size:10.5px">+36</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Streaks — the archive as the interface. Fourteen days at a glance.</div>
+<div class="dv-card" style="width:1040px">
+<div style="background:#161826;display:flex;flex-direction:column">
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 26px;border-bottom:1px solid rgba(233,233,237,.14)">
+<div style="display:flex;align-items:baseline;gap:14px">
+<span style="font-size:19px;letter-spacing:-.02em;color:#e9e9ed;font-weight:500">newvelles</span>
+<span style="font-size:11.5px;color:#75798c">3 – 16 August · 14 days · 48 stories</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px">
+<div style="display:flex;align-items:center;gap:7px;background:#232532;border:1px solid #3f424d;border-radius:8px;padding:6px 11px;width:210px">
+<i class="ph ph-magnifying-glass" style="font-size:14px;color:#75798c;line-height:1"></i>
+<span style="font-size:12.5px;color:#595d6c">Filter streaks</span>
+</div>
+<div class="seg" style="display:flex;border:1px solid #3f424d;border-radius:8px;overflow:hidden">
+<span style="font-size:11.5px;padding:6px 11px;background:rgba(145,132,217,.16);color:#d2cefd">14d</span>
+<span style="font-size:11.5px;padding:6px 11px;color:#75798c">90d</span>
+<span style="font-size:11.5px;padding:6px 11px;color:#75798c">All</span>
+</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 300px">
+<div style="padding:20px 8px 24px 26px;display:flex;flex-direction:column;gap:10px;border-right:1px solid rgba(233,233,237,.1)">
+
+<div style="display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:center">
+<div></div>
+<div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;font:500 9.5px ui-monospace,Menlo,monospace;color:#595d6c;text-align:center">
+<span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span style="color:#9184d9">16</span>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:center;padding:7px 0;background:linear-gradient(90deg,rgba(145,132,217,.08),transparent 70%);border-radius:6px">
+<div style="font-size:13px;line-height:1.35;color:#e9e9ed;padding-left:6px">Alaska summit ends without a ceasefire</div>
+<div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:center;height:22px">
+<span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:6px;background:#423a6a;border-radius:3px"></span><span style="height:8px;background:#5d5294;border-radius:4px"></span><span style="height:11px;background:#796cbf;border-radius:5px"></span><span style="height:16px;background:#9184d9;border-radius:6px"></span><span style="height:20px;background:#b5abfc;border-radius:7px"></span><span style="height:18px;background:#9184d9;border-radius:6px"></span><span style="height:13px;background:#796cbf;border-radius:5px"></span>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:center;padding:7px 0">
+<div style="font-size:13px;line-height:1.35;color:#cfd3e5;padding-left:6px">European security guarantees</div>
+<div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:center;height:22px">
+<span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:6px;background:#423a6a;border-radius:3px"></span><span style="height:7px;background:#423a6a;border-radius:3px"></span><span style="height:9px;background:#5d5294;border-radius:4px"></span><span style="height:8px;background:#5d5294;border-radius:4px"></span><span style="height:10px;background:#5d5294;border-radius:5px"></span><span style="height:11px;background:#796cbf;border-radius:5px"></span><span style="height:12px;background:#796cbf;border-radius:5px"></span><span style="height:13px;background:#796cbf;border-radius:5px"></span><span style="height:14px;background:#9184d9;border-radius:6px"></span><span style="height:15px;background:#9184d9;border-radius:6px"></span>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:center;padding:7px 0">
+<div style="font-size:13px;line-height:1.35;color:#cfd3e5;padding-left:6px">Fed September rate split</div>
+<div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:center;height:22px">
+<span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:5px;background:#423a6a;border-radius:3px"></span><span style="height:14px;background:#9184d9;border-radius:6px"></span>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:center;padding:7px 0">
+<div style="font-size:13px;line-height:1.35;color:#cfd3e5;padding-left:6px">Pacific Northwest wildfire smoke</div>
+<div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:center;height:22px">
+<span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:12px;background:#796cbf;border-radius:5px"></span><span style="height:14px;background:#9184d9;border-radius:6px"></span><span style="height:11px;background:#796cbf;border-radius:5px"></span><span style="height:9px;background:#5d5294;border-radius:4px"></span><span style="height:7px;background:#423a6a;border-radius:3px"></span><span style="height:6px;background:#423a6a;border-radius:3px"></span>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:center;padding:7px 0">
+<div style="font-size:13px;line-height:1.35;color:#cfd3e5;padding-left:6px">Asia chip export rules</div>
+<div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:center;height:22px">
+<span style="height:7px;background:#423a6a;border-radius:3px"></span><span style="height:9px;background:#5d5294;border-radius:4px"></span><span style="height:8px;background:#5d5294;border-radius:4px"></span><span style="height:10px;background:#5d5294;border-radius:5px"></span><span style="height:7px;background:#423a6a;border-radius:3px"></span><span style="height:8px;background:#5d5294;border-radius:4px"></span><span style="height:6px;background:#423a6a;border-radius:3px"></span><span style="height:9px;background:#5d5294;border-radius:4px"></span><span style="height:7px;background:#423a6a;border-radius:3px"></span><span style="height:6px;background:#423a6a;border-radius:3px"></span><span style="height:8px;background:#5d5294;border-radius:4px"></span><span style="height:7px;background:#423a6a;border-radius:3px"></span><span style="height:9px;background:#5d5294;border-radius:4px"></span><span style="height:8px;background:#5d5294;border-radius:4px"></span>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:center;padding:7px 0;opacity:.72">
+<div style="font-size:13px;line-height:1.35;color:#9397ab;padding-left:6px">Heat wave across southern Europe</div>
+<div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:center;height:22px">
+<span style="height:15px;background:#9184d9;border-radius:6px"></span><span style="height:13px;background:#796cbf;border-radius:5px"></span><span style="height:11px;background:#796cbf;border-radius:5px"></span><span style="height:8px;background:#5d5294;border-radius:4px"></span><span style="height:6px;background:#423a6a;border-radius:3px"></span><span style="height:5px;background:#423a6a;border-radius:3px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span><span style="height:4px;background:#292b31;border-radius:2px"></span>
+</div>
+</div>
+
+<div style="font-size:11.5px;color:#595d6c;padding:8px 0 0 6px">42 more streaks · bar height is outlets covering that day</div>
+</div>
+
+<div style="padding:20px 22px;display:flex;flex-direction:column;gap:18px;background:#1b1d2b">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9184d9">Selected streak</div>
+<div style="font-size:17px;line-height:1.25;letter-spacing:-.015em;color:#e9e9ed">Alaska summit ends without a ceasefire</div>
+<div style="font-size:11.5px;color:#75798c">10 – 16 Aug · peaked 14 Aug · 14 outlets</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:9px">
+<div style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9397ab">Same day, two framings</div>
+<div style="display:flex;flex-direction:column;gap:5px;border-left:2px solid #9184d9;padding-left:11px">
+<span style="font-size:13px;line-height:1.4;color:#cfd3e5">Trump says 'great progress,' but stops short of announcing ceasefire after Putin summit</span>
+<span style="font-size:10.5px;color:#75798c">abc7.com · 16 Aug</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px;border-left:2px solid #595d6c;padding-left:11px">
+<span style="font-size:13px;line-height:1.4;color:#cfd3e5">Trump Bows to Putin's Approach on Ukraine: No Cease-Fire, Deadlines or Sanctions</span>
+<span style="font-size:10.5px;color:#75798c">nytimes.com · 16 Aug</span>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:9px;border-top:1px solid rgba(233,233,237,.12);padding-top:14px">
+<div style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9397ab">How it started</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;gap:10px;align-items:baseline"><span style="font:500 10px ui-monospace,Menlo,monospace;color:#75798c;width:34px">10 Aug</span><span style="font-size:12.5px;line-height:1.4;color:#9397ab;flex:1">China's watching closely, Lindsey Graham says ahead of Trump's peace talks with Putin</span></div>
+<div style="display:flex;gap:10px;align-items:baseline"><span style="font:500 10px ui-monospace,Menlo,monospace;color:#75798c;width:34px">14 Aug</span><span style="font-size:12.5px;line-height:1.4;color:#9397ab;flex:1">What do Putin and Trump each want from the Alaska summit?</span></div>
+<div style="display:flex;gap:10px;align-items:baseline"><span style="font:500 10px ui-monospace,Menlo,monospace;color:#9184d9;width:34px">16 Aug</span><span style="font-size:12.5px;line-height:1.4;color:#cfd3e5;flex:1">Ukraine's Zelenskyy to meet Trump on Monday after US-Russia summit secured no halt to fighting</span></div>
+</div>
+</div>
+
+<button class="btn btn-primary" style="font-size:12.5px;align-self:flex-start">Open all 31 articles</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Mobile read of <a class="dv-oid" href="#1a">1a</a> — the three-minute skim.</div>
+<div class="dv-card" style="width:390px">
+<div style="background:#161826;padding:18px 16px 24px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:3px">
+<div style="font-size:20px;letter-spacing:-.02em;color:#e9e9ed;font-weight:500">newvelles</div>
+<div style="font-size:11px;color:#75798c">Sat 16 Aug · 34 stories · 41 feeds</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;background:#232532;border:1px solid #3f424d;border-radius:8px;padding:9px 11px">
+<i class="ph ph-magnifying-glass" style="font-size:14px;color:#75798c;line-height:1"></i>
+<span style="font-size:13px;color:#595d6c">Filter stories</span>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:9px;padding-bottom:14px;border-bottom:1px solid rgba(233,233,237,.12)">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<span style="font:500 11px ui-monospace,Menlo,monospace;color:#9184d9">01</span>
+<svg width="70" height="18" viewBox="0 0 70 18" fill="none"><polyline points="2,16 14,14 26,10 38,3 50,2 62,6" stroke="#9184d9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+<div style="font-size:18px;line-height:1.25;letter-spacing:-.015em;color:#e9e9ed">Trump and Putin meet in Alaska and leave without a ceasefire</div>
+<div style="font-size:11.5px;color:#75798c">14 outlets · 4 days running · 2h ago</div>
+<div style="display:flex;flex-direction:column;gap:0;border-left:1px solid #3f424d;padding-left:12px">
+<a href="#1d" style="padding:6px 0;font-size:13px;line-height:1.4;color:#cfd3e5;text-decoration:none">Trump Bows to Putin's Approach on Ukraine: No Cease-Fire, Deadlines or Sanctions <span style="color:#75798c;font-size:11px">nytimes.com</span></a>
+<a href="#1d" style="padding:6px 0;font-size:13px;line-height:1.4;color:#cfd3e5;text-decoration:none">Trump pursues peace deal after leaving Alaska without ceasefire pact <span style="color:#75798c;font-size:11px">bbc.com</span></a>
+<span style="padding:7px 0;font-size:11.5px;color:#9184d9">29 more</span>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px;padding-bottom:14px;border-bottom:1px solid rgba(233,233,237,.12)">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<span style="font:500 11px ui-monospace,Menlo,monospace;color:#595d6c">02</span>
+<svg width="70" height="18" viewBox="0 0 70 18" fill="none"><polyline points="2,14 14,12 26,12 38,8 50,6 62,4" stroke="#796cbf" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+<div style="font-size:16px;line-height:1.3;color:#e9e9ed">European leaders press for security guarantees before any Ukraine deal</div>
+<div style="font-size:11.5px;color:#75798c">9 outlets · 6 days running</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px;padding-bottom:14px;border-bottom:1px solid rgba(233,233,237,.12)">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<span style="font:500 11px ui-monospace,Menlo,monospace;color:#595d6c">03</span>
+<svg width="70" height="18" viewBox="0 0 70 18" fill="none"><polyline points="38,15 50,10 62,2" stroke="#796cbf" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+<div style="font-size:16px;line-height:1.3;color:#e9e9ed">Federal Reserve minutes point to a September rate decision split</div>
+<div style="font-size:11.5px;color:#75798c">7 outlets · new today</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+<span style="font:500 11px ui-monospace,Menlo,monospace;color:#595d6c">04</span>
+<svg width="70" height="18" viewBox="0 0 70 18" fill="none"><polyline points="14,4 26,7 38,10 50,12 62,15" stroke="#5d5294" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+<div style="font-size:16px;line-height:1.3;color:#e9e9ed">Wildfire smoke pushes air quality warnings across the Pacific Northwest</div>
+<div style="font-size:11.5px;color:#75798c">6 outlets · 3 days running</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "build <a class="dv-oid" href="#1a">1a</a> out as a clickable prototype" · "put <a class="dv-oid" href="#1c">1c</a>'s streak rail on top of <a class="dv-oid" href="#1b">1b</a>" · "show the search and archive states" · "what would the domain switcher look like once science and markets land"</p>
+</section>
+
+</x-dc>
+</body>
+</html>

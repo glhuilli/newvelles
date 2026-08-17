@@ -1,0 +1,2415 @@
+{
+  "version": "0.3.0",
+  "generated": "2026-08-09T12:00:00",
+  "source_fetch": "newvelles/latest_news.json (backend repo sample, QA feed set)",
+  "feeds": 12,
+  "article_count": 127,
+  "story_count": 41,
+  "merge_threshold": 0.5,
+  "stories": [
+    {
+      "id": "st_11f911",
+      "headline": "Google researchers depart as the Pixel 11 event approaches",
+      "headline_source": "llm",
+      "keywords": [
+        "google 2026",
+        "expect",
+        "pixel"
+      ],
+      "entities": [
+        "Google",
+        "Expect"
+      ],
+      "section": "Tech",
+      "outlet_count": 2,
+      "article_count": 6,
+      "latest_published": "2026-08-07T12:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 4
+        },
+        {
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "How to Watch Made by Google 2026: The Pixel Event's Start Time and What to Expect",
+          "link": "https://lifehacker.com/tech/how-to-watch-made-by-google-2026-pixel-event-start-time-livestream?utm_medium=RSS",
+          "published": "2026-08-07T12:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Made by Google 2026: What to Expect From the Pixel 11 Event",
+          "link": "https://lifehacker.com/tech/what-to-expect-made-by-google-pixel-11-event-2026?utm_medium=RSS",
+          "published": "2026-08-06T14:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Four Top Google A.I. Researchers Form New Start-Up",
+          "link": "https://www.nytimes.com/2026/08/05/technology/google-researchers-ai-startup.html",
+          "published": "2026-08-05T16:00:07Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "section": "Tech",
+          "feed": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml"
+        },
+        {
+          "title": "Google Never Should Have Put Nano Banana Into Google Earth in the First Place",
+          "link": "https://lifehacker.com/tech/google-never-should-have-put-nano-banana-into-google-earth-in-the-first?utm_medium=RSS",
+          "published": "2026-08-03T20:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This Unlocked Google Pixel 10a Is Now $75 Off",
+          "link": "https://lifehacker.com/tech/pixel-10a-deal-august-2026?utm_medium=RSS",
+          "published": "2026-08-03T19:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Google Earth Disables A.I. Tool After One Day Over Disinformation Concerns",
+          "link": "https://www.nytimes.com/2026/08/02/technology/google-earth-ai-satellite-images.html",
+          "published": "2026-08-03T14:31:11Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "section": "Tech",
+          "feed": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml"
+        }
+      ],
+      "days_running": 4,
+      "first_seen": "2026-08-03",
+      "kind": "story"
+    },
+    {
+      "id": "st_23d9a0",
+      "headline": "This 45-Inch LG UltraGear OLED Curved Gaming Monitor Is $700 Off Right Now",
+      "headline_source": "fallback",
+      "keywords": [
+        "oled gaming monitor",
+        "lg",
+        "27-"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 2,
+      "article_count": 6,
+      "latest_published": "2026-08-08T11:01:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 5
+        },
+        {
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "Best Gaming Laptops (2026): Razer, Asus, Dell, and More",
+          "link": "https://www.wired.com/story/best-gaming-laptops/",
+          "published": "2026-08-08T11:01:00Z",
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "section": "Tech",
+          "feed": "https://www.wired.com/feed"
+        },
+        {
+          "title": "This LG Ultrawide OLED Gaming Monitor Is $200 Off Right Now",
+          "link": "https://lifehacker.com/tech/lg-evo-ultragear-gaming-monitor-sale-august-2026?utm_medium=RSS",
+          "published": "2026-08-07T12:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This 27-Inch Asus OLED Gaming Monitor Is $120 Off Right Now",
+          "link": "https://lifehacker.com/tech/asus-oled-gaming-monitor-deal-august-2026?utm_medium=RSS",
+          "published": "2026-08-06T18:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This 15.6-Inch Dell Laptop Is $130 Off Right Now",
+          "link": "https://lifehacker.com/tech/dell-156-laptop-deal-august-2026?utm_medium=RSS",
+          "published": "2026-08-05T18:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This 45-Inch LG UltraGear OLED Curved Gaming Monitor Is $700 Off Right Now",
+          "link": "https://lifehacker.com/tech/lg-ultragear-oled-curved-gaming-monitor-sale-august-2026?utm_medium=RSS",
+          "published": "2026-08-04T19:09:48Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This 27-Inch Sony OLED Gaming Monitor Is $300 Off Right Now",
+          "link": "https://lifehacker.com/tech/sony-inzone-27-inch-oled-gaming-monitor-sale-august-2026?utm_medium=RSS",
+          "published": "2026-08-03T21:32:38Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 6,
+      "first_seen": "2026-08-03",
+      "kind": "deal"
+    },
+    {
+      "id": "st_bfa329",
+      "headline": "Israel rejects the 15-point US plan to disarm Hamas",
+      "headline_source": "llm",
+      "keywords": [
+        "rejects",
+        "disarm",
+        "plan"
+      ],
+      "entities": [
+        "Hamas"
+      ],
+      "section": "World",
+      "outlet_count": 2,
+      "article_count": 3,
+      "latest_published": "2026-08-09T16:39:14Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "articles": 2
+        },
+        {
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "Israel Rejects Trump’s 15-Point Plan to Disarm Hamas",
+          "link": "https://www.nytimes.com/2026/08/09/world/middleeast/israel-netanyahu-trump-15-point-plan-hamas-peace-gaza.html",
+          "published": "2026-08-09T16:39:14Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "section": "General",
+          "feed": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+        },
+        {
+          "title": "Netanyahu rejects Board of Peace's Gaza plan: No 'withdrawal until Hamas is genuinely disarmed'",
+          "link": "https://www.foxnews.com/world/netanyahu-rejects-board-peace-gaza-plan-no-withdrawal-until-hamas-genuinely-disarmed",
+          "published": "2026-08-09T13:14:25Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "World",
+          "feed": "https://moxie.foxnews.com/google-publisher/world.xml"
+        },
+        {
+          "title": "Iran reaffirms support for Hamas as Trump pushes to disarm terror group",
+          "link": "https://www.foxnews.com/world/iran-reaffirms-support-hamas-trump-pushes-disarm-terror-group",
+          "published": "2026-08-03T17:20:54Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "World",
+          "feed": "https://moxie.foxnews.com/google-publisher/world.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-03",
+      "kind": "story"
+    },
+    {
+      "id": "st_999cb0",
+      "headline": "My Favorite Earbuds for Sleep Are $60 Off Right Now",
+      "headline_source": "fallback",
+      "keywords": [
+        "60",
+        "favorite"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 2,
+      "article_count": 3,
+      "latest_published": "2026-08-09T11:55:18Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 2
+        },
+        {
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "The Pope’s Favorite Team",
+          "link": "https://www.nytimes.com/2026/08/09/briefing/the-popes-favorite-team.html",
+          "published": "2026-08-09T11:55:18Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "section": "General",
+          "feed": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+        },
+        {
+          "title": "My Favorite Earbuds for Sleep Are $60 Off Right Now",
+          "link": "https://lifehacker.com/tech/soundcore-sleep-a30-earbuds-deal-august-2026?utm_medium=RSS",
+          "published": "2026-08-05T18:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "My Favorite Sony Headphones Are $60 Off Again",
+          "link": "https://lifehacker.com/tech/sony-wh-1000xm6-headphones-sale?utm_medium=RSS",
+          "published": "2026-08-03T20:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 3,
+      "first_seen": "2026-08-03",
+      "kind": "deal"
+    },
+    {
+      "id": "st_1d2c10",
+      "headline": "Google expands Gemini across Docs and Gmail, with an off switch",
+      "headline_source": "llm",
+      "keywords": [
+        "google docs",
+        "gemini"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 2,
+      "article_count": 3,
+      "latest_published": "2026-08-08T10:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 2
+        },
+        {
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "How to Disable Gemini in Gmail and Google Docs",
+          "link": "https://www.wired.com/story/how-to-disable-the-gemini-ai-features-in-gmail-and-google-docs/",
+          "published": "2026-08-08T10:00:00Z",
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "section": "Tech",
+          "feed": "https://www.wired.com/feed"
+        },
+        {
+          "title": "Five Ways to Make Gemini Behave More Like Google Assistant",
+          "link": "https://lifehacker.com/tech/make-gemini-more-like-google-assistant?utm_medium=RSS",
+          "published": "2026-08-07T19:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Google Docs Is Rolling Out These Three New Gemini Features",
+          "link": "https://lifehacker.com/tech/google-docs-has-new-gemini-features?utm_medium=RSS",
+          "published": "2026-07-30T18:30:02Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 3,
+      "first_seen": "2026-07-30",
+      "kind": "story"
+    },
+    {
+      "id": "st_11ff81",
+      "headline": "1 Popular Cryptocurrency to Buy Before Its Next Massive Rally, According to 1 Wall Street Bull",
+      "headline_source": "fallback",
+      "keywords": [
+        "cryptocurrency",
+        "massive"
+      ],
+      "entities": [],
+      "section": "Markets",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-09T17:23:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "articles": 1
+        },
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "1 Popular Cryptocurrency to Buy Before Its Next Massive Rally, According to 1 Wall Street Bull",
+          "link": "https://finance.yahoo.com/markets/crypto/articles/1-popular-cryptocurrency-buy-next-172300623.html",
+          "published": "2026-08-09T17:23:00Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "How to Protect Yourself From This Massive Ongoing Cryptocurrency Hack",
+          "link": "https://lifehacker.com/tech/how-to-protect-yourself-from-this-massive-cryptocurrency-hack?utm_medium=RSS",
+          "published": "2026-08-04T20:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-04",
+      "kind": "story"
+    },
+    {
+      "id": "st_39ac84",
+      "headline": "Iran holds firm on Hormuz as US presses for joint patrols",
+      "headline_source": "llm",
+      "keywords": [
+        "hormuz",
+        "pushes"
+      ],
+      "entities": [
+        "Hormuz"
+      ],
+      "section": "General",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-09T14:44:02Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "articles": 1
+        },
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "Iran, Holding Firm to Hormuz, Pushes for Return to June MOU",
+          "link": "https://www.nytimes.com/2026/08/09/world/europe/iran-strait-hormuz-trump-deal.html",
+          "published": "2026-08-09T14:44:02Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "section": "General",
+          "feed": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+        },
+        {
+          "title": "Allies shrug as US pushes for Strait of Hormuz patrol",
+          "link": "https://www.politico.com/news/2026/07/28/iran-us-strait-ofhormuz-allies-patrol-01013659",
+          "published": "2026-07-28T20:30:00Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "World",
+          "feed": "https://rss.politico.com/defense.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-07-28",
+      "kind": "story"
+    },
+    {
+      "id": "st_982368",
+      "headline": "Obama speaks with El-Sayed on unity after the Michigan Senate primary",
+      "headline_source": "llm",
+      "keywords": [
+        "abdul el-sayed",
+        "-sayed",
+        "sayed"
+      ],
+      "entities": [],
+      "section": "General",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-09T17:27:27Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "articles": 1
+        },
+        {
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "Obama and Abdul El-Sayed Spoke to Discuss Unity After Michigan Senate Primary",
+          "link": "https://www.nytimes.com/2026/08/09/us/politics/obama-abdul-el-sayed-michigan-senate.html",
+          "published": "2026-08-09T17:27:27Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "section": "General",
+          "feed": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+        },
+        {
+          "title": "Biden-world veteran issues stark warning about Abdul El-Sayed as he crosses party lines",
+          "link": "https://www.foxnews.com/politics/biden-world-veteran-issues-stark-warning-abdul-el-sayed-crosses-party-lines",
+          "published": "2026-08-09T16:24:35Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "US politics",
+          "feed": "https://moxie.foxnews.com/google-publisher/politics.xml"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-09",
+      "kind": "story"
+    },
+    {
+      "id": "st_736daf",
+      "headline": "A SpaceX rocket strikes the Moon and leaves a visible crater",
+      "headline_source": "llm",
+      "keywords": [
+        "rocket",
+        "moon"
+      ],
+      "entities": [
+        "Moon"
+      ],
+      "section": "Tech",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-08T12:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "articles": 1
+        },
+        {
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "Here Are the First Images of the Crater Left on the Moon by SpaceX’s Rocket",
+          "link": "https://www.wired.com/story/first-images-spacex-rocket-moon-crater/",
+          "published": "2026-08-08T12:00:00Z",
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "section": "Tech",
+          "feed": "https://www.wired.com/feed"
+        },
+        {
+          "title": "A SpaceX Rocket Will Soon Crash Into the Moon",
+          "link": "https://www.nytimes.com/2026/08/04/science/spacex-rocket-moon-crash.html",
+          "published": "2026-08-05T13:10:43Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "section": "Tech",
+          "feed": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-05",
+      "kind": "story"
+    },
+    {
+      "id": "st_cd0446",
+      "headline": "8 Best Workout Headphones & Earbuds: Beats, Bose, Apple (2026)",
+      "headline_source": "fallback",
+      "keywords": [
+        "headphones",
+        "beats"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-09T09:37:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "articles": 1
+        },
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "8 Best Workout Headphones & Earbuds: Beats, Bose, Apple (2026)",
+          "link": "https://www.wired.com/story/the-best-workout-headphones-and-earbuds/",
+          "published": "2026-08-09T09:37:00Z",
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "section": "Tech",
+          "feed": "https://www.wired.com/feed"
+        },
+        {
+          "title": "These Amazon-Exclusive Metallic Pink Beats Headphones Are 50% Off",
+          "link": "https://lifehacker.com/tech/metallic-pink-beats-headphones-amaz0n-deal-august-2026?utm_medium=RSS",
+          "published": "2026-08-05T13:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-05",
+      "kind": "deal"
+    },
+    {
+      "id": "st_951cf4",
+      "headline": "WhatsApp adds an @all mention and four other group chat features",
+      "headline_source": "llm",
+      "keywords": [
+        "whatsapp",
+        "group"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-08T09:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "articles": 1
+        },
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "WhatsApp Gets a Handy @all Feature for Group Chats",
+          "link": "https://www.wired.com/story/whatsapp-gets-a-handy-all-feature-for-group-chats/",
+          "published": "2026-08-08T09:00:00Z",
+          "outlet": "WIRED",
+          "domain": "wired.com",
+          "section": "Tech",
+          "feed": "https://www.wired.com/feed"
+        },
+        {
+          "title": "WhatsApp Just Added Five New Group Chat Features, Including '@All'",
+          "link": "https://lifehacker.com/tech/whatsapps-five-new-group-chat-features?utm_medium=RSS",
+          "published": "2026-08-04T14:00:15Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-04",
+      "kind": "story"
+    },
+    {
+      "id": "st_fafc80",
+      "headline": "Senate confirms Blanche as attorney general ahead of Fauci hearings",
+      "headline_source": "llm",
+      "keywords": [
+        "attorney general"
+      ],
+      "entities": [],
+      "section": "US politics",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-08T20:47:21Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "articles": 1
+        },
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "Fauci in the congressional wringer: A test for Trump's newly-minted attorney general",
+          "link": "https://www.foxnews.com/politics/fauci-congressional-wringer-test-trumps-newly-minted-attorney-general",
+          "published": "2026-08-08T20:47:21Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "US politics",
+          "feed": "https://moxie.foxnews.com/google-publisher/politics.xml"
+        },
+        {
+          "title": "Senate confirms Blanche as attorney general",
+          "link": "https://www.politico.com/live-updates/2026/08/07/congress/todd-blanche-senate-confirmation-01029751",
+          "published": "2026-08-08T08:33:12Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/congress.xml"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-08",
+      "kind": "story"
+    },
+    {
+      "id": "st_27efbd",
+      "headline": "It Won’t Stop at the Arc de Trump. It Won’t Stop at Washington.",
+      "headline_source": "fallback",
+      "keywords": [
+        "washington"
+      ],
+      "entities": [
+        "Stop"
+      ],
+      "section": "General",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-09T05:49:06Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "articles": 1
+        },
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "It Won’t Stop at the Arc de Trump. It Won’t Stop at Washington.",
+          "link": "https://www.nytimes.com/2026/08/09/opinion/trump-washington-landmarks-arch-pool-east-wing.html",
+          "published": "2026-08-09T05:49:06Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "section": "General",
+          "feed": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+        },
+        {
+          "title": "Momentum shifts for Zelenskyy in Washington",
+          "link": "https://www.politico.com/news/2026/07/28/zelenskyy-washington-hill-wins-01014504",
+          "published": "2026-07-29T01:49:11Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "World",
+          "feed": "https://rss.politico.com/defense.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-07-29",
+      "kind": "story"
+    },
+    {
+      "id": "st_fe26a3",
+      "headline": "SpaceX reports rising revenue and heavy AI spending in its first post-IPO earnings",
+      "headline_source": "llm",
+      "keywords": [
+        "soaring"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-04T22:52:45Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "articles": 1
+        },
+        {
+          "outlet": "NPR",
+          "domain": "npr.org",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "SpaceX, in First Earnings After IPO, Reports Soaring AI Spending",
+          "link": "https://www.nytimes.com/2026/08/04/technology/spacex-earnings-elon-musk.html",
+          "published": "2026-08-04T22:52:45Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com",
+          "section": "Tech",
+          "feed": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml"
+        },
+        {
+          "title": "SpaceX's revenue rises as its once-soaring stock price drifts back to Earth",
+          "link": "https://www.npr.org/2026/08/04/nx-s1-5918536/spacex-first-earnings-report-since-ipo",
+          "published": "2026-08-04T22:02:03Z",
+          "outlet": "NPR",
+          "domain": "npr.org",
+          "section": "Tech",
+          "feed": "https://feeds.npr.org/1019/rss.xml"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-04",
+      "kind": "story"
+    },
+    {
+      "id": "st_526d67",
+      "headline": "Max Miller locked in as Ohio Republican nominee",
+      "headline_source": "llm",
+      "keywords": [
+        "max"
+      ],
+      "entities": [
+        "Max Miller"
+      ],
+      "section": "US politics",
+      "outlet_count": 2,
+      "article_count": 2,
+      "latest_published": "2026-08-09T17:07:07Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "articles": 1
+        },
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 1
+        }
+      ],
+      "articles": [
+        {
+          "title": "Max Miller locked in as Republican nominee after Ohio ballot deadline passes without withdrawal",
+          "link": "https://www.foxnews.com/politics/max-miller-locked-republican-nominee-ohio-ballot-deadline-passes-without-withdrawal",
+          "published": "2026-08-09T17:07:07Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "US politics",
+          "feed": "https://moxie.foxnews.com/google-publisher/politics.xml"
+        },
+        {
+          "title": "Max Miller’s Democratic opponent doesn't want to talk about Max Miller",
+          "link": "https://www.politico.com/live-updates/2026/08/05/congress/brian-poindexter-interview-max-miller-01025723",
+          "published": "2026-08-05T17:18:10Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/congress.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-05",
+      "kind": "story"
+    },
+    {
+      "id": "st_313a32",
+      "headline": "10 Hacks Every Even Realities G2 Smart Glasses User Should Know",
+      "headline_source": "fallback",
+      "keywords": [
+        "hacks amazfit cheetah 2",
+        "10 hacks google",
+        "mac"
+      ],
+      "entities": [
+        "User Know",
+        "Hacks Amazfit Cheetah"
+      ],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 11,
+      "latest_published": "2026-08-07T21:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 11
+        }
+      ],
+      "articles": [
+        {
+          "title": "10 Screenshot Hacks Every Mac User Should Know",
+          "link": "https://lifehacker.com/tech/10-screenshot-hacks-every-mac-user-should-know?utm_medium=RSS",
+          "published": "2026-08-07T21:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Five Hacks Every Amazfit Balance 3 User Should Know",
+          "link": "https://lifehacker.com/health/hacks-every-amazfit-balance-3-user-should-know?utm_medium=RSS",
+          "published": "2026-08-04T20:30:58Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Five Hacks Every Amazfit Cheetah 2 Ultra User Should Know",
+          "link": "https://lifehacker.com/health/hacks-every-amazfit-cheetah-2-ultra-user-should-know?utm_medium=RSS",
+          "published": "2026-08-04T18:00:19Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "These Are the Best Clipboard Managers for Your Mac",
+          "link": "https://lifehacker.com/tech/best-mac-clipboard-managers?utm_medium=RSS",
+          "published": "2026-08-04T17:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "10 Hacks Every Google Drive User Should Know",
+          "link": "https://lifehacker.com/tech/10-hacks-every-google-drive-user-should-know?utm_medium=RSS",
+          "published": "2026-08-04T13:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Five Hacks Every Amazfit Cheetah 2 Pro User Should Know",
+          "link": "https://lifehacker.com/health/amazfit-cheetah-2-pro-hacks?utm_medium=RSS",
+          "published": "2026-08-03T15:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "10 Snipping Tool Hacks Every Windows 11 User Should Know",
+          "link": "https://lifehacker.com/tech/10-snipping-tool-hacks-every-windows-11-user-should-know?utm_medium=RSS",
+          "published": "2026-07-31T21:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "10 Hacks Every Google Sheets User Should Know",
+          "link": "https://lifehacker.com/tech/hacks-every-google-sheets-user-should-know?utm_medium=RSS",
+          "published": "2026-07-31T19:30:10Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "10 Hacks Every Samsung Galaxy User Should Know",
+          "link": "https://lifehacker.com/tech/10-hacks-every-samsung-galaxy-user-should-know?utm_medium=RSS",
+          "published": "2026-07-30T21:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Five Hacks Every Boox Palma User Should Know",
+          "link": "https://lifehacker.com/tech/hacks-every-boox-palma-user-should-know?utm_medium=RSS",
+          "published": "2026-07-30T12:00:20Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "10 Hacks Every Even Realities G2 Smart Glasses User Should Know",
+          "link": "https://lifehacker.com/tech/10-hacks-for-even-realities-g2-glasses?utm_medium=RSS",
+          "published": "2026-07-29T19:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 6,
+      "first_seen": "2026-07-29",
+      "kind": "roundup"
+    },
+    {
+      "id": "st_32bf8d",
+      "headline": "Second-quarter earnings calls across utilities, water and retail",
+      "headline_source": "llm",
+      "keywords": [
+        "q2 earnings call highlights",
+        "water"
+      ],
+      "entities": [
+        "Earnings Call Highlights"
+      ],
+      "section": "Markets",
+      "outlet_count": 1,
+      "article_count": 8,
+      "latest_published": "2026-08-09T17:03:57Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "articles": 8
+        }
+      ],
+      "articles": [
+        {
+          "title": "Select Water Solutions Q2 Earnings Call Highlights",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/select-water-solutions-q2-earnings-170357873.html",
+          "published": "2026-08-09T17:03:57Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Essential Utilities Q2 Earnings Call Highlights",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/essential-utilities-q2-earnings-call-170357920.html",
+          "published": "2026-08-09T17:03:57Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Watts Water Technologies Q2 Earnings Call Highlights",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/watts-water-technologies-q2-earnings-170357400.html",
+          "published": "2026-08-09T17:03:57Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "W&T Offshore Q2 Earnings Call Highlights",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/w-t-offshore-q2-earnings-170357109.html",
+          "published": "2026-08-09T17:03:57Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Warby Parker Q2 Earnings Call Highlights",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/warby-parker-q2-earnings-call-170356111.html",
+          "published": "2026-08-09T17:03:56Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "WPP H1 Earnings Call Highlights",
+          "link": "https://finance.yahoo.com/media-advertising/articles/wpp-h1-earnings-call-highlights-170356880.html",
+          "published": "2026-08-09T17:03:56Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Wheaton Precious Metals Q2 Earnings Call Highlights",
+          "link": "https://finance.yahoo.com/markets/commodities/articles/wheaton-precious-metals-q2-earnings-170356529.html",
+          "published": "2026-08-09T17:03:56Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Advanced Drainage Systems Q1 Earnings Call Highlights",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/advanced-drainage-systems-q1-earnings-170354672.html",
+          "published": "2026-08-09T17:03:54Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-09",
+      "kind": "roundup"
+    },
+    {
+      "id": "st_bbf1e4",
+      "headline": "If You Loved ‘Stuart Fails to Save the Universe,' There's One Movie You Need to Watch Next",
+      "headline_source": "fallback",
+      "keywords": [
+        "movie watch",
+        "10",
+        "loved"
+      ],
+      "entities": [
+        "If You Loved",
+        "There's Movie You Need",
+        "Watch Next",
+        "Shows Like"
+      ],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 7,
+      "latest_published": "2026-08-07T17:00:18Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 7
+        }
+      ],
+      "articles": [
+        {
+          "title": "If You Loved 'Futurama,' There's One Movie You Need to Watch Next",
+          "link": "https://lifehacker.com/entertainment/what-movie-to-watch-after-futurama?utm_medium=RSS",
+          "published": "2026-08-07T17:00:18Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "10 Shows Like 'Furious' You Should Watch Next",
+          "link": "https://lifehacker.com/entertainment/best-shows-like-furious?utm_medium=RSS",
+          "published": "2026-08-06T16:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "The Apple Watch Series 11 Is $150 Off Right Now",
+          "link": "https://lifehacker.com/tech/apple-watch-series-11-deal-august-2026?utm_medium=RSS",
+          "published": "2026-08-05T21:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "If You Loved 'Ted Lasso,' There's One Movie You Need to Watch Next",
+          "link": "https://lifehacker.com/entertainment/what-movie-fans-of-ted-lasso-should-watch?utm_medium=RSS",
+          "published": "2026-08-05T19:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "If You Loved 'Gilmore Girls,' There's One Movie You Need to Watch Next",
+          "link": "https://lifehacker.com/entertainment/what-movie-fans-of-gilmore-girls-should-watch?utm_medium=RSS",
+          "published": "2026-07-31T16:50:30Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "If You Loved ‘Stuart Fails to Save the Universe,' There's One Movie You Need to Watch Next",
+          "link": "https://lifehacker.com/entertainment/what-movie-to-watch-after-stuart-fails-to-save-the-universe?utm_medium=RSS",
+          "published": "2026-07-30T17:32:06Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "10 Shows Like 'Futurama' You Should Watch Next",
+          "link": "https://lifehacker.com/entertainment/best-shows-like-futurama?utm_medium=RSS",
+          "published": "2026-07-29T20:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 6,
+      "first_seen": "2026-07-29",
+      "kind": "story"
+    },
+    {
+      "id": "st_706355",
+      "headline": "Today Is Your Last Chance to Preorder a Samsung Galaxy Z Phone and Get a $350 Amazon Gift Card",
+      "headline_source": "fallback",
+      "keywords": [
+        "chance preorder samsung galaxy",
+        "amazon gift card",
+        "samsung oled tv"
+      ],
+      "entities": [
+        "Samsung Galaxy Watch",
+        "Is Last Chance",
+        "Preorder",
+        "Get",
+        "Amazon Gift Card"
+      ],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 6,
+      "latest_published": "2026-08-06T19:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 6
+        }
+      ],
+      "articles": [
+        {
+          "title": "This Pre-Order Deal for the Samsung Galaxy Watch 9 Ultra2 Ends Today",
+          "link": "https://lifehacker.com/tech/samsung-galaxy-watch-ultra2-deal-august-2026?utm_medium=RSS",
+          "published": "2026-08-06T19:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Today Is Your Last Chance to Preorder a Samsung Galaxy Watch 9 and Get a $50 Amazon Gift Card",
+          "link": "https://lifehacker.com/tech/samsung-galaxy-watch-9-preorder-amazon-gift-card-deal-august-2026?utm_medium=RSS",
+          "published": "2026-08-06T18:30:41Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Today Is Your Last Chance to Preorder a Samsung Galaxy Z Phone and Get a $350 Amazon Gift Card",
+          "link": "https://lifehacker.com/tech/preorder-samsung-galaxy-z-phones-deal?utm_medium=RSS",
+          "published": "2026-08-06T17:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Your Samsung Galaxy Watch's Browser Just Got a Useful Upgrade",
+          "link": "https://lifehacker.com/tech/your-samsung-galaxy-watchs-browser-just-got-a-useful-upgrade?utm_medium=RSS",
+          "published": "2026-07-31T17:39:55Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This 2026 Samsung OLED TV Is $700 Off Right Now",
+          "link": "https://lifehacker.com/tech/2026-samsung-oled-tv-sale-july-2026?utm_medium=RSS",
+          "published": "2026-07-31T12:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This Budget Samsung OLED TV Is Now $800 Off Its Original Price",
+          "link": "https://lifehacker.com/tech/samsung-s85f-oled-tv-deal-april-2026?utm_medium=RSS",
+          "published": "2026-07-30T19:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 3,
+      "first_seen": "2026-07-30",
+      "kind": "deal"
+    },
+    {
+      "id": "st_31fa69",
+      "headline": "Hisense’s Latest 65-Inch Mini-LED TV Is Nearly Half Off Right Now",
+      "headline_source": "fallback",
+      "keywords": [
+        "qled",
+        "tv",
+        "led"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 4,
+      "latest_published": "2026-08-06T13:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 4
+        }
+      ],
+      "articles": [
+        {
+          "title": "Hisense’s Latest 65-Inch Mini-LED TV Is Nearly Half Off Right Now",
+          "link": "https://lifehacker.com/tech/hisense-u6-pro-tv-sale-august-2026?utm_medium=RSS",
+          "published": "2026-08-06T13:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This Massive Mini LED QLED From TCL Is $800 Off Right Now",
+          "link": "https://lifehacker.com/tech/this-massive-mini-led-qled-from-tcl-is-800-off-right-now?utm_medium=RSS",
+          "published": "2026-08-04T21:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "One of the Best QLED TVs of 2026 Is $1,000 Off Right Now",
+          "link": "https://lifehacker.com/tech/one-of-the-best-qled-tvs-of-2026-is-40-off-right-now?utm_medium=RSS",
+          "published": "2026-07-30T20:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This Ultra-Thin QLED TV Is 45% Off Right Now",
+          "link": "https://lifehacker.com/tech/hisense-qled-tv-deal-july-2026?utm_medium=RSS",
+          "published": "2026-07-29T18:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 4,
+      "first_seen": "2026-07-29",
+      "kind": "deal"
+    },
+    {
+      "id": "st_2e4e7e",
+      "headline": "Weekend CD and mortgage rate roundups",
+      "headline_source": "llm",
+      "keywords": [
+        "mortgage refinance interest rates",
+        "saturday august 8 2026",
+        "rates today sunday august"
+      ],
+      "entities": [
+        "August",
+        "Sunday",
+        "APY",
+        "Mortgage",
+        "Rates"
+      ],
+      "section": "Markets",
+      "outlet_count": 1,
+      "article_count": 4,
+      "latest_published": "2026-08-09T10:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "articles": 4
+        }
+      ],
+      "articles": [
+        {
+          "title": "Best CD rates today, Sunday, August 9, 2026: Lock in up to 4.35% APY",
+          "link": "https://finance.yahoo.com/personal-finance/banking/article/best-cd-rates-today-sunday-august-9-2026-lock-in-up-to-435-apy-100000411.html",
+          "published": "2026-08-09T10:00:00Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Mortgage and refinance interest rates today, Sunday, August 9, 2026: Rates mostly lower than last week",
+          "link": "https://finance.yahoo.com/personal-finance/mortgages/article/mortgage-and-refinance-interest-rates-today-sunday-august-9-2026-rates-mostly-lower-than-last-week-100000935.html",
+          "published": "2026-08-09T10:00:00Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Best CD rates today, Saturday, August 8, 2026: Best CD account earns 4.15% APY",
+          "link": "https://finance.yahoo.com/personal-finance/banking/article/best-cd-rates-today-saturday-august-8-2026-best-cd-account-earns-415-apy-100000008.html",
+          "published": "2026-08-08T10:00:00Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Mortgage and refinance interest rates today, Saturday, August 8, 2026: Rates mixed this weekend",
+          "link": "https://finance.yahoo.com/personal-finance/mortgages/article/mortgage-and-refinance-interest-rates-today-saturday-august-8-2026-rates-mixed-this-weekend-100000461.html",
+          "published": "2026-08-08T10:00:00Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-08",
+      "kind": "story"
+    },
+    {
+      "id": "st_23a4b4",
+      "headline": "Victory Capital Hit a Stock-Price Target in Months. Here's What the CFO's Latest Insider Filing Shows",
+      "headline_source": "fallback",
+      "keywords": [
+        "victory capital",
+        "stock",
+        "vested"
+      ],
+      "entities": [
+        "Know"
+      ],
+      "section": "Markets",
+      "outlet_count": 1,
+      "article_count": 3,
+      "latest_published": "2026-08-09T17:26:04Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "articles": 3
+        }
+      ],
+      "articles": [
+        {
+          "title": "A Victory Capital Insider's Shares Vested as the Stock Climbed to Records. Here's What to Know",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/victory-capital-insiders-shares-vested-172604359.html",
+          "published": "2026-08-09T17:26:04Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Victory Capital Hit a Stock-Price Target in Months. Here's What the CFO's Latest Insider Filing Shows",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/victory-capital-hit-stock-price-171934908.html",
+          "published": "2026-08-09T17:19:34Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Victory Capital's CEO Stock Vested Because Shares Hit a Target. Here's What to Know",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/victory-capitals-ceo-stock-vested-171158666.html",
+          "published": "2026-08-09T17:11:58Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-09",
+      "kind": "roundup"
+    },
+    {
+      "id": "st_19ff5c",
+      "headline": "Metals and crypto climb after the July jobs report misses",
+      "headline_source": "llm",
+      "keywords": [
+        "prices today friday august",
+        "july jobs report",
+        "august 7 2026"
+      ],
+      "entities": [
+        "Friday",
+        "August",
+        "July",
+        "Silver",
+        "Gold"
+      ],
+      "section": "Markets",
+      "outlet_count": 1,
+      "article_count": 3,
+      "latest_published": "2026-08-07T13:14:51Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "articles": 3
+        }
+      ],
+      "articles": [
+        {
+          "title": "Bitcoin and ethereum prices today, Friday, August 7, 2026: Crypto prices moving higher following July jobs report",
+          "link": "https://finance.yahoo.com/personal-finance/investing/article/bitcoin-and-ethereum-prices-today-friday-august-7-2026-crypto-prices-moving-higher-following-july-jobs-report-131451960.html",
+          "published": "2026-08-07T13:14:51Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Silver prices today, Friday, August 7, 2026: Silver surge continues as jobs report disappoints",
+          "link": "https://finance.yahoo.com/personal-finance/investing/article/silver-prices-today-friday-august-7-2026-silver-surge-continues-as-jobs-report-disappoints-124342659.html",
+          "published": "2026-08-07T12:43:42Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Gold prices today, Friday, August 7, 2026: Gold prices continue to rise even after July jobs report misses",
+          "link": "https://finance.yahoo.com/personal-finance/investing/article/gold-prices-today-friday-august-7-2026-gold-prices-continue-to-rise-even-after-july-jobs-report-misses-122102132.html",
+          "published": "2026-08-07T12:21:02Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-07",
+      "kind": "roundup"
+    },
+    {
+      "id": "st_41f9ac",
+      "headline": "Magnite Bought Back $28 Million in Stock While Its Insiders Sold. Here's How to Read It",
+      "headline_source": "fallback",
+      "keywords": [
+        "magnite insider",
+        "stock"
+      ],
+      "entities": [
+        "Million",
+        "Know"
+      ],
+      "section": "Markets",
+      "outlet_count": 1,
+      "article_count": 3,
+      "latest_published": "2026-08-09T16:44:36Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "articles": 3
+        }
+      ],
+      "articles": [
+        {
+          "title": "A Magnite Insider Kept $12 Million in Stock After Selling. Here's What to Know",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/magnite-insider-kept-12-million-164436423.html",
+          "published": "2026-08-09T16:44:36Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Magnite Bought Back $28 Million in Stock While Its Insiders Sold. Here's How to Read It",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/magnite-bought-back-28-million-163444800.html",
+          "published": "2026-08-09T16:34:44Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "A Magnite Insider Cashed In Options as CTV Revenue Jumped 36%. Here's What to Know",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/magnite-insider-cashed-options-ctv-162023089.html",
+          "published": "2026-08-09T16:20:23Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-09",
+      "kind": "roundup"
+    },
+    {
+      "id": "st_618ad4",
+      "headline": "Hawaii governor and incumbent House member win Democratic primaries",
+      "headline_source": "llm",
+      "keywords": [
+        "gov josh green",
+        "primary win",
+        "cruises"
+      ],
+      "entities": [
+        "Hawaii",
+        "Dem"
+      ],
+      "section": "US politics",
+      "outlet_count": 1,
+      "article_count": 3,
+      "latest_published": "2026-08-09T05:41:49Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "articles": 3
+        }
+      ],
+      "articles": [
+        {
+          "title": "Hawaii Gov Josh Green cruises to Democratic primary win, sets up fall matchup with GOP nominee",
+          "link": "https://www.foxnews.com/politics/hawaii-gov-josh-green-cruises-democratic-primary-win-sets-fall-matchup-gop-nominee",
+          "published": "2026-08-09T05:41:49Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "US politics",
+          "feed": "https://moxie.foxnews.com/google-publisher/politics.xml"
+        },
+        {
+          "title": "Hawaii rep cruises to Dem primary win after challenger arrested for beach brawl",
+          "link": "https://www.foxnews.com/politics/hawaii-rep-cruises-dem-primary-win-after-challenger-arrested-beach-brawl",
+          "published": "2026-08-09T05:39:16Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "US politics",
+          "feed": "https://moxie.foxnews.com/google-publisher/politics.xml"
+        },
+        {
+          "title": "Hawaii voters hit the polls as Gov Josh Green dominates, progressive takes aim at Dem congressman",
+          "link": "https://www.foxnews.com/politics/hawaii-voters-hit-polls-gov-josh-green-dominates-progressive-takes-aim-dem-congressman",
+          "published": "2026-08-08T16:00:51Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "US politics",
+          "feed": "https://moxie.foxnews.com/google-publisher/politics.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-08",
+      "kind": "story"
+    },
+    {
+      "id": "st_a547aa",
+      "headline": "Senate recess slips as a GOP-Trump deal is negotiated",
+      "headline_source": "llm",
+      "keywords": [
+        "gop",
+        "exit",
+        "senate"
+      ],
+      "entities": [
+        "Senate"
+      ],
+      "section": "US politics",
+      "outlet_count": 1,
+      "article_count": 3,
+      "latest_published": "2026-08-08T03:53:43Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 3
+        }
+      ],
+      "articles": [
+        {
+          "title": "Senate eyes the exit after GOP-Trump deal",
+          "link": "https://www.politico.com/live-updates/2026/08/07/congress/senate-trump-votes-01030007",
+          "published": "2026-08-08T03:53:43Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/congress.xml"
+        },
+        {
+          "title": "Vance to Senate GOP lunch",
+          "link": "https://www.politico.com/live-updates/2026/08/06/congress/jd-vance-senate-gop-lunch-01027445",
+          "published": "2026-08-06T16:59:22Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/congress.xml"
+        },
+        {
+          "title": "Capitol agenda: Summer exit eludes Senate",
+          "link": "https://www.politico.com/live-updates/2026/08/06/congress/summer-exit-eludes-senate-01026760",
+          "published": "2026-08-06T12:00:00Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/congress.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-06",
+      "kind": "story"
+    },
+    {
+      "id": "st_745a79",
+      "headline": "Why Usana Health Sciences Stock Plummeted This Week",
+      "headline_source": "fallback",
+      "keywords": [
+        "stock plummeted week"
+      ],
+      "entities": [],
+      "section": "Markets",
+      "outlet_count": 1,
+      "article_count": 3,
+      "latest_published": "2026-08-09T17:13:03Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "articles": 3
+        }
+      ],
+      "articles": [
+        {
+          "title": "Why AdaptHealth Stock Plummeted This Week",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/why-adapthealth-stock-plummeted-week-171303684.html",
+          "published": "2026-08-09T17:13:03Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Why Usana Health Sciences Stock Plummeted This Week",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/why-usana-health-sciences-stock-164851585.html",
+          "published": "2026-08-09T16:48:51Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Why Gartner Stock Skyrocketed This Week",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/why-gartner-stock-skyrocketed-week-163316434.html",
+          "published": "2026-08-09T16:33:16Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-09",
+      "kind": "roundup"
+    },
+    {
+      "id": "st_85361b",
+      "headline": "Rivian Is Worth $23 Billion With the R2 Just Ramping. Where Will the Stock Be in 3 Years?",
+      "headline_source": "fallback",
+      "keywords": [
+        "worth",
+        "years"
+      ],
+      "entities": [
+        "Years"
+      ],
+      "section": "Markets",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-09T17:07:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "Rivian Is Worth $23 Billion With the R2 Just Ramping. Where Will the Stock Be in 3 Years?",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/rivian-worth-23-billion-r2-170700870.html",
+          "published": "2026-08-09T17:07:00Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        },
+        {
+          "title": "Here's How Saving $15 Per Day Could Create a Portfolio Worth $1 Million in 30 Years",
+          "link": "https://finance.yahoo.com/markets/stocks/articles/heres-saving-15-per-day-162000364.html",
+          "published": "2026-08-09T16:20:00Z",
+          "outlet": "Yahoo Finance",
+          "domain": "finance.yahoo.com",
+          "section": "Markets",
+          "feed": "https://finance.yahoo.com/rss/"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-09",
+      "kind": "story"
+    },
+    {
+      "id": "st_88d1ac",
+      "headline": "Lifehacker Deals Live Blog: The Best Tech Sales, All in One Place",
+      "headline_source": "fallback",
+      "keywords": [
+        "tech",
+        "deals"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-06T21:16:41Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "Lifehacker Deals Live Blog: The Best Tech Sales, All in One Place",
+          "link": "https://lifehacker.com/lifehacker-deals-live-blog?utm_medium=RSS",
+          "published": "2026-08-06T21:16:41Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "I’m a Deals Writer, and These Are My Top 10 Tech Deals This Week",
+          "link": "https://lifehacker.com/tech/best-tech-deals-this-week?utm_medium=RSS",
+          "published": "2026-07-31T21:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-07-31",
+      "kind": "deal"
+    },
+    {
+      "id": "st_f7cbd1",
+      "headline": "The Top 10 TV Series Right Now, According to Streaming Data",
+      "headline_source": "fallback",
+      "keywords": [
+        "top 10",
+        "streaming data"
+      ],
+      "entities": [
+        "According",
+        "Streaming Data"
+      ],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-05T16:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "The Top 10 TV Series Right Now, According to Streaming Data",
+          "link": "https://lifehacker.com/entertainment/the-top-10-streaming-series-july-2026?utm_medium=RSS",
+          "published": "2026-08-05T16:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "The Top 10 Movies Right Now, According to Streaming Data",
+          "link": "https://lifehacker.com/entertainment/the-top-10-movies-right-now-according-to-streaming-data-august-2026?utm_medium=RSS",
+          "published": "2026-08-04T18:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-04",
+      "kind": "roundup"
+    },
+    {
+      "id": "st_90424f",
+      "headline": "Dyson's OnTrac ANC Headphones Have Great Battery Life, and They're Half Off Right Now",
+      "headline_source": "fallback",
+      "keywords": [
+        "half",
+        "anc"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-04T13:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "These Apple AirPods 4 With ANC Are Half Off Right Now",
+          "link": "https://lifehacker.com/tech/apple-airpods-4-anc-sale-august-2026?utm_medium=RSS",
+          "published": "2026-08-04T13:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "Dyson's OnTrac ANC Headphones Have Great Battery Life, and They're Half Off Right Now",
+          "link": "https://lifehacker.com/tech/dyson-ontrac-cnc-aluminum-headphones-deal-july-2026?utm_medium=RSS",
+          "published": "2026-07-29T19:30:11Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-07-29",
+      "kind": "deal"
+    },
+    {
+      "id": "st_134ae9",
+      "headline": "Fever coach defends Carrington after a flagrant foul ejection",
+      "headline_source": "llm",
+      "keywords": [
+        "flagrant foul",
+        "fever",
+        "dijonai"
+      ],
+      "entities": [
+        "Fever"
+      ],
+      "section": "General",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-09T17:02:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "Sophie Cunningham's former teammate appears to fully endorse DiJonai Carrington's flagrant foul on Fever star",
+          "link": "https://www.foxnews.com/outkick-sports/sophie-cunningham-former-teammate-endorses-dijonai-carrington-flagrant-foul-fever-star",
+          "published": "2026-08-09T17:02:00Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "General",
+          "feed": "https://moxie.foxnews.com/google-publisher/latest.xml"
+        },
+        {
+          "title": "Fever coach Stephanie White defends DiJonai Carrington after flagrant foul ejection on her own player",
+          "link": "https://www.foxnews.com/outkick-sports/fever-coach-stephanie-white-defends-dijonai-carrington-flagrant-foul-ejection-player",
+          "published": "2026-08-09T14:45:35Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "General",
+          "feed": "https://moxie.foxnews.com/google-publisher/latest.xml"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-09",
+      "kind": "story"
+    },
+    {
+      "id": "st_9e4086",
+      "headline": "Ceuta migrant surge reignites Spain-Morocco tensions",
+      "headline_source": "llm",
+      "keywords": [
+        "migrant surge",
+        "islamist"
+      ],
+      "entities": [
+        "Islamist"
+      ],
+      "section": "World",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-08T13:23:51Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "Spain's migrant surge reignites debate over Europe’s Islamist terror threat",
+          "link": "https://www.foxnews.com/world/spains-migrant-surge-reignites-debate-over-europes-islamist-terror-threat",
+          "published": "2026-08-08T13:23:51Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "World",
+          "feed": "https://moxie.foxnews.com/google-publisher/world.xml"
+        },
+        {
+          "title": "Ceuta migrant surge exposes Spain-Morocco tensions as Islamist groups reportedly seek to exploit border crisis",
+          "link": "https://www.foxnews.com/world/ceuta-migrant-surge-exposes-spain-morocco-tensions-islamist-groups-reportedly-seek-exploit-border-crisis",
+          "published": "2026-08-04T14:44:14Z",
+          "outlet": "Fox News",
+          "domain": "foxnews.com",
+          "section": "World",
+          "feed": "https://moxie.foxnews.com/google-publisher/world.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-04",
+      "kind": "story"
+    },
+    {
+      "id": "st_5d7a76",
+      "headline": "NIH and HHS leaders spar with TV hosts over public trust in health guidance",
+      "headline_source": "llm",
+      "keywords": [
+        "public",
+        "host",
+        "health"
+      ],
+      "entities": [],
+      "section": "US politics",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-09T17:22:08Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "NIH head quarrels with CBS host over loss in public trust on health issues",
+          "link": "https://www.politico.com/news/2026/08/09/bhattacharya-brennan-vaccination-health-issues-01030313",
+          "published": "2026-08-09T17:22:08Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/healthcare.xml"
+        },
+        {
+          "title": "RFK Jr. tells CNN host that constitutional rights take priority over public health",
+          "link": "https://www.politico.com/news/2026/08/02/rfk-jr-dana-bash-cnn-covid-01021641",
+          "published": "2026-08-02T15:19:38Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/healthcare.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-02",
+      "kind": "story"
+    },
+    {
+      "id": "st_88014f",
+      "headline": "Red states reject a Medicaid lifeline as a work rule survives court challenge",
+      "headline_source": "llm",
+      "keywords": [
+        "sick",
+        "patients",
+        "medicaid"
+      ],
+      "entities": [
+        "Medicaid"
+      ],
+      "section": "US politics",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-09T14:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "The Trump admin offered sick Medicaid patients a 1-year lifeline. These red states are rejecting it.",
+          "link": "https://www.politico.com/news/2026/08/09/medicaid-work-requirements-exemptions-medical-frailty-01029777",
+          "published": "2026-08-09T14:00:00Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/healthcare.xml"
+        },
+        {
+          "title": "Judge declines to block strict work rule for sick patients on Medicaid",
+          "link": "https://www.politico.com/news/2026/07/30/judge-declines-to-block-medicaid-work-rule-01016889",
+          "published": "2026-07-30T14:02:01Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/healthcare.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-07-30",
+      "kind": "story"
+    },
+    {
+      "id": "st_24516f",
+      "headline": "State Department releases $600M in vaccine funding held up by RFK Jr.",
+      "headline_source": "llm",
+      "keywords": [
+        "600m vaccines rfk jr",
+        "held",
+        "dispense"
+      ],
+      "entities": [
+        "RFK Jr."
+      ],
+      "section": "US politics",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-07-30T00:57:29Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "Trump administration to dispense $600M for vaccines RFK Jr. held up",
+          "link": "https://www.politico.com/news/2026/07/29/gavi-vaccines-rfk-rubio-thimerosal-autism-01016663",
+          "published": "2026-07-30T00:57:29Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/healthcare.xml"
+        },
+        {
+          "title": "State Department will dispense $600M for vaccines RFK Jr. held up, Collins says",
+          "link": "https://www.politico.com/news/2026/07/28/vaccines-rfk-collins-gavi-rubio-01013690",
+          "published": "2026-07-28T20:15:46Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/healthcare.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-07-28",
+      "kind": "story"
+    },
+    {
+      "id": "st_f7dcac",
+      "headline": "This Loud and Rugged JBL Speaker Is $65 Off Right Now",
+      "headline_source": "fallback",
+      "keywords": [
+        "jbl speaker"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-07T18:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "This Loud and Rugged JBL Speaker Is $65 Off Right Now",
+          "link": "https://lifehacker.com/tech/jbl-speaker-deal-august-2026?utm_medium=RSS",
+          "published": "2026-08-07T18:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This Clip-On JBL Speaker Is 38% Off Right Now",
+          "link": "https://lifehacker.com/tech/jbl-clip-5-speaker-sale-august-2026?utm_medium=RSS",
+          "published": "2026-08-03T12:30:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-03",
+      "kind": "deal"
+    },
+    {
+      "id": "st_efabcd",
+      "headline": "College sports bill advances as the CBC objects to the debate process",
+      "headline_source": "llm",
+      "keywords": [
+        "college sports"
+      ],
+      "entities": [],
+      "section": "US politics",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-06T19:00:02Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "Protect College Sports Act debate has ‘failed’ to listen to Black Americans, CBC says",
+          "link": "https://www.politico.com/live-updates/2026/08/06/congress/congressional-black-caucus-protect-college-sports-act-01027720",
+          "published": "2026-08-06T19:00:02Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/congress.xml"
+        },
+        {
+          "title": "Thune tees up action on college sports bill",
+          "link": "https://www.politico.com/live-updates/2026/08/05/congress/senate-vote-college-sports-01025456",
+          "published": "2026-08-05T15:29:51Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/congress.xml"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-08-05",
+      "kind": "story"
+    },
+    {
+      "id": "st_430256",
+      "headline": "This Floatable Anker Speaker Is Nearly Half Off Right Now",
+      "headline_source": "fallback",
+      "keywords": [
+        "anker"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-03T13:00:00Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "This Floatable Anker Speaker Is Nearly Half Off Right Now",
+          "link": "https://lifehacker.com/tech/anker-soundcore-boom-2-speaker-sale-august-2026?utm_medium=RSS",
+          "published": "2026-08-03T13:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This Anker Charging Station Is 30% Off Right Now",
+          "link": "https://lifehacker.com/tech/anker-prime-charging-station-sale-july-2026?utm_medium=RSS",
+          "published": "2026-07-30T16:00:00Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-07-30",
+      "kind": "deal"
+    },
+    {
+      "id": "st_5d92fa",
+      "headline": "This Is the Robot Vacuum I Use Every Day, and It's 47% Off Right Now",
+      "headline_source": "fallback",
+      "keywords": [
+        "vacuum"
+      ],
+      "entities": [],
+      "section": "Tech",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-07-31T13:00:47Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "This Self-Cleaning Roborock Vacuum Is $700 Off Right Now",
+          "link": "https://lifehacker.com/tech/roborock-saros-10r-deal-july-2026?utm_medium=RSS",
+          "published": "2026-07-31T13:00:47Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        },
+        {
+          "title": "This Is the Robot Vacuum I Use Every Day, and It's 47% Off Right Now",
+          "link": "https://lifehacker.com/home/roborock-qrevo-curvx-deal-july-2026?utm_medium=RSS",
+          "published": "2026-07-29T22:30:33Z",
+          "outlet": "Lifehacker",
+          "domain": "lifehacker.com",
+          "section": "Tech",
+          "feed": "https://lifehacker.com/feed/rss"
+        }
+      ],
+      "days_running": 2,
+      "first_seen": "2026-07-29",
+      "kind": "deal"
+    },
+    {
+      "id": "st_62fa2e",
+      "headline": "Moreno responds to Johnson",
+      "headline_source": "fallback",
+      "keywords": [
+        "johnson"
+      ],
+      "entities": [
+        "Johnson"
+      ],
+      "section": "US politics",
+      "outlet_count": 1,
+      "article_count": 2,
+      "latest_published": "2026-08-05T18:55:51Z",
+      "merged_from_groups": 1,
+      "outlets": [
+        {
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "articles": 2
+        }
+      ],
+      "articles": [
+        {
+          "title": "Moreno responds to Johnson",
+          "link": "https://www.politico.com/live-updates/2026/08/05/congress/moreno-responds-to-johnson-01025917",
+          "published": "2026-08-05T18:55:51Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/congress.xml"
+        },
+        {
+          "title": "What Johnson told Edwards",
+          "link": "https://www.politico.com/live-updates/2026/08/05/congress/mike-johnson-chuck-edwards-01025620",
+          "published": "2026-08-05T16:37:30Z",
+          "outlet": "Politico",
+          "domain": "politico.com",
+          "section": "US politics",
+          "feed": "https://rss.politico.com/congress.xml"
+        }
+      ],
+      "days_running": 1,
+      "first_seen": "2026-08-05",
+      "kind": "story"
+    }
+  ],
+  "kind_counts": {
+    "story": 24,
+    "roundup": 7,
+    "deal": 10
+  },
+  "classifier_note": "kind: deal = majority of titles match a price/offer pattern; roundup = single outlet plus a shared contiguous title template of 3+ words carrying no proper noun; story = everything else."
+}

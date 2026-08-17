@@ -1,0 +1,789 @@
+{
+  "version": "0.3.0",
+  "generated": "2026-08-09T12:00:00",
+  "window_days": 14,
+  "window_start": "2026-07-27",
+  "window_end": "2026-08-09",
+  "approximation": true,
+  "approximation_note": "Derived from the published timestamps inside a single fetch, not from stored daily runs. In production this file is accumulated one datapoint per day, taking max(outlets) across that day’s four runs.",
+  "stories": {
+    "st_11f911": {
+      "first_seen": "2026-08-03",
+      "days_running": 4,
+      "series": [
+        {
+          "date": "2026-08-03",
+          "outlets": 2,
+          "articles": 3
+        },
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-06",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-07",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-03",
+      "trend": "cooling"
+    },
+    "st_23d9a0": {
+      "first_seen": "2026-08-03",
+      "days_running": 6,
+      "series": [
+        {
+          "date": "2026-08-03",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-04",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-06",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-07",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-08",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-03",
+      "trend": "steady"
+    },
+    "st_bfa329": {
+      "first_seen": "2026-08-03",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-03",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 2,
+          "articles": 2
+        }
+      ],
+      "peak_date": "2026-08-09",
+      "trend": "climbing"
+    },
+    "st_999cb0": {
+      "first_seen": "2026-08-03",
+      "days_running": 3,
+      "series": [
+        {
+          "date": "2026-08-03",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-03",
+      "trend": "steady"
+    },
+    "st_1d2c10": {
+      "first_seen": "2026-07-30",
+      "days_running": 3,
+      "series": [
+        {
+          "date": "2026-07-30",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-07",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-08",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-30",
+      "trend": "steady"
+    },
+    "st_11ff81": {
+      "first_seen": "2026-08-04",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-04",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-04",
+      "trend": "steady"
+    },
+    "st_39ac84": {
+      "first_seen": "2026-07-28",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-07-28",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-28",
+      "trend": "steady"
+    },
+    "st_982368": {
+      "first_seen": "2026-08-09",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-09",
+          "outlets": 2,
+          "articles": 2
+        }
+      ],
+      "peak_date": "2026-08-09",
+      "trend": "new"
+    },
+    "st_736daf": {
+      "first_seen": "2026-08-05",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-08",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-05",
+      "trend": "steady"
+    },
+    "st_cd0446": {
+      "first_seen": "2026-08-05",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-05",
+      "trend": "steady"
+    },
+    "st_951cf4": {
+      "first_seen": "2026-08-04",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-04",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-08",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-04",
+      "trend": "steady"
+    },
+    "st_fafc80": {
+      "first_seen": "2026-08-08",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-08",
+          "outlets": 2,
+          "articles": 2
+        }
+      ],
+      "peak_date": "2026-08-08",
+      "trend": "single day"
+    },
+    "st_27efbd": {
+      "first_seen": "2026-07-29",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-07-29",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-29",
+      "trend": "steady"
+    },
+    "st_fe26a3": {
+      "first_seen": "2026-08-04",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-04",
+          "outlets": 2,
+          "articles": 2
+        }
+      ],
+      "peak_date": "2026-08-04",
+      "trend": "single day"
+    },
+    "st_526d67": {
+      "first_seen": "2026-08-05",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-05",
+      "trend": "steady"
+    },
+    "st_313a32": {
+      "first_seen": "2026-07-29",
+      "days_running": 6,
+      "series": [
+        {
+          "date": "2026-07-29",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-07-30",
+          "outlets": 1,
+          "articles": 2
+        },
+        {
+          "date": "2026-07-31",
+          "outlets": 1,
+          "articles": 2
+        },
+        {
+          "date": "2026-08-03",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-04",
+          "outlets": 1,
+          "articles": 4
+        },
+        {
+          "date": "2026-08-07",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-29",
+      "trend": "steady"
+    },
+    "st_32bf8d": {
+      "first_seen": "2026-08-09",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 8
+        }
+      ],
+      "peak_date": "2026-08-09",
+      "trend": "new"
+    },
+    "st_bbf1e4": {
+      "first_seen": "2026-07-29",
+      "days_running": 6,
+      "series": [
+        {
+          "date": "2026-07-29",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-07-30",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-07-31",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 2
+        },
+        {
+          "date": "2026-08-06",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-07",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-29",
+      "trend": "steady"
+    },
+    "st_706355": {
+      "first_seen": "2026-07-30",
+      "days_running": 3,
+      "series": [
+        {
+          "date": "2026-07-30",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-07-31",
+          "outlets": 1,
+          "articles": 2
+        },
+        {
+          "date": "2026-08-06",
+          "outlets": 1,
+          "articles": 3
+        }
+      ],
+      "peak_date": "2026-07-30",
+      "trend": "steady"
+    },
+    "st_31fa69": {
+      "first_seen": "2026-07-29",
+      "days_running": 4,
+      "series": [
+        {
+          "date": "2026-07-29",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-07-30",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-04",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-06",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-29",
+      "trend": "steady"
+    },
+    "st_2e4e7e": {
+      "first_seen": "2026-08-08",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-08",
+          "outlets": 1,
+          "articles": 2
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 2
+        }
+      ],
+      "peak_date": "2026-08-08",
+      "trend": "steady"
+    },
+    "st_23a4b4": {
+      "first_seen": "2026-08-09",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 3
+        }
+      ],
+      "peak_date": "2026-08-09",
+      "trend": "new"
+    },
+    "st_19ff5c": {
+      "first_seen": "2026-08-07",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-07",
+          "outlets": 1,
+          "articles": 3
+        }
+      ],
+      "peak_date": "2026-08-07",
+      "trend": "single day"
+    },
+    "st_41f9ac": {
+      "first_seen": "2026-08-09",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 3
+        }
+      ],
+      "peak_date": "2026-08-09",
+      "trend": "new"
+    },
+    "st_618ad4": {
+      "first_seen": "2026-08-08",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-08",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 2
+        }
+      ],
+      "peak_date": "2026-08-08",
+      "trend": "steady"
+    },
+    "st_a547aa": {
+      "first_seen": "2026-08-06",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-06",
+          "outlets": 1,
+          "articles": 2
+        },
+        {
+          "date": "2026-08-08",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-06",
+      "trend": "steady"
+    },
+    "st_745a79": {
+      "first_seen": "2026-08-09",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 3
+        }
+      ],
+      "peak_date": "2026-08-09",
+      "trend": "new"
+    },
+    "st_85361b": {
+      "first_seen": "2026-08-09",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 2
+        }
+      ],
+      "peak_date": "2026-08-09",
+      "trend": "new"
+    },
+    "st_88d1ac": {
+      "first_seen": "2026-07-31",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-07-31",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-06",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-31",
+      "trend": "steady"
+    },
+    "st_f7cbd1": {
+      "first_seen": "2026-08-04",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-04",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-04",
+      "trend": "steady"
+    },
+    "st_90424f": {
+      "first_seen": "2026-07-29",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-07-29",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-04",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-29",
+      "trend": "steady"
+    },
+    "st_134ae9": {
+      "first_seen": "2026-08-09",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 2
+        }
+      ],
+      "peak_date": "2026-08-09",
+      "trend": "new"
+    },
+    "st_9e4086": {
+      "first_seen": "2026-08-04",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-04",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-08",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-04",
+      "trend": "steady"
+    },
+    "st_5d7a76": {
+      "first_seen": "2026-08-02",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-02",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-02",
+      "trend": "steady"
+    },
+    "st_88014f": {
+      "first_seen": "2026-07-30",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-07-30",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-09",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-30",
+      "trend": "steady"
+    },
+    "st_24516f": {
+      "first_seen": "2026-07-28",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-07-28",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-07-30",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-28",
+      "trend": "steady"
+    },
+    "st_f7dcac": {
+      "first_seen": "2026-08-03",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-03",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-07",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-03",
+      "trend": "steady"
+    },
+    "st_efabcd": {
+      "first_seen": "2026-08-05",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-06",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-08-05",
+      "trend": "steady"
+    },
+    "st_430256": {
+      "first_seen": "2026-07-30",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-07-30",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-08-03",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-30",
+      "trend": "steady"
+    },
+    "st_5d92fa": {
+      "first_seen": "2026-07-29",
+      "days_running": 2,
+      "series": [
+        {
+          "date": "2026-07-29",
+          "outlets": 1,
+          "articles": 1
+        },
+        {
+          "date": "2026-07-31",
+          "outlets": 1,
+          "articles": 1
+        }
+      ],
+      "peak_date": "2026-07-29",
+      "trend": "steady"
+    },
+    "st_62fa2e": {
+      "first_seen": "2026-08-05",
+      "days_running": 1,
+      "series": [
+        {
+          "date": "2026-08-05",
+          "outlets": 1,
+          "articles": 2
+        }
+      ],
+      "peak_date": "2026-08-05",
+      "trend": "single day"
+    }
+  }
+}
