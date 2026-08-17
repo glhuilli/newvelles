@@ -89,6 +89,76 @@ class TestLocalProvider:
         assert not _name_via_local(_story(ALASKA_TITLES)).endswith(".")
 
 
+class TestBedrockProvider:
+    def _bedrock_response(self, text):
+        body = MagicMock()
+        body.read.return_value = json.dumps(
+            {"content": [{"type": "text", "text": text}]}).encode()
+        return {"body": body}
+
+    @patch("boto3.client")
+    def test_invokes_inference_profile_with_correct_body(self, mock_client, monkeypatch):
+        monkeypatch.delenv("NEWVELLES_NAMING_MODEL", raising=False)
+        from newvelles.models.naming import _name_via_bedrock
+        mock_client.return_value.invoke_model.return_value = self._bedrock_response(
+            "Trump and Putin meet in Alaska without a ceasefire deal.")
+
+        result = _name_via_bedrock("PROMPT")
+
+        assert result == "Trump and Putin meet in Alaska without a ceasefire deal"
+        call = mock_client.return_value.invoke_model.call_args
+        assert call.kwargs["modelId"] == "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+        body = json.loads(call.kwargs["body"])
+        assert body["anthropic_version"] == "bedrock-2023-05-31"
+        assert body["messages"] == [{"role": "user", "content": "PROMPT"}]
+        # timeout/retry config at the network boundary
+        config = mock_client.call_args.kwargs["config"]
+        assert config.read_timeout == 8
+        assert config.retries == {"max_attempts": 2}
+
+    @patch("boto3.client")
+    def test_model_and_timeout_env_overrides(self, mock_client, monkeypatch):
+        monkeypatch.setenv("NEWVELLES_NAMING_MODEL", "us.anthropic.other-model-v1:0")
+        monkeypatch.setenv("NEWVELLES_NAMING_TIMEOUT", "3")
+        from newvelles.models.naming import _name_via_bedrock
+        mock_client.return_value.invoke_model.return_value = self._bedrock_response("A headline")
+
+        _name_via_bedrock("PROMPT")
+
+        assert mock_client.return_value.invoke_model.call_args.kwargs["modelId"] == \
+            "us.anthropic.other-model-v1:0"
+        assert mock_client.call_args.kwargs["config"].read_timeout == 3
+
+    @patch("boto3.client")
+    def test_provider_error_propagates(self, mock_client):
+        from newvelles.models.naming import _name_via_bedrock
+        mock_client.return_value.invoke_model.side_effect = RuntimeError("throttled")
+        with pytest.raises(RuntimeError):
+            _name_via_bedrock("PROMPT")
+
+
+class TestDormantProviders:
+    def test_anthropic_requires_key(self, monkeypatch):
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        from newvelles.models.naming import _name_via_anthropic
+        with pytest.raises(KeyError):
+            _name_via_anthropic("PROMPT")
+
+    def test_openai_requires_key(self, monkeypatch):
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        from newvelles.models.naming import _name_via_openai
+        with pytest.raises(KeyError):
+            _name_via_openai("PROMPT")
+
+    @patch("requests.post")
+    def test_anthropic_call_shape(self, mock_post, monkeypatch):
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        from newvelles.models.naming import _name_via_anthropic
+        mock_post.return_value.json.return_value = {"content": [{"text": "A headline"}]}
+        assert _name_via_anthropic("PROMPT") == "A headline"
+        assert mock_post.call_args.kwargs["headers"]["x-api-key"] == "sk-test"
+
+
 class TestProviderRegistry:
     def test_all_four_providers_registered(self):
         assert set(PROVIDERS) == {"bedrock", "anthropic", "openai", "local"}
