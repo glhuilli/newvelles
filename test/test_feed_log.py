@@ -251,9 +251,14 @@ class TestEmitVisualization:
             "latest_news.json",
             "latest_news_metadata.json",
         ]
-        # drift preserved: s3-only metadata has NO latest_log_reference
+        # S3 metadata records which archive object the live file came from,
+        # turning a restore from a search into a lookup
         meta = json.loads(mock_upload.call_args_list[2].kwargs["string_byte"])
-        assert meta == {"datetime": "2025-01-16T10:30:45", "version": "0.2.1"}
+        assert meta == {
+            "datetime": "2025-01-16T10:30:45",
+            "version": "0.2.1",
+            "latest_log_reference": "newvelles_visualization_0.2.1_2025-01-16T10:30:45.json",
+        }
         # payload bytes identical to legacy json.dumps
         assert mock_upload.call_args_list[0].kwargs["string_byte"] == json.dumps(viz).encode("utf-8")
         # public flags

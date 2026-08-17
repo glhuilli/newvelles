@@ -141,6 +141,9 @@ def emit_visualization(
         with open(metadata_path, "w", encoding="utf-8") as f:
             json.dump(latest_metadata, f)
     if write_s3:
+        # Record which private-bucket archive object the live file came from,
+        # so a data restore is a lookup instead of a search.
+        latest_metadata.setdefault("latest_log_reference", timestamped_name)
         upload_to_s3(
             bucket_name=_S3_PUBLIC_BUCKET,
             file_name=f"{_LOG_LATEST_VISUALIZATION_METADATA_NAME}.json",

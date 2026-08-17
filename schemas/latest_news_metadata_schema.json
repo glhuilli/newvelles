@@ -14,6 +14,10 @@
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
       "description": "Semantic version number (major.minor.patch)"
+    },
+    "latest_log_reference": {
+      "type": "string",
+      "description": "Archive object (private bucket) or local path this file was generated alongside"
     }
   },
   "required": ["datetime", "version"],
