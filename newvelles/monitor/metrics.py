@@ -45,21 +45,21 @@ def extract_file_metrics(data: Dict[str, Any], filename: str) -> Dict[str, Any]:
     sub_group_sizes = []
 
     # Traverse 3-level hierarchy
-    for top_level_key, top_level_value in data.items():
+    for top_level_value in data.values():
         if not isinstance(top_level_value, dict):
             continue
 
         top_level_count += 1
         top_level_article_count = 0
 
-        for sub_group_key, sub_group_value in top_level_value.items():
+        for sub_group_value in top_level_value.values():
             if not isinstance(sub_group_value, dict):
                 continue
 
             sub_group_count += 1
             sub_group_article_count = 0
 
-            for article_key, article_data in sub_group_value.items():
+            for article_data in sub_group_value.values():
                 if not isinstance(article_data, dict):
                     continue
 
@@ -101,7 +101,9 @@ def extract_file_metrics(data: Dict[str, Any], filename: str) -> Dict[str, Any]:
         }
 
     # Calculate sub-groups per top-level group
-    subgroups_per_top_group = round(sub_group_count / top_level_count, 2) if top_level_count > 0 else 0.0
+    subgroups_per_top_group = (
+        round(sub_group_count / top_level_count, 2) if top_level_count > 0 else 0.0
+    )
 
     return {
         'timestamp': timestamp,
@@ -264,7 +266,8 @@ def get_overall_statistics(daily_metrics: Dict[str, Dict[str, Any]]) -> Dict[str
         - articles: All-time statistics for article counts
         - groups: All-time statistics for top-level group counts (not including sub-groups)
         - sources: All-time statistics for source counts (if available)
-        - subgroups_per_top_group: All-time statistics for sub-groups per top-level group (if available)
+        - subgroups_per_top_group: All-time statistics for sub-groups per
+          top-level group (if available)
         - avg_updates_per_day: Average number of updates per day
     """
     if not daily_metrics:
@@ -308,7 +311,9 @@ def get_overall_statistics(daily_metrics: Dict[str, Dict[str, Any]]) -> Dict[str
                     all_sources.append(avg_sources)
 
                 # Calculate avg subgroups per top group
-                avg_subgroups_per_top = sum(u.get('subgroups_per_top_group', 0) for u in updates) / len(updates)
+                avg_subgroups_per_top = sum(
+                    u.get('subgroups_per_top_group', 0) for u in updates
+                ) / len(updates)
                 if avg_subgroups_per_top > 0:
                     all_subgroups_per_top.append(avg_subgroups_per_top)
 

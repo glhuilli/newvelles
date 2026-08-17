@@ -1,4 +1,5 @@
 # pylint: disable=too-many-lines
+import math
 import re
 from collections import Counter
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -838,18 +839,20 @@ def get_total_info_value(word: str) -> float:
     and length. This score is intended to estimate how "distinctive" or "informative" a word is.
 
     Scoring components:
-      1. Letter rarity: Each letter has a rarity value (similar to Scrabble), and a word with more rare letters
-         (e.g., 'q', 'z', 'x') scores higher.
+      1. Letter rarity: Each letter has a rarity value (similar to Scrabble), and a word
+         with more rare letters (e.g., 'q', 'z', 'x') scores higher.
       2. Structure: Assesses the ratio of vowels to consonants. Words with more consonants
          (lower vowel-to-consonant ratio) receive a higher structure score.
-      3. Length: Longer words are considered more informative, but this factor is logarithmically scaled.
+      3. Length: Longer words are considered more informative, but this factor is
+         logarithmically scaled.
 
     The final score is a weighted combination:
       - 40% letter rarity
       - 40% structure
       - 20% word length
 
-    Returns a float between 0 and 1 (rounded to 4 decimals), or 0 if the word is shorter than 2 letters.
+    Returns a float between 0 and 1 (rounded to 4 decimals), or 0 if the word is shorter
+    than 2 letters.
 
     Args:
         word (str): The word to evaluate.
@@ -882,7 +885,6 @@ def get_total_info_value(word: str) -> float:
     factor_structure = 1 / (1 + v_to_c)
 
     # 3. Final Composite (40% Rarity, 40% Structure, 20% Length)
-    import math
     factor_length = min(math.log(len(word), 12), 1.0)  # Scale based on length
 
     final_score = (factor_rarity * 0.4) + (factor_structure * 0.4) + (factor_length * 0.2)
@@ -902,15 +904,16 @@ def get_final_weighted_score(word: str, is_start_of_sentence: bool = False) -> f
         float: Weighted score of the word (rounded to 4 decimals).
     """
     word_clean = word.strip(".,!?;:()\"'")
-    if len(word_clean) < 2: return 0
-    
+    if len(word_clean) < 2:
+        return 0
+
     # 1. Base Score (Rarity + Structure + Length)
     # Using the logic from our previous implementation
-    base_val = get_total_info_value(word_clean) 
-    
+    base_val = get_total_info_value(word_clean)
+
     # 2. Capitalization Weight Logic
     multiplier = 1.0
-    
+
     # Is it ALL CAPS (Acronym)?
     if word_clean.isupper() and len(word_clean) > 1:
         multiplier = 2.5
@@ -923,14 +926,15 @@ def get_final_weighted_score(word: str, is_start_of_sentence: bool = False) -> f
         else:
             # Middle of sentence capitalization is a high-value Entity
             multiplier = 2.0
-            
+
     return round(base_val * multiplier, 4)
 
 
 def get_sentence_score(sentence: str) -> float:
     """
-    Compute an information score for a sentence based on its most informative words and the proportion of less informative ("noisy") words.
-    
+    Compute an information score for a sentence based on its most informative words
+    and the proportion of less informative ("noisy") words.
+
     The sentence score is calculated as follows:
       1. For each word in the sentence, compute an information value using `get_total_info_value()`.
       2. Take the sum of the top 3 most informative word scores ("signal").
@@ -945,29 +949,30 @@ def get_sentence_score(sentence: str) -> float:
         float: Aggregated sentence information score (rounded to 4 decimals).
     """
     words = sentence.lower().split()
-    if not words: return 0
-    
+    if not words:
+        return 0
+
     # Use our previous word-level function to get scores for every word
     # (Assuming get_total_info_value is defined as before)
     word_scores = [get_final_weighted_score(w) for w in words]
     word_scores.sort(reverse=True)
-    
+
     # 1. THE SIGNAL: Sum of the top 3 most informative words
     # This ensures one or two 'power words' can carry a sentence.
     top_k = word_scores[:3]
     signal = sum(top_k)
-    
-    # 2. THE NOISE PENALTY: 
+
+    # 2. THE NOISE PENALTY:
     # How much of the sentence is "filler"?
     # We define noise as any word with a score below 0.45
     noise_count = sum(1 for s in word_scores if s < 0.45)
     noise_ratio = noise_count / len(words)
-    
+
     # 3. FINAL AGGREGATION:
-    # We multiply the signal by a penalty factor that 
+    # We multiply the signal by a penalty factor that
     # reduces the score by up to 20% if the sentence is pure fluff.
     final_sentence_score = signal * (1 - (noise_ratio * 0.2))
-    
+
     return round(final_sentence_score, 4)
 
 

@@ -258,7 +258,8 @@ class CacheManager:
             existing_timestamps = {u.get("timestamp") for u in metrics[date]["updates"]}
 
             if timestamp in existing_timestamps:
-                logger.debug(f"Update with timestamp {timestamp} already exists for {date}, skipping")
+                logger.debug(
+                    f"Update with timestamp {timestamp} already exists for {date}, skipping")
                 return
 
             # Add update to the list

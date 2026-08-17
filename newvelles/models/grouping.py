@@ -34,7 +34,9 @@ MIN_GROUP_SIZE = 2
 """
 
 
-def group_similar_titles(titles: List[str], similarity_threshold: float = DEFAULT_SIMILARITY_THRESHOLD) -> List[List[int]]:
+def group_similar_titles(
+    titles: List[str], similarity_threshold: float = DEFAULT_SIMILARITY_THRESHOLD
+) -> List[List[int]]:
     """
     Group similar titles using TF-IDF and cosine similarity.
 
@@ -137,7 +139,9 @@ def _is_word_boundary(text: str, pos: int) -> bool:
     return False
 
 
-def extract_common_substrings(titles: List[str], min_length: int = MIN_SUBSTRING_LENGTH) -> List[str]:
+def extract_common_substrings(
+    titles: List[str], min_length: int = MIN_SUBSTRING_LENGTH
+) -> List[str]:
     """
     Extract common substrings from titles, respecting word boundaries.
     Only returns substrings that start and end at word boundaries to avoid fragments.
@@ -161,7 +165,8 @@ def extract_common_substrings(titles: List[str], min_length: int = MIN_SUBSTRING
                 if len(substring) >= min_length and substring in s2:
                     # Verify this substring also appears at word boundary in s2
                     s2_pos = s2.find(substring)
-                    if s2_pos != -1 and _is_word_boundary(s2, s2_pos) and _is_word_boundary(s2, s2_pos + len(substring)):
+                    if (s2_pos != -1 and _is_word_boundary(s2, s2_pos)
+                            and _is_word_boundary(s2, s2_pos + len(substring))):
                         common.append(original_s1[i:j].strip())
         return common
 
@@ -176,7 +181,9 @@ def extract_common_substrings(titles: List[str], min_length: int = MIN_SUBSTRING
     return sorted(list(common_substrings), key=len, reverse=True)
 
 
-def _filter_highly_overlapping_phrases(phrases: List[str], overlap_threshold: float = OVERLAP_FILTER_THRESHOLD) -> List[str]:
+def _filter_highly_overlapping_phrases(
+    phrases: List[str], overlap_threshold: float = OVERLAP_FILTER_THRESHOLD
+) -> List[str]:
     """
     Keep only phrases that are not highly overlapping with any longer phrase selected so far.
 
@@ -201,7 +208,7 @@ def _filter_highly_overlapping_phrases(phrases: List[str], overlap_threshold: fl
     for i, phrase in enumerate(phrases):
         words_lower = phrase_words_lower[i]
         skip = False
-        for j, selected_phrase in enumerate(selected):
+        for selected_phrase in selected:
             # Use lowercase word set for selected phrase
             selected_words_lower = set(w.lower() for w in selected_phrase.split())
             if not words_lower or not selected_words_lower:
@@ -236,7 +243,8 @@ def identify_group(titles: List[str]) -> str:
         Group identifier string in format "[phrase1] [phrase2] [phrase3]"
         or empty string if no common substrings found
     """
-    # Normalize titles: remove all non-alphanumeric characters except "&" and "-", collapse extra spaces
+    # Normalize titles: remove all non-alphanumeric characters except "&" and "-",
+    # collapse extra spaces
     normalized_titles = []
     for title in titles:
         # Remove all characters except alphanumerics, whitespace, "&", and "-"
@@ -257,7 +265,8 @@ def identify_group(titles: List[str]) -> str:
         return ""
 
     # Get common substrings (sorted by character length, longest first)
-    common_substrings = [x for x in extract_common_substrings(titles) if len(x.split(' ')) < MAX_SUBSTRING_WORDS]
+    common_substrings = [x for x in extract_common_substrings(titles)
+                         if len(x.split(' ')) < MAX_SUBSTRING_WORDS]
 
     if not common_substrings:
         return ""
@@ -265,7 +274,8 @@ def identify_group(titles: List[str]) -> str:
     filtered_sorted = sorted(common_substrings, key=get_sentence_score, reverse=True)
 
     # Filter out overlapped phrases
-    filtered_sorted = _filter_highly_overlapping_phrases(filtered_sorted, overlap_threshold=OVERLAP_FILTER_THRESHOLD)
+    filtered_sorted = _filter_highly_overlapping_phrases(
+        filtered_sorted, overlap_threshold=OVERLAP_FILTER_THRESHOLD)
 
     # Take top N non-overlapping substrings
     top_substrings = filtered_sorted[:TOP_SUBSTRINGS_LIMIT]
@@ -296,7 +306,8 @@ def rank_news_groups(groups: Dict) -> Dict:
         groups: Dictionary of news groups (top-level -> sub-groups -> articles)
 
     Returns:
-        Dictionary of groups sorted by ranking priority (dict maintains insertion order in Python 3.7+)
+        Dictionary of groups sorted by ranking priority (dict maintains insertion
+        order in Python 3.7+)
     """
     def get_ranking_key(item):
         top_group_id, sub_groups = item
@@ -382,7 +393,7 @@ def build_visualization(
 
     # Use the news grouping algorithm
     news_groups = build_news_groups(titles)
-    
+
     visualization: defaultdict = defaultdict(
         lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(str)))
     )
