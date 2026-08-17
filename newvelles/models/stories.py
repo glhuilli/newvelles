@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 
 from newvelles.utils.dates import iso_date, to_iso8601
 from newvelles.utils.sources import resolve_feed
+from newvelles.utils.text import NLP
 
 STORIES_VERSION = "0.3.0"
 MERGE_THRESHOLD = 0.5
@@ -213,7 +214,6 @@ def _fallback_headline(articles: list) -> str:
 
 
 def _extract_entities(titles: list) -> list:
-    from newvelles.utils.text import NLP  # module-level spaCy model, already loaded
     counts: Counter = Counter()
     for title in titles:
         for ent in NLP(title).ents:
