@@ -57,3 +57,37 @@ def collect_groups(visualization: dict) -> list:
                 "keywords": _keywords_from_group_id(top_id),
             })
     return groups
+
+
+def _find(parent, i):
+    while parent[i] != i:
+        parent[i] = parent[parent[i]]
+        i = parent[i]
+    return i
+
+
+def _union(parent, a, b):
+    root_a, root_b = _find(parent, a), _find(parent, b)
+    if root_a != root_b:
+        parent[max(root_a, root_b)] = min(root_a, root_b)
+
+
+def merge_groups(groups: list, threshold: float = MERGE_THRESHOLD) -> list:
+    """Connected components over groups, edge when link containment >= threshold.
+
+    Containment (min in the denominator) rather than Jaccard: a small group
+    fully contained in a large one must merge.
+    """
+    link_sets = [set(g["articles"]) for g in groups]
+    parent = list(range(len(groups)))
+    for i in range(len(groups)):
+        for j in range(i + 1, len(groups)):
+            smaller = min(len(link_sets[i]), len(link_sets[j]))
+            if smaller == 0:
+                continue
+            if len(link_sets[i] & link_sets[j]) / smaller >= threshold:
+                _union(parent, i, j)
+    components: dict = {}
+    for i in range(len(groups)):
+        components.setdefault(_find(parent, i), []).append(i)
+    return [components[root] for root in sorted(components)]

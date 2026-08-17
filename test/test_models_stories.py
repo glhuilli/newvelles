@@ -68,6 +68,51 @@ def test_collect_groups_handles_old_key_names():
     assert art["feed"].startswith("https://rss.nytimes.com")
 
 
+def _g(links):
+    return {"group_id": "[g]", "keywords": [],
+            "articles": {l: {"title": l, "link": l, "published_raw": "", "feed": ""} for l in links}}
+
+
+def test_merge_containment_beats_jaccard():
+    """A 4-article group fully contained in a 30-article group must merge
+    (containment 1.0) even though Jaccard would be ~0.13."""
+    from newvelles.models.stories import merge_groups
+    big = _g([f"big.com/{i}" for i in range(30)])
+    small = _g([f"big.com/{i}" for i in range(4)])
+    assert merge_groups([big, small]) == [[0, 1]]
+
+
+def test_merge_below_threshold_stays_apart():
+    from newvelles.models.stories import merge_groups
+    a = _g(["a.com/1", "a.com/2", "a.com/3", "shared.com/x"])
+    b = _g(["b.com/1", "b.com/2", "b.com/3", "shared.com/x"])
+    # overlap = 1/4 = 0.25 < 0.5
+    assert merge_groups([a, b]) == [[0], [1]]
+
+
+def test_merge_transitive_chain():
+    """A~B and B~C merge into one component even when A and C share nothing."""
+    from newvelles.models.stories import merge_groups
+    a = _g(["x.com/1", "x.com/2"])
+    b = _g(["x.com/1", "x.com/2", "y.com/1", "y.com/2"])
+    c = _g(["y.com/1", "y.com/2"])
+    assert merge_groups([a, b, c]) == [[0, 1, 2]]
+
+
+def test_merge_no_overlap_is_noop():
+    from newvelles.models.stories import merge_groups
+    groups = [_g([f"s{i}.com/a", f"s{i}.com/b"]) for i in range(5)]
+    assert merge_groups(groups) == [[i] for i in range(5)]
+
+
+def test_merge_threshold_boundary_inclusive():
+    from newvelles.models.stories import merge_groups
+    a = _g(["s.com/1", "s.com/2", "u.com/1", "u.com/2"])
+    b = _g(["s.com/1", "s.com/2", "v.com/1", "v.com/2"])
+    # overlap = 2/4 = 0.5 -> edge at threshold 0.5 (>=)
+    assert merge_groups([a, b], threshold=0.5) == [[0, 1]]
+
+
 def test_intra_group_dedupe_on_real_example_file():
     """data/latest_news_example.json: 410 entries resolve to 121 unique links,
     all duplication is within-group across sub-groups."""
