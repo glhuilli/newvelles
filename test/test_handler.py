@@ -61,6 +61,9 @@ class TestHandler:
 class TestRun:
     """Test run function."""
 
+    @patch("handler.save_naming_cache_s3")
+    @patch("handler.load_naming_cache_s3", return_value={})
+    @patch("handler.name_stories")
     @patch("handler.load_state_s3")
     @patch("handler.apply_momentum")
     @patch("handler.build_stories")
@@ -69,7 +72,8 @@ class TestRun:
     @patch("handler.build_data_from_rss_feeds_list")
     @patch("handler.CONFIG")
     def test_run_success(self, mock_config, mock_build_data, mock_build_viz, mock_log_s3,
-                         mock_build_stories, mock_apply, mock_load_state):
+                         mock_build_stories, mock_apply, mock_load_state,
+                         mock_name, mock_load_cache, mock_save_cache):
         """Test run function executes pipeline successfully."""
         # Mock configuration
         mock_config.__getitem__.return_value = {"cluster_limit": "5"}
@@ -88,6 +92,9 @@ class TestRun:
         mock_momentum = {"version": "0.3.0", "stories": {}}
         mock_state = {"version": "0.3.0", "stories": {}}
         mock_apply.return_value = (mock_stories, mock_momentum, mock_state)
+        mock_name.return_value = (mock_stories, {},
+                                  {"llm_named": 0, "cache_hits": 0,
+                                   "fallbacks": 0, "renamed": 0})
 
         result = run()
 
@@ -98,6 +105,8 @@ class TestRun:
         mock_load_state.assert_called_once()
         assert mock_apply.call_args.args[0] is mock_stories
         assert mock_apply.call_args.args[1] is None
+        mock_name.assert_called_once()
+        mock_save_cache.assert_called_once_with({})
         mock_log_s3.assert_called_once_with(
             mock_visualization_data, stories_data=mock_stories,
             momentum_doc=mock_momentum, momentum_state=mock_state)

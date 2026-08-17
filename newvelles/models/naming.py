@@ -150,7 +150,7 @@ def _name_via_local(story: dict) -> str:
             if len(text.split()) >= 2:
                 chunk_counts[text] += 1
 
-    entities = [e for e in story.get("entities", [])][:2]
+    entities = list(story.get("entities", []))[:2]
     top_chunks = []
     used_words = {w.lower() for e in entities for w in e.split()}
     for chunk, _count in chunk_counts.most_common(6):

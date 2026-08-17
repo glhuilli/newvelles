@@ -9,6 +9,8 @@ from newvelles.feed.load import build_data_from_rss_feeds
 from newvelles.feed.log import emit_visualization, log_groups
 from newvelles.models.grouping import build_visualization
 from newvelles.models.momentum import apply_momentum, load_state_local, utc_today
+from newvelles.models.naming import (load_naming_cache_local, name_stories,
+                                     save_naming_cache_local)
 from newvelles.models.stories import build_stories
 
 CONFIG = config()
@@ -25,6 +27,9 @@ def run(rss_file: str, s3: bool) -> None:
     stories_data, momentum_doc, momentum_state = apply_momentum(
         stories_data, load_state_local(), today=utc_today()
     )
+    naming_cache = load_naming_cache_local()
+    stories_data, naming_cache, _naming_stats = name_stories(stories_data, naming_cache)
+    save_naming_cache_local(naming_cache)
     # log data
     emit_visualization(
         visualization_data,

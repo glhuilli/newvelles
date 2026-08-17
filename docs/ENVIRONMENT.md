@@ -50,6 +50,37 @@ This document describes all environment variables needed to run the Newvelles pr
   - Values: `true` | `false`
   - Default: `false`
 
+### LLM Naming (stories.json headlines)
+- **`NEWVELLES_NAMING_PROVIDER`** (Optional)
+  - Which provider generates neutral story headlines
+  - Values: `bedrock` | `anthropic` | `openai` | `local`
+  - Default: `local` (spaCy, no network, no credentials — a fresh clone runs offline)
+  - Production/QA use `bedrock`: IAM auth via the Lambda role's `bedrock:InvokeModel`,
+    **no API key in the Lambda**
+
+- **`NEWVELLES_NAMING_MODEL`** (Optional)
+  - Model id for the chosen provider
+  - Default: `us.anthropic.claude-haiku-4-5-20251001-v1:0` (Bedrock inference
+    profile — the bare `anthropic.` id is not invokable on-demand)
+
+- **`NEWVELLES_NAMING_TIMEOUT`** (Optional)
+  - Seconds per naming call (2 retries)
+  - Default: `8`
+
+- **`NEWVELLES_NAMING_MAX_CALLS`** (Optional)
+  - Cap on new LLM calls per run (cache hits are free); `kind=="story"` is named first
+  - Default: `60` — the guard against a clustering bug producing 900 tiny stories
+
+- **`NEWVELLES_NAMING_CACHE`** (Optional, local runs only)
+  - Path of the local naming cache (production uses `story_names.json` in the private bucket)
+  - Default: `./cache/story_names.json`
+
+- **`BEDROCK_REGION`** (Optional)
+  - Region for the Bedrock client; defaults to `AWS_DEFAULT_REGION`, then `us-west-2`
+
+- **`ANTHROPIC_API_KEY`** / **`OPENAI_API_KEY`** (Optional)
+  - Only for the dormant `anthropic`/`openai` escape-hatch providers — never set in Lambda
+
 ### Publish Sanity Gate (stories.json)
 - **`NEWVELLES_GATE_MAX_DEVIATION`** (Optional)
   - Maximum allowed story-count deviation vs. the previously published `stories.json`

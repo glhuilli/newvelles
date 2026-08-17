@@ -131,6 +131,18 @@ See `docs/MONITORING_DASHBOARD.md` for complete documentation.
    - Emits `stories.json` beside `latest_news.json`; fallback headlines only
      (LLM naming is Stage B, not yet implemented)
 
+4.5. **Naming** (`newvelles/models/naming.py`) — runs after momentum so the cache
+   keys on carried (stable) story ids
+   - Generates neutral headlines via a four-provider interface
+     (`bedrock`/`anthropic`/`openai`/`local`, env `NEWVELLES_NAMING_PROVIDER`,
+     default `local` = offline spaCy). Production: Claude Haiku on Bedrock, IAM
+     auth only — no API keys in the Lambda
+   - Identity-keyed cache (`story_names.json`, private bucket); rename only when
+     the article set grew >50% since the current headline was minted
+   - Capped at 60 new calls/run, `kind=="story"` first; failures keep the
+     best-real-headline fallback and are counted (a silent outage is visible)
+   - `headline_source`: `llm` for remote providers, `fallback` otherwise
+
 5. **Momentum** (`newvelles/models/momentum.py`)
    - Carries story identity across runs/days: Jaccard over keywords ∪ entities
      (>= 0.4) against stories last seen today/yesterday; a match inherits the

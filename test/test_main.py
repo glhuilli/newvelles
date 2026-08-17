@@ -12,6 +12,9 @@ from newvelles.__main__ import main, run, run_daemon
 class TestRun:
     """Test run function."""
 
+    @patch("newvelles.__main__.save_naming_cache_local")
+    @patch("newvelles.__main__.load_naming_cache_local", return_value={})
+    @patch("newvelles.__main__.name_stories")
     @patch("newvelles.__main__.load_state_local", return_value=None)
     @patch("newvelles.__main__.apply_momentum")
     @patch("newvelles.__main__.print_viz")
@@ -35,6 +38,9 @@ class TestRun:
         mock_print_viz,
         mock_apply,
         mock_load_state,
+        mock_name,
+        mock_load_cache,
+        mock_save_cache,
     ):
         """Test basic functionality of run function."""
         # Mock configuration
@@ -53,6 +59,8 @@ class TestRun:
         mock_momentum = {"version": "0.3.0", "stories": {}}
         mock_state = {"version": "0.3.0", "stories": {}}
         mock_apply.return_value = (mock_stories, mock_momentum, mock_state)
+        mock_name.return_value = (mock_stories, {}, {"llm_named": 0, "cache_hits": 0,
+                                                     "fallbacks": 0, "renamed": 0})
 
         rss_file = "test_rss.txt"
 
@@ -72,6 +80,9 @@ class TestRun:
         mock_print_titles.assert_not_called()
         mock_print_viz.assert_not_called()
 
+    @patch("newvelles.__main__.save_naming_cache_local")
+    @patch("newvelles.__main__.load_naming_cache_local", return_value={})
+    @patch("newvelles.__main__.name_stories")
     @patch("newvelles.__main__.load_state_local", return_value=None)
     @patch("newvelles.__main__.apply_momentum")
     @patch("newvelles.__main__.print_viz")
@@ -95,6 +106,9 @@ class TestRun:
         mock_print_viz,
         mock_apply,
         mock_load_state,
+        mock_name,
+        mock_load_cache,
+        mock_save_cache,
     ):
         """Test run function with debug mode enabled."""
         # Mock configuration
@@ -112,6 +126,8 @@ class TestRun:
         mock_momentum = {"version": "0.3.0", "stories": {}}
         mock_state = {"version": "0.3.0", "stories": {}}
         mock_apply.return_value = (mock_stories, mock_momentum, mock_state)
+        mock_name.return_value = (mock_stories, {}, {"llm_named": 0, "cache_hits": 0,
+                                                     "fallbacks": 0, "renamed": 0})
 
         rss_file = "test_rss.txt"
 
@@ -141,8 +157,10 @@ class TestRun:
             "newvelles.__main__.apply_momentum",
             return_value=({}, {}, {}),
         ), patch("newvelles.__main__.load_state_local", return_value=None), patch(
-            "newvelles.__main__.log_groups"
-        ):
+            "newvelles.__main__.name_stories", return_value=({}, {}, {})
+        ), patch("newvelles.__main__.load_naming_cache_local", return_value={}), patch(
+            "newvelles.__main__.save_naming_cache_local"
+        ), patch("newvelles.__main__.log_groups"):
 
             mock_build_viz.return_value = ({}, {})
 

@@ -10,6 +10,8 @@ from newvelles.feed.load import build_data_from_rss_feeds, build_data_from_rss_f
 from newvelles.feed.log import log_s3
 from newvelles.models.grouping import build_visualization
 from newvelles.models.momentum import apply_momentum, load_state_s3, utc_today
+from newvelles.models.naming import (load_naming_cache_s3, name_stories,
+                                     save_naming_cache_s3)
 from newvelles.models.stories import build_stories
 
 
@@ -94,6 +96,13 @@ def run() -> bool:
     carried = sum(1 for s in stories_data["stories"] if s.get("days_running", 1) > 1)
     print(f"📈 {carried} stories carried an id from a previous day "
           f"({len(momentum_doc['stories'])} in the momentum window)")
+
+    print("✏️ Naming stories...")
+    naming_cache = load_naming_cache_s3()
+    stories_data, naming_cache, naming_stats = name_stories(stories_data, naming_cache)
+    save_naming_cache_s3(naming_cache)
+    print(f"✏️ Naming: {naming_stats['llm_named']} named, {naming_stats['cache_hits']} cached, "
+          f"{naming_stats['renamed']} renamed, {naming_stats['fallbacks']} fallbacks")
 
     print("📤 Uploading to S3...")
     log_s3(visualization_data, stories_data=stories_data,
