@@ -18,6 +18,9 @@ _LOG_VISUALIZATION_NAME = "newvelles_visualization"
 _LOG_LATEST_VISUALIZATION_NAME = "latest_news"
 _LOG_LATEST_VISUALIZATION_METADATA_NAME = "latest_news_metadata"
 _LOG_STORIES_NAME = "stories"
+_LOG_MOMENTUM_NAME = "momentum"
+_MOMENTUM_STATE_NAME = "momentum_state"
+_LOCAL_STATE_DIR = "./cache"
 
 # Load S3 bucket names from config with fallbacks
 CONFIG = config()
@@ -89,6 +92,8 @@ def emit_visualization(
     writers: str = "local",
     output_path: str = _LOG_PATH,
     stories_data=None,
+    momentum_doc=None,
+    momentum_state=None,
 ) -> str:
     """Single emit path for visualization outputs.
 
@@ -152,12 +157,14 @@ def emit_visualization(
         )
 
     if stories_data is not None:
-        _emit_stories(stories_data, write_local=write_local, write_s3=write_s3)
+        _emit_stories(stories_data, write_local=write_local, write_s3=write_s3,
+                      momentum_doc=momentum_doc, momentum_state=momentum_state)
 
     return log_path if write_local else timestamped_name
 
 
-def _emit_stories(stories_data, write_local: bool, write_s3: bool) -> None:
+def _emit_stories(stories_data, write_local: bool, write_s3: bool,
+                  momentum_doc=None, momentum_state=None) -> None:
     if write_local:
         for stories_path in (
             f"{_LATEST_PATH}/{_LOG_STORIES_NAME}.json",
@@ -165,15 +172,30 @@ def _emit_stories(stories_data, write_local: bool, write_s3: bool) -> None:
         ):
             with open(stories_path, "w", encoding="utf-8") as f:
                 json.dump(stories_data, f)
+        if momentum_doc is not None:
+            for momentum_path in (
+                f"{_LATEST_PATH}/{_LOG_MOMENTUM_NAME}.json",
+                f"./{_LOG_MOMENTUM_NAME}.json",
+            ):
+                with open(momentum_path, "w", encoding="utf-8") as f:
+                    json.dump(momentum_doc, f)
+        if momentum_state is not None:
+            os.makedirs(_LOCAL_STATE_DIR, exist_ok=True)
+            with open(f"{_LOCAL_STATE_DIR}/{_MOMENTUM_STATE_NAME}.json", "w",
+                      encoding="utf-8") as f:
+                json.dump(momentum_state, f)
     if write_s3:
         # Pre-publish sanity gate: compare against the previously published
-        # run and refuse to overwrite it with an anomalous one.
+        # run and refuse to overwrite it with an anomalous one. Momentum and
+        # its identity state ride the same gate — an anomalous run must not
+        # pollute cross-day story identity.
         previous = read_json_from_s3(_S3_PUBLIC_BUCKET, f"{_LOG_STORIES_NAME}.json")
         previous_count = previous.get("story_count") if previous else None
         ok, reason = evaluate_stories_gate(stories_data, previous_count)
         if not ok:
             print(f"❌ Stories sanity gate blocked publish: {reason}")
-            print("   Previous stories.json left in place; legacy files published normally.")
+            print("   Previous stories.json/momentum.json left in place; "
+                  "legacy files published normally.")
             return
         upload_to_s3(
             bucket_name=_S3_PUBLIC_BUCKET,
@@ -181,6 +203,19 @@ def _emit_stories(stories_data, write_local: bool, write_s3: bool) -> None:
             string_byte=json.dumps(stories_data).encode("utf-8"),
             public_read=True,
         )
+        if momentum_doc is not None:
+            upload_to_s3(
+                bucket_name=_S3_PUBLIC_BUCKET,
+                file_name=f"{_LOG_MOMENTUM_NAME}.json",
+                string_byte=json.dumps(momentum_doc).encode("utf-8"),
+                public_read=True,
+            )
+        if momentum_state is not None:
+            upload_to_s3(
+                bucket_name=_S3_BUCKET,
+                file_name=f"{_MOMENTUM_STATE_NAME}.json",
+                string_byte=json.dumps(momentum_state).encode("utf-8"),
+            )
 
 
 def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool = False) -> str:
@@ -191,5 +226,6 @@ def log_visualization(visualization_data, output_path: str = _LOG_PATH, s3: bool
     )
 
 
-def log_s3(visualization_data, stories_data=None) -> str:
-    return emit_visualization(visualization_data, writers="s3", stories_data=stories_data)
+def log_s3(visualization_data, stories_data=None, momentum_doc=None, momentum_state=None) -> str:
+    return emit_visualization(visualization_data, writers="s3", stories_data=stories_data,
+                              momentum_doc=momentum_doc, momentum_state=momentum_state)

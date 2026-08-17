@@ -12,6 +12,8 @@ from newvelles.__main__ import main, run, run_daemon
 class TestRun:
     """Test run function."""
 
+    @patch("newvelles.__main__.load_state_local", return_value=None)
+    @patch("newvelles.__main__.apply_momentum")
     @patch("newvelles.__main__.print_viz")
     @patch("newvelles.__main__.print_sorted_grouped_titles")
     @patch("newvelles.__main__.log_groups")
@@ -31,6 +33,8 @@ class TestRun:
         mock_log_groups,
         mock_print_titles,
         mock_print_viz,
+        mock_apply,
+        mock_load_state,
     ):
         """Test basic functionality of run function."""
         # Mock configuration
@@ -46,6 +50,9 @@ class TestRun:
         mock_build_viz.return_value = (mock_visualization_data, mock_group_sentences)
         mock_stories = {"version": "0.3.0", "stories": []}
         mock_build_stories.return_value = mock_stories
+        mock_momentum = {"version": "0.3.0", "stories": {}}
+        mock_state = {"version": "0.3.0", "stories": {}}
+        mock_apply.return_value = (mock_stories, mock_momentum, mock_state)
 
         rss_file = "test_rss.txt"
 
@@ -56,7 +63,8 @@ class TestRun:
         mock_build_viz.assert_called_once_with(mock_title_data, cluster_limit=2)
         mock_build_stories.assert_called_once_with(mock_visualization_data)
         mock_emit.assert_called_once_with(
-            mock_visualization_data, writers="local", stories_data=mock_stories
+            mock_visualization_data, writers="local", stories_data=mock_stories,
+            momentum_doc=mock_momentum, momentum_state=mock_state,
         )
         mock_log_groups.assert_called_once_with(mock_group_sentences)
 
@@ -64,6 +72,8 @@ class TestRun:
         mock_print_titles.assert_not_called()
         mock_print_viz.assert_not_called()
 
+    @patch("newvelles.__main__.load_state_local", return_value=None)
+    @patch("newvelles.__main__.apply_momentum")
     @patch("newvelles.__main__.print_viz")
     @patch("newvelles.__main__.print_sorted_grouped_titles")
     @patch("newvelles.__main__.log_groups")
@@ -83,6 +93,8 @@ class TestRun:
         mock_log_groups,
         mock_print_titles,
         mock_print_viz,
+        mock_apply,
+        mock_load_state,
     ):
         """Test run function with debug mode enabled."""
         # Mock configuration
@@ -97,6 +109,9 @@ class TestRun:
         mock_build_viz.return_value = (mock_visualization_data, mock_group_sentences)
         mock_stories = {"version": "0.3.0", "stories": []}
         mock_build_stories.return_value = mock_stories
+        mock_momentum = {"version": "0.3.0", "stories": {}}
+        mock_state = {"version": "0.3.0", "stories": {}}
+        mock_apply.return_value = (mock_stories, mock_momentum, mock_state)
 
         rss_file = "test_rss.txt"
 
@@ -108,7 +123,8 @@ class TestRun:
 
         # Verify S3 logging is enabled (writers="both" uploads and writes locally)
         mock_emit.assert_called_once_with(
-            mock_visualization_data, writers="both", stories_data=mock_stories
+            mock_visualization_data, writers="both", stories_data=mock_stories,
+            momentum_doc=mock_momentum, momentum_state=mock_state,
         )
 
     @patch("newvelles.__main__.build_data_from_rss_feeds")
@@ -121,7 +137,12 @@ class TestRun:
 
         with patch("newvelles.__main__.build_visualization") as mock_build_viz, patch(
             "newvelles.__main__.emit_visualization"
-        ), patch("newvelles.__main__.build_stories"), patch("newvelles.__main__.log_groups"):
+        ), patch("newvelles.__main__.build_stories"), patch(
+            "newvelles.__main__.apply_momentum",
+            return_value=({}, {}, {}),
+        ), patch("newvelles.__main__.load_state_local", return_value=None), patch(
+            "newvelles.__main__.log_groups"
+        ):
 
             mock_build_viz.return_value = ({}, {})
 

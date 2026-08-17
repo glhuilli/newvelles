@@ -9,6 +9,7 @@ from newvelles.config import config
 from newvelles.feed.load import build_data_from_rss_feeds, build_data_from_rss_feeds_list
 from newvelles.feed.log import log_s3
 from newvelles.models.grouping import build_visualization
+from newvelles.models.momentum import apply_momentum, load_state_s3, utc_today
 from newvelles.models.stories import build_stories
 
 
@@ -85,8 +86,18 @@ def run() -> bool:
           f"({kind_counts.get('story', 0)} story / {kind_counts.get('roundup', 0)} roundup / "
           f"{kind_counts.get('deal', 0)} deal) from {len(visualization_data)} groups")
 
+    print("📈 Applying momentum (identity carry + rolling window)...")
+    momentum_state = load_state_s3()
+    stories_data, momentum_doc, new_state = apply_momentum(
+        stories_data, momentum_state, today=utc_today()
+    )
+    carried = sum(1 for s in stories_data["stories"] if s.get("days_running", 1) > 1)
+    print(f"📈 {carried} stories carried an id from a previous day "
+          f"({len(momentum_doc['stories'])} in the momentum window)")
+
     print("📤 Uploading to S3...")
-    log_s3(visualization_data, stories_data=stories_data)
+    log_s3(visualization_data, stories_data=stories_data,
+           momentum_doc=momentum_doc, momentum_state=new_state)
     print("✅ S3 upload completed successfully")
     
     return True

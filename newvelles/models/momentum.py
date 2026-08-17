@@ -10,12 +10,36 @@ runs); only the current day is ever mutated. The public momentum.json carries
 only stories present in the current stories.json; the private state keeps the
 full window.
 """
-from datetime import date, timedelta
+import json
+from datetime import date, timedelta, timezone
+from datetime import datetime as _datetime
 from typing import Optional, Tuple
 
 MOMENTUM_VERSION = "0.3.0"
 WINDOW_DAYS = 14
 CARRY_THRESHOLD = 0.4
+LOCAL_STATE_PATH = "./cache/momentum_state.json"
+
+
+def utc_today() -> str:
+    """Momentum days are UTC — matching the archive timestamps and the Lambda."""
+    return _datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def load_state_s3() -> Optional[dict]:
+    """Read momentum_state.json from the private bucket; None on first run."""
+    from newvelles.feed.log import _MOMENTUM_STATE_NAME, _S3_BUCKET
+    from newvelles.utils.s3 import read_json_from_s3
+    return read_json_from_s3(_S3_BUCKET, f"{_MOMENTUM_STATE_NAME}.json")
+
+
+def load_state_local(path: str = LOCAL_STATE_PATH) -> Optional[dict]:
+    """Read the local momentum state; None on first run or unreadable file."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
 
 
 def _signature(story: dict) -> set:
