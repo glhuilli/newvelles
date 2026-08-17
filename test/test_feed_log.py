@@ -312,12 +312,15 @@ class TestEmitVisualization:
 
 
 class TestEmitStories:
+    @patch("newvelles.feed.log.read_json_from_s3", return_value=None)
     @patch("newvelles.feed.log.upload_to_s3")
     @patch("newvelles.feed.log._current_datetime")
-    def test_stories_uploaded_to_public_bucket_after_legacy_files(self, mock_datetime, mock_upload):
+    def test_stories_uploaded_to_public_bucket_after_legacy_files(
+        self, mock_datetime, mock_upload, mock_read
+    ):
         from newvelles.feed.log import emit_visualization
         mock_datetime.return_value = "2025-01-16T10:30:45"
-        stories = {"version": "0.3.0", "stories": []}
+        stories = {"version": "0.3.0", "story_count": 100, "article_count": 500, "stories": []}
 
         emit_visualization({}, writers="s3", stories_data=stories)
 

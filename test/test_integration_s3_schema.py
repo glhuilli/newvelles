@@ -128,10 +128,13 @@ class TestS3SchemaValidation:
             assert len(metadata_data['datetime']) > 0
             assert len(metadata_data['version']) > 0
 
-    def test_s3_stories_upload_schema_validation(self, schema_loader, mock_rss_data, s3_mock_setup):
+    def test_s3_stories_upload_schema_validation(self, schema_loader, mock_rss_data,
+                                                 s3_mock_setup, monkeypatch):
         """stories.json uploaded through log_s3 must conform to the stories schema."""
         from newvelles.models.stories import build_stories
 
+        # tiny synthetic corpus — drop the publish gate's article floor for this test
+        monkeypatch.setenv("NEWVELLES_GATE_MIN_ARTICLES", "1")
         s3_client = s3_mock_setup["client"]
         bucket_name = s3_mock_setup["bucket"]
         public_bucket_name = s3_mock_setup["public_bucket"]

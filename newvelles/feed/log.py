@@ -5,7 +5,8 @@ from typing import Any, Dict, List
 
 from newvelles.config import config
 from newvelles.models.grouping import VISUALIZATION_VERSION
-from newvelles.utils.s3 import upload_to_s3
+from newvelles.utils.publish_gate import evaluate_stories_gate
+from newvelles.utils.s3 import read_json_from_s3, upload_to_s3
 
 # Lambda-compatible paths (no local file writes)
 # These are kept for reference but not used for file operations
@@ -162,6 +163,15 @@ def _emit_stories(stories_data, write_local: bool, write_s3: bool) -> None:
             with open(stories_path, "w", encoding="utf-8") as f:
                 json.dump(stories_data, f)
     if write_s3:
+        # Pre-publish sanity gate: compare against the previously published
+        # run and refuse to overwrite it with an anomalous one.
+        previous = read_json_from_s3(_S3_PUBLIC_BUCKET, f"{_LOG_STORIES_NAME}.json")
+        previous_count = previous.get("story_count") if previous else None
+        ok, reason = evaluate_stories_gate(stories_data, previous_count)
+        if not ok:
+            print(f"❌ Stories sanity gate blocked publish: {reason}")
+            print("   Previous stories.json left in place; legacy files published normally.")
+            return
         upload_to_s3(
             bucket_name=_S3_PUBLIC_BUCKET,
             file_name=f"{_LOG_STORIES_NAME}.json",
