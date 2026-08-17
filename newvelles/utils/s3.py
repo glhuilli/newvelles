@@ -1,9 +1,25 @@
+import json
 import logging
+from typing import Optional
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import BotoCoreError, ClientError
 
 logger = logging.getLogger(__name__)
+
+
+def read_json_from_s3(bucket_name: str, file_name: str) -> Optional[dict]:
+    """Fetch and parse a JSON object from S3; None if missing or unparseable.
+
+    Never raises — callers use this for best-effort reads (e.g. the publish
+    gate comparing against the previously published file).
+    """
+    try:
+        response = boto3.client("s3").get_object(Bucket=bucket_name, Key=file_name)
+        return json.loads(response["Body"].read())
+    except (ClientError, BotoCoreError, ValueError) as e:
+        logger.warning(f"Could not read s3://{bucket_name}/{file_name}: {e}")
+        return None
 
 
 def upload_to_s3(bucket_name: str, file_name: str, string_byte, public_read: bool = False) -> None:

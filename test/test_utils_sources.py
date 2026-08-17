@@ -29,6 +29,17 @@ def test_known_resolutions():
     assert r.outlet == "NYT" and r.domain == "nytimes.com" and r.section == "Tech"
 
 
+def test_self_reported_feed_variants_resolve():
+    """Feeds sometimes self-report a base URL that differs from the source list —
+    these variants were observed in real production archives."""
+    r = resolve_feed("https://abcnews.com/abcnews/internationalheadlines")
+    assert r.outlet == "ABC News" and r.section == "World"
+    r = resolve_feed("https://www.westword.com/feed/")
+    assert r.outlet == "Westword" and r.section == "Local"
+    r = resolve_feed("https://www.newsweek.com")
+    assert r.outlet == "Newsweek"
+
+
 def test_unmapped_feed_falls_back_to_registered_domain():
     r = resolve_feed("https://blog.example.co.uk/feed.xml")
     assert isinstance(r, SourceInfo)

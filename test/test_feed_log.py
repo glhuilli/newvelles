@@ -251,9 +251,14 @@ class TestEmitVisualization:
             "latest_news.json",
             "latest_news_metadata.json",
         ]
-        # drift preserved: s3-only metadata has NO latest_log_reference
+        # S3 metadata records which archive object the live file came from,
+        # turning a restore from a search into a lookup
         meta = json.loads(mock_upload.call_args_list[2].kwargs["string_byte"])
-        assert meta == {"datetime": "2025-01-16T10:30:45", "version": "0.2.1"}
+        assert meta == {
+            "datetime": "2025-01-16T10:30:45",
+            "version": "0.2.1",
+            "latest_log_reference": "newvelles_visualization_0.2.1_2025-01-16T10:30:45.json",
+        }
         # payload bytes identical to legacy json.dumps
         assert mock_upload.call_args_list[0].kwargs["string_byte"] == json.dumps(viz).encode("utf-8")
         # public flags
@@ -312,12 +317,15 @@ class TestEmitVisualization:
 
 
 class TestEmitStories:
+    @patch("newvelles.feed.log.read_json_from_s3", return_value=None)
     @patch("newvelles.feed.log.upload_to_s3")
     @patch("newvelles.feed.log._current_datetime")
-    def test_stories_uploaded_to_public_bucket_after_legacy_files(self, mock_datetime, mock_upload):
+    def test_stories_uploaded_to_public_bucket_after_legacy_files(
+        self, mock_datetime, mock_upload, mock_read
+    ):
         from newvelles.feed.log import emit_visualization
         mock_datetime.return_value = "2025-01-16T10:30:45"
-        stories = {"version": "0.3.0", "stories": []}
+        stories = {"version": "0.3.0", "story_count": 100, "article_count": 500, "stories": []}
 
         emit_visualization({}, writers="s3", stories_data=stories)
 
