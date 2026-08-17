@@ -192,6 +192,124 @@ def test_weekday_month_names_are_generic():
     assert classify_story(titles, outlet_count=1) == "roundup"
 
 
+def _entry(title, link, published, feed):
+    return {"title": title, "link": link, "timestamp": published, "source": feed}
+
+
+BBC = "https://feeds.bbci.co.uk/news/world/rss.xml"
+NYT = "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+
+VIZ = {
+    "[alaska summit] [ceasefire]": {
+        "[putin]": {
+            "Trump and Putin end summit without ceasefire deal": _entry(
+                "Trump and Putin end summit without ceasefire deal",
+                "https://www.bbc.co.uk/news/summit-1", "Sat, 16 Aug 2025 18:51:12 +0000", BBC),
+            "Watch: Moment Trump and Putin meet in Alaska": _entry(
+                "Watch: Moment Trump and Putin meet in Alaska",
+                "https://www.bbc.co.uk/news/summit-video", "Sat, 16 Aug 2025 12:00:00 +0000", BBC),
+        },
+    },
+    "[alaska]": {
+        "[trump putin]": {
+            "Trump bows to Putin approach on Ukraine": _entry(
+                "Trump bows to Putin approach on Ukraine",
+                "https://www.nytimes.com/2025/08/16/summit.html", "2025-08-15T04:31:19Z", NYT),
+            "Watch: Moment Trump and Putin meet in Alaska (dup)": _entry(
+                "Watch: Moment Trump and Putin meet in Alaska",
+                "https://www.bbc.co.uk/news/summit-video?at_medium=RSS",
+                "Sat, 16 Aug 2025 12:00:00 +0000", BBC),
+        },
+    },
+    "[quarterly results]": {
+        "[earnings]": {
+            "Acme Q2 Earnings Call Highlights": _entry(
+                "Acme Q2 Earnings Call Highlights",
+                "https://finance.yahoo.com/news/acme", "2025-08-16T04:00:00Z",
+                "https://finance.yahoo.com/rss/"),
+            "Globex Q2 Earnings Call Highlights": _entry(
+                "Globex Q2 Earnings Call Highlights",
+                "https://finance.yahoo.com/news/globex", "2025-08-14T04:00:00Z",
+                "https://finance.yahoo.com/rss/"),
+        },
+    },
+}
+
+
+@pytest.fixture(scope="module")
+def doc():
+    from newvelles.models.stories import build_stories
+    return build_stories(VIZ, generated="2025-08-16T20:00:00")
+
+
+def test_top_level_fields(doc):
+    assert doc["version"] == "0.3.0"
+    assert doc["generated"] == "2025-08-16T20:00:00"
+    assert doc["story_count"] == len(doc["stories"]) == 2
+    assert doc["feeds"] == 3
+    assert doc["article_count"] == 5  # dup video counted once
+    assert doc["merge_threshold"] == 0.5
+    assert doc["kind_counts"] == {"story": 1, "roundup": 1, "deal": 0}
+
+
+def test_merged_story_shape(doc):
+    story = doc["stories"][0]  # 2 outlets ranks first
+    assert story["outlet_count"] == 2
+    assert story["article_count"] == 3
+    assert story["merged_from_groups"] == 2
+    assert story["kind"] == "story"
+    assert story["id"].startswith("st_") and len(story["id"]) == 9
+    assert story["headline_source"] == "fallback"
+    # fallback: BBC has most articles (2); its longest title:
+    assert story["headline"] == "Trump and Putin end summit without ceasefire deal"
+    assert story["keywords"][:2] == ["alaska summit", "ceasefire"]
+    assert "alaska" in story["keywords"]
+    assert story["section"] == "World"
+    assert story["latest_published"] == "2025-08-16T18:51:12Z"
+    assert story["first_seen"] == "2025-08-15"
+    assert story["days_running"] == 2
+    outlets = {o["outlet"]: o for o in story["outlets"]}
+    assert outlets["BBC"]["articles"] == 2 and outlets["BBC"]["domain"] == "bbc.com"
+    assert outlets["NYT"]["articles"] == 1
+    # articles sorted by published desc, ISO normalized, each carries outlet metadata
+    pubs = [a["published"] for a in story["articles"]]
+    assert pubs == sorted(pubs, reverse=True)
+    assert all(a["published"].endswith("Z") for a in story["articles"])
+    assert story["articles"][0]["domain"] in {"bbc.co.uk", "bbc.com", "nytimes.com"}
+
+
+def test_roundup_classified_and_ranked_below(doc):
+    roundup = doc["stories"][1]
+    assert roundup["kind"] == "roundup"
+    assert roundup["outlet_count"] == 1
+
+
+def test_stable_ids(doc):
+    from newvelles.models.stories import build_stories
+    doc2 = build_stories(VIZ, generated="2099-01-01T00:00:00")
+    assert [s["id"] for s in doc2["stories"]] == [s["id"] for s in doc["stories"]]
+
+
+def test_entities_present(doc):
+    story = doc["stories"][0]
+    assert isinstance(story["entities"], list)
+    assert any("Putin" in e or "Trump" in e or "Alaska" in e for e in story["entities"])
+
+
+def test_build_stories_on_real_example_file():
+    from newvelles.models.stories import build_stories
+    viz = json.loads((REPO_ROOT / "data" / "latest_news_example.json").read_text())
+    result = build_stories(viz)
+    assert result["story_count"] == len(result["stories"]) > 0
+    links = [a["link"] for s in result["stories"] for a in s["articles"]]
+    # flattening removed the massive intra-group duplication
+    assert len(links) == result["article_count"]
+    for s in result["stories"]:
+        assert s["kind"] in {"story", "roundup", "deal"}
+        assert s["outlet_count"] >= 1
+        assert s["outlet_count"] == len({a["outlet"] for a in s["articles"]})
+
+
 def test_intra_group_dedupe_on_real_example_file():
     """data/latest_news_example.json: 410 entries resolve to 121 unique links,
     all duplication is within-group across sub-groups."""

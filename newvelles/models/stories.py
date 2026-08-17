@@ -1,6 +1,12 @@
 """Merge visualization groups into stories (schema 0.3.0). Stage A + A.5."""
+import hashlib
 import re
+from collections import Counter
+from datetime import datetime
 from urllib.parse import urlsplit
+
+from newvelles.utils.dates import iso_date, to_iso8601
+from newvelles.utils.sources import resolve_feed
 
 STORIES_VERSION = "0.3.0"
 MERGE_THRESHOLD = 0.5
@@ -187,3 +193,110 @@ def classify_story(titles: list, outlet_count: int) -> str:
     if outlet_count == 1 and template_run(titles) >= TEMPLATE_MIN_RUN:
         return "roundup"
     return "story"
+
+
+_ENTITY_LABELS = {"PERSON", "ORG", "GPE", "LOC", "NORP", "FAC", "EVENT"}
+MAX_KEYWORDS = 8
+MAX_ENTITIES = 10
+
+
+def _story_id(links: list) -> str:
+    fingerprint = hashlib.sha256(",".join(sorted(links)[:20]).encode("utf-8")).hexdigest()
+    return f"st_{fingerprint[:6]}"
+
+
+def _fallback_headline(articles: list) -> str:
+    by_outlet = Counter(a["outlet"] for a in articles)
+    top_outlet = by_outlet.most_common(1)[0][0]
+    candidates = [a["title"] for a in articles if a["outlet"] == top_outlet]
+    return max(candidates, key=len)
+
+
+def _extract_entities(titles: list) -> list:
+    from newvelles.utils.text import NLP  # module-level spaCy model, already loaded
+    counts: Counter = Counter()
+    for title in titles:
+        for ent in NLP(title).ents:
+            if ent.label_ in _ENTITY_LABELS:
+                counts[ent.text] += 1
+    return [entity for entity, _ in counts.most_common(MAX_ENTITIES)]
+
+
+def build_stories(visualization: dict, generated: str = None) -> dict:
+    """Assemble the stories.json document from a visualization dict."""
+    groups = collect_groups(visualization)
+    components = merge_groups(groups)
+
+    stories = []
+    all_links: set = set()
+    all_feeds: set = set()
+    for component in components:
+        articles_by_link: dict = {}
+        keywords, seen_keywords = [], set()
+        for idx in component:
+            for link, article in groups[idx]["articles"].items():
+                articles_by_link.setdefault(link, article)
+            for keyword in groups[idx]["keywords"]:
+                if keyword not in seen_keywords:
+                    seen_keywords.add(keyword)
+                    keywords.append(keyword)
+
+        articles = []
+        for link, article in articles_by_link.items():
+            source = resolve_feed(article["feed"])
+            articles.append({
+                "title": article["title"],
+                "link": article["link"],
+                "published": to_iso8601(article["published_raw"]),
+                "outlet": source.outlet,
+                "domain": source.domain,
+                "section": source.section,
+                "feed": article["feed"],
+            })
+            all_feeds.add(article["feed"])
+        all_links.update(articles_by_link)
+        articles.sort(key=lambda a: a["published"], reverse=True)
+
+        titles = [a["title"] for a in articles]
+        outlet_counter = Counter(a["outlet"] for a in articles)
+        outlet_domains = {a["outlet"]: a["domain"] for a in articles}
+        sections = Counter(a["section"] for a in articles)
+        publish_dates = {iso_date(a["published"]) for a in articles} - {""}
+        parseable = [a["published"] for a in articles if a["published"].endswith("Z")]
+
+        stories.append({
+            "id": _story_id(list(articles_by_link)),
+            "headline": _fallback_headline(articles),
+            "headline_source": "fallback",
+            "keywords": keywords[:MAX_KEYWORDS],
+            "entities": _extract_entities(titles),
+            "section": sections.most_common(1)[0][0],
+            "kind": classify_story(titles, outlet_count=len(outlet_counter)),
+            "outlet_count": len(outlet_counter),
+            "article_count": len(articles),
+            "latest_published": max(parseable) if parseable else "",
+            "first_seen": min(publish_dates) if publish_dates else "",
+            "days_running": max(len(publish_dates), 1),
+            "merged_from_groups": len(component),
+            "outlets": [
+                {"outlet": outlet, "domain": outlet_domains[outlet], "articles": count}
+                for outlet, count in outlet_counter.most_common()
+            ],
+            "articles": articles,
+        })
+
+    stories.sort(
+        key=lambda s: (s["outlet_count"], s["article_count"], s["latest_published"]),
+        reverse=True,
+    )
+    kind_counts = Counter(s["kind"] for s in stories)
+    return {
+        "version": STORIES_VERSION,
+        "generated": generated or datetime.now().isoformat().split(".")[0],
+        "feeds": len(all_feeds),
+        "article_count": len(all_links),
+        "story_count": len(stories),
+        "merge_threshold": MERGE_THRESHOLD,
+        "kind_counts": {k: kind_counts.get(k, 0) for k in ("story", "roundup", "deal")},
+        "stories": stories,
+    }
