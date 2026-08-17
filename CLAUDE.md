@@ -306,6 +306,15 @@ newvelles/
   publishes with anomalous story counts (>60% deviation) or too few articles
 - See `docs/PRODUCTION_ROLLBACK_GUIDE.md` for detailed rollback procedures
 
+## Current Status & Next Steps
+
+**Read `docs/NEXT_STEPS.md` first when resuming work** — it records the 2026-08
+redesign cutover (stories/momentum/naming pipeline live in prod, new front end at
+newvelles.com root, old UI at /classic), hard-won operational notes (deploy
+quirks, Bedrock guardrails), and the three planned workstreams: RSS feed-health
+logging + review skill, the research-papers vertical, and the 2021-present
+historical analysis (`make pull-archive` -> backfill -> Parquet dataset).
+
 ## Additional Documentation
 
 Refer to `docs/` for detailed guides:

@@ -540,6 +540,10 @@ rollback-prod:
 	@echo "🔄 Starting production rollback..."
 	./bin/rollback-production.sh
 
+# Mirror the full 2021->present visualization archive locally (~1.8 GB, resumable)
+pull-archive:
+	@$(VENV_ACTIVATE) && python scripts/pull_archive.py
+
 # Seed momentum_state.json + momentum.json from archived production runs
 # (replays the last 14 days through the momentum pipeline). ENV=qa|prod.
 backfill-momentum:
