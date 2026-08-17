@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="./doc-page.js"></script>
+<style>
+doc-page:not(:defined){visibility:hidden}
+doc-page{font-family:"Inter",system-ui,sans-serif;color:#22242e;font-size:10.5pt;line-height:1.6}
+h1,h2,h3{font-weight:500;color:#161826;letter-spacing:-.015em;margin:0}
+h1{font-size:23pt;line-height:1.12}
+h2{font-size:14pt;margin:26pt 0 8pt;padding-bottom:5pt;border-bottom:1px solid #d7d8de}
+h3{font-size:11pt;margin:16pt 0 4pt}
+p{margin:0 0 8pt;orphans:3;widows:3}
+ul,ol{margin:0 0 9pt;padding-left:15pt}
+li{margin-bottom:4pt;orphans:3;widows:3}
+code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9pt;background:#f1f0f7;padding:1px 3px;border-radius:3px;color:#4b3f8f}
+pre{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.4pt;line-height:1.5;background:#f7f7fa;border:1px solid #e3e3ea;border-left:2px solid #6b5fc0;border-radius:4px;padding:10pt 12pt;margin:0 0 10pt;white-space:pre-wrap;break-inside:avoid;color:#2c2e38}
+table{width:100%;border-collapse:collapse;margin:0 0 12pt;font-size:9.2pt}
+th{text-align:left;font-weight:500;color:#161826;border-bottom:1px solid #9a9aa6;padding:5pt 8pt 5pt 0;vertical-align:bottom}
+td{border-bottom:1px solid #e6e6ec;padding:5pt 8pt 5pt 0;vertical-align:top;break-inside:avoid}
+.lede{font-size:11.5pt;line-height:1.55;color:#3f424d;margin-bottom:14pt}
+.kicker{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:#6b5fc0;margin-bottom:6pt}
+.note{background:#f4f3fb;border:1px solid #ddd9f2;border-radius:5px;padding:9pt 12pt;margin:0 0 12pt;break-inside:avoid;font-size:9.6pt;line-height:1.55}
+.note strong{color:#4b3f8f}
+.meta{font-size:9pt;color:#6f7280}
+.tag{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8pt;color:#6b5fc0}
+a{color:#4b3f8f}
+a:hover{color:#6b5fc0}
+</style>
+</helmet>
+
+<doc-page margin="0.8in">
+
+<div class="kicker">Newvelles · implementation spec · draft for review</div>
+<h1>From 179 groupings to 34 named stories</h1>
+<p class="lede">What the backend has to produce for the redesigned front page to work, in four independently shippable phases. Nothing here changes the RSS ingestion, the TF-IDF clustering, or the Lambda deployment path. The work is a post-processing stage between <code>build_visualization()</code> and <code>log_s3()</code>, plus one new rollup file.</p>
+
+<h2>1 · Where the new code goes</h2>
+
+<p>Today <code>handler.py</code> runs three steps: build data from RSS, <code>build_visualization()</code>, <code>log_s3()</code>. The redesign inserts one stage in the middle and one after:</p>
+
+<pre>title_data        = build_data_from_rss_feeds(RSS_FILE)
+visualization, _  = build_visualization(title_data, cluster_limit=...)
+
+# NEW — newvelles/models/stories.py
+stories           = build_stories(visualization)        # merge + resolve sources
+stories           = name_stories(stories)               # LLM titles, cached
+
+# NEW — newvelles/models/momentum.py
+momentum          = update_momentum(stories)            # reads/writes rolling state
+
+log_s3(visualization, stories=stories, momentum=momentum)</pre>
+
+<p>Five new modules, all pure functions except the two that touch S3 and the LLM:</p>
+
+<table>
+<thead><tr><th style="width:32%">File</th><th>Responsibility</th></tr></thead>
+<tbody>
+<tr><td><code>models/stories.py</code></td><td>Merge overlapping groups into stories; compute outlet counts</td></tr>
+<tr><td><code>models/naming.py</code></td><td>LLM headline generation with fingerprint cache and fallback</td></tr>
+<tr><td><code>models/momentum.py</code></td><td>Story identity across days; rolling 14-day series</td></tr>
+<tr><td><code>utils/sources.py</code></td><td>RSS feed URL → outlet name and domain</td></tr>
+<tr><td><code>feed/log.py</code></td><td>Extended: two more public-bucket uploads</td></tr>
+</tbody>
+</table>
+
+<h2>2 · Stage A — merging groups into stories</h2>
+
+<p>This is the change that does the most work for the least cost, and it needs no LLM. In the 16 August sample, the Alaska summit occupies at least twelve top-level groupings and the BBC video <em>"Watch: Moment Trump and Putin meet in Alaska"</em> appears in eight of them. The clustering isn't wrong — the two-level greedy pass legitimately puts one article in several groups. The output just never collapses them.</p>
+
+<h3>Article identity</h3>
+<p>Use the <code>link</code> field, normalised: strip query strings except where they carry the path (BBC appends <code>?at_medium=RSS</code>; drop it), lowercase the host, drop <code>www.</code>, drop trailing slashes. Two entries with the same normalised link are the same article. Title-based identity is unreliable — the same story reruns with edited headlines.</p>
+
+<h3>Merge rule</h3>
+<p>Build a graph over top-level groupings: an edge exists when two groupings share articles above a threshold. Connected components become stories.</p>
+
+<pre>def overlap(g1_links, g2_links):
+    inter = len(g1_links &amp; g2_links)
+    return inter / min(len(g1_links), len(g2_links))
+
+# edge when overlap >= MERGE_THRESHOLD (start at 0.5)
+# connected components via union-find -> one story per component</pre>
+
+<p>Containment (<code>min</code> in the denominator) rather than Jaccard matters here: a four-article grouping fully contained in a thirty-article one should merge, and Jaccard would score that pair at 0.13 and leave them apart.</p>
+
+<div class="note"><strong>Tuning:</strong> 0.5 is a starting point, not a finding. Run it over thirty stored days from the private bucket and check the story count lands in the 25–45 band on a normal day. Too low and the summit swallows unrelated Trump stories; too high and you keep four Alaska piles. This is a half day of work with the archive you already have, and it's worth doing before anything else.</div>
+
+<h3>Outlet counting</h3>
+<p>The redesign ranks by <em>distinct outlets</em>, not article count — that's what stops twenty Yahoo reposts outranking a story the BBC, NYT and Politico all covered independently. The RSS <code>source</code> field is a feed URL, so it needs resolving:</p>
+
+<pre>https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml  ->  BBC       bbc.com
+https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml  ->  NYT       nytimes.com
+https://rss.politico.com/congress.xml                      ->  Politico  politico.com
+https://www.yahoo.com/news/rss                             ->  Yahoo     yahoo.com</pre>
+
+<p>84 feeds map to far fewer outlets — several NYT and Politico feeds each. A static table in <code>data/sources.json</code> keyed by feed URL, with <code>{"outlet", "domain", "section"}</code>, is the whole implementation. <code>data/rss_titles.json</code> already holds part of this. Unmapped feeds fall back to the registered domain of the feed URL, and the run logs them so the table can be filled in.</p>
+
+<h2>2.5 · Stage A.5 — roundups, templates and <code>kind</code></h2>
+
+<p>Running the merge over real fetches turned up a failure the spec's first draft didn't account for, and no amount of LLM naming fixes it: some clusters are held together by shared headline <em>scaffolding</em> rather than a shared subject. Real examples from the 9 August fetch, each currently a single "story":</p>
+
+<pre>Select Water Solutions Q2 Earnings Call Highlights
+Essential Utilities Q2 Earnings Call Highlights
+Watts Water Technologies Q2 Earnings Call Highlights
+Warby Parker Q2 Earnings Call Highlights          <- four unrelated companies
+
+Five Hacks Every Amazfit Balance 3 User Should Know
+Five Hacks Every Amazfit Cheetah 2 Ultra User Should Know
+10 Screenshot Hacks Every Mac User Should Know    <- one outlet's article series
+
+This 27-Inch Asus OLED Gaming Monitor Is $120 Off Right Now
+This LG Ultrawide OLED Gaming Monitor Is $200 Off Right Now
+This 45-Inch LG UltraGear OLED Curved Monitor Is $700 Off  <- affiliate deals</pre>
+
+<p>TF-IDF cannot distinguish a template from a topic — the shared words are genuinely shared. Naming such a cluster produces a fluent headline for something that was never one event. The cluster is wrong upstream of the name.</p>
+
+<h3>The check</h3>
+<p>Two signals, both cheap, applied after merging and before naming:</p>
+<ul>
+<li><strong>Single-outlet:</strong> every article in the cluster comes from one outlet. A real event gets covered by several; an article series does not.</li>
+<li><strong>Shared template run:</strong> the longest <em>contiguous</em> word run appearing in 60% or more of the titles. Three or more words means the titles came from a template. Contiguity matters — loose word overlap flags real stories, because three articles about one primary election naturally share "primary", "win" and a candidate name without being a template.</li>
+</ul>
+
+<pre>def classify(story):
+    if majority_match(story.titles, DEAL_RE):   # "$120 Off", "% Off", "Preorder", "Deal"
+        return "deal"
+    if story.outlet_count == 1 and template_run(story.titles) &gt;= 3:
+        return "roundup"
+    return "story"
+
+def template_run(titles):
+    """Longest contiguous word run shared by &gt;=60% of titles,
+    excluding runs that contain a proper noun."""
+    # A run carrying a proper noun is a subject, not a template:
+    # "dispense $600M for vaccines RFK Jr. held up" is two outlets
+    # covering one event, not a headline pattern.</pre>
+
+<p>One trap worth knowing before you implement this. Detecting proper nouns by capitalisation fails on title-case headlines, where every significant word is capitalised — Lifehacker and Yahoo Finance both write that way, and they are exactly the feeds that produce templates. Collect the proper-noun set only from sentence-case titles, and treat weekday and month names as generic (the daily rate and price roundups are built on them). Run against the 9 August fetch, the rule gives:</p>
+
+<pre>story    24     multi-outlet coverage, plus single-outlet news
+roundup   7     earnings-call highlights, "Hacks Every X User Should Know",
+                insider-filing series, daily metals/crypto prices
+deal     10     price-off posts, preorder offers, deals live blogs</pre>
+
+<p>No genuine news cluster is misclassified at that setting, which is the failure that matters — a roundup shown as a story is a mild embarrassment, a real story buried under a roundup filter is a bug. Two known misses in the other direction: a movie-recommendation series and the daily CD/mortgage rate posts still read as stories. Both are single-outlet, so they sit low in an outlet-count ranking anyway.</p>
+
+<p>Emit the result as <code>kind</code> on every story. Nothing is discarded — classification, not filtering, because a deals reader may well want the deals; they just shouldn't outrank a foreign-policy story on the front page.</p>
+
+<div class="note"><strong>Why this matters more than it looks:</strong> in the QA feed set, commerce and article-series clusters outnumber news clusters. A front page ranked purely by outlet count would put "This Anker Charging Station Is 30% Off" alongside Gaza ceasefire coverage. The board view should show <code>kind == "story"</code> only, with deals and roundups reachable behind a filter pill.</div>
+
+<h3>The second deduplication axis</h3>
+<p>Related finding from the same sweep. In <code>data/latest_news_example.json</code>, 410 article entries resolve to 121 unique links — but no article appears in more than one <em>top-level</em> group. The duplication is entirely <em>within</em> a group, across sub-groups: one article shows up in as many as 16 sub-groupings of the same parent. Flattening a story to a single list of articles removes all of it, with no threshold and no tuning. Stage A's merge handles cross-group duplication, which is a production-scale phenomenon; this handles the intra-group kind, which is present at every scale.</p>
+
+<div class="note"><strong>Consequence for the threshold sweep:</strong> run it on stored <em>production</em> files (84 feeds). In the 12-feed QA set no article appears in two top-level groups at all, so the merge is a no-op there and any threshold looks equally correct. Testing the merge against QA data would tell you nothing.</div>
+
+<h2>3 · Stage B — LLM-generated headlines</h2>
+
+<p>Group identifiers today come from <code>extract_common_substrings()</code>, which is why they read as <code>[next time] [no ceasefire] [6 takeaways]</code>. Those are the longest shared substrings across headlines, and shared substrings are not topics. Keep them — they become the keyword pills, and they're good at that. The story <em>name</em> becomes a generated sentence.</p>
+
+<h3>Call shape</h3>
+<p>One call per story per run, cached. Batching all stories into one call is cheaper but couples failures together and makes the cache useless, so keep it one story per call.</p>
+
+<table>
+<thead><tr><th style="width:26%">Decision</th><th>Recommendation</th></tr></thead>
+<tbody>
+<tr><td>Model</td><td>Claude Haiku — naming from headlines is not a frontier task, and latency matters inside a Lambda</td></tr>
+<tr><td>Input</td><td>Up to 12 headlines from the story, longest first, plus outlet names</td></tr>
+<tr><td>Output</td><td>One sentence, 6–12 words, sentence case, no trailing period</td></tr>
+<tr><td>Timeout</td><td>8s per call, 2 retries, then fall back</td></tr>
+<tr><td>Concurrency</td><td>4 parallel calls via <code>ThreadPoolExecutor</code> — 34 stories in ~15s</td></tr>
+<tr><td>Credential</td><td><code>ANTHROPIC_API_KEY</code> from Lambda environment; document in <code>docs/ENVIRONMENT.md</code></td></tr>
+</tbody>
+</table>
+
+<h3>Prompt</h3>
+<pre>You name news stories. You will get headlines that all cover the same
+event, from different outlets.
+
+Write one plain sentence naming what happened. Rules:
+- 6 to 12 words, sentence case, no trailing period
+- State the event, not the framing. Never adopt one outlet's angle.
+- No clickbait, no questions, no colons, no "here's what"
+- Use the names of people, places and organisations that appear
+- If the headlines disagree about what happened, name the disputed
+  fact, not one side's version
+
+Headlines:
+{numbered list of up to 12 headlines, each with its outlet}
+
+Reply with the sentence and nothing else.</pre>
+
+<p>Against the sample cluster this should produce something close to <em>"Trump and Putin meet in Alaska and leave without a ceasefire"</em> — which is what the mockups use.</p>
+
+<h3>Cache</h3>
+<p>The Lambda runs every six hours and most stories persist between runs. Naming the same cluster repeatedly is wasted money and, worse, produces a headline that drifts between refreshes. Cache on a fingerprint of the story's <em>content</em>:</p>
+
+<pre>fingerprint = sha256(",".join(sorted(normalised_links)[:20]))</pre>
+
+<p>Store <code>{fingerprint: headline}</code> in a single <code>story_names.json</code> in the private bucket, loaded at the start of a run and rewritten at the end. When a story gains articles the fingerprint changes and it gets renamed — which is correct, since the story has moved on. Expect 30–60 real calls a day rather than several hundred.</p>
+
+<h3>Failure path</h3>
+<p>The naming stage must never fail a run. If the API is unreachable or the key is missing, fall back to the <em>longest real headline in the story from the outlet with the most articles</em>. That's the "best real headline" option from our earlier conversation, and it degrades gracefully — the site still reads sensibly, it just loses the neutral phrasing. Log the fallback count so a silent outage is visible in monitoring.</p>
+
+<div class="note"><strong>Cost:</strong> roughly 600 input and 30 output tokens per call, 30–60 calls a day. On Haiku pricing that's about a dollar a month, well inside the low-cost constraint. Set a monthly budget alert anyway.</div>
+
+<h2>4 · Stage C — momentum from the archive</h2>
+
+<p>The sparklines and "running 4 days" counters need one thing the current pipeline never produces: a story that knows it existed yesterday. The private bucket already holds every timestamped run back to 2021, so no new collection is needed — but querying that history at read time would mean infrastructure you don't have. Precompute instead.</p>
+
+<h3>Story identity across days</h3>
+<p>Links can't carry identity across days: tomorrow's coverage of the same story is entirely new articles. Match on content overlap instead, against yesterday's stories only:</p>
+
+<pre>def match_previous(story, previous_stories):
+    best, best_score = None, 0
+    for prev in previous_stories:
+        score = jaccard(story.keywords | story.entities,
+                        prev.keywords | prev.entities)
+        if score > best_score:
+            best, best_score = prev, score
+    return best if best_score >= CARRY_THRESHOLD else None   # start at 0.4</pre>
+
+<p>A match inherits <code>story_id</code> and increments <code>days_running</code>; no match mints a new id. Keywords come free from the existing substring extraction. Entities need a spaCy NER pass — spaCy is already a dependency and already loaded from EFS, so this is a function call, not a new model.</p>
+
+<h3>The rollup file</h3>
+<p>One small file, rewritten every run, holding a rolling 14-day window. This is the whole "months of archive" story from the front end's point of view — the deep archive stays in the private bucket, unqueried, and the site reads a file measured in kilobytes.</p>
+
+<pre>// public bucket: momentum.json
+{
+  "generated": "2026-08-16T08:12:00",
+  "window_days": 14,
+  "stories": {
+    "st_a91f2c": {
+      "first_seen": "2026-08-10",
+      "days_running": 4,
+      "series": [
+        {"date": "2026-08-13", "outlets": 5,  "articles": 9},
+        {"date": "2026-08-14", "outlets": 13, "articles": 28},
+        {"date": "2026-08-15", "outlets": 11, "articles": 24},
+        {"date": "2026-08-16", "outlets": 14, "articles": 31}
+      ],
+      "peak_date": "2026-08-14",
+      "trend": "cooling"
+    }
+  }
+}</pre>
+
+<p><code>trend</code> is derived, not stored per article: compare the last two days' outlet counts against the window mean and emit one of <code>new</code>, <code>climbing</code>, <code>peaked</code>, <code>cooling</code>, <code>steady</code>. The front end prints it verbatim under the sparkline ("peaked yesterday", "still climbing"), so the vocabulary is a contract — changing a label changes the UI copy.</p>
+
+<div class="note"><strong>Backfill:</strong> run the merge and identity passes over the last 14 days of stored runs once, offline, to seed <code>momentum.json</code>. Otherwise every story reads "new today" for the first fortnight and the sparkline column is empty at launch — the least convincing possible first impression.</div>
+
+<h2>5 · Stage D — what the front end reads</h2>
+
+<p>Two new public files. <code>latest_news.json</code> stays exactly as it is, on the current schema, so nothing breaks while the new site is built and so the existing page keeps working.</p>
+
+<table>
+<thead><tr><th style="width:26%">File</th><th style="width:14%">Bucket</th><th>Contents</th></tr></thead>
+<tbody>
+<tr><td><code>latest_news.json</code></td><td>public</td><td>Unchanged, schema 0.2.1</td></tr>
+<tr><td><code>stories.json</code></td><td>public</td><td>New: merged, named, source-resolved stories</td></tr>
+<tr><td><code>momentum.json</code></td><td>public</td><td>New: rolling 14-day series per story</td></tr>
+<tr><td><code>story_names.json</code></td><td>private</td><td>New: fingerprint → headline cache</td></tr>
+</tbody>
+</table>
+
+<h3>stories.json</h3>
+<pre>{
+  "version": "0.3.0",
+  "generated": "2026-08-16T08:12:00",
+  "feeds": 84,
+  "article_count": 672,
+  "stories": [
+    {
+      "id": "st_a91f2c",
+      "headline": "Trump and Putin meet in Alaska and leave without a ceasefire",
+      "headline_source": "llm",              // or "fallback"
+      "keywords": ["alaska summit", "ceasefire", "ukraine", "zelensky"],
+      "entities": ["Donald Trump", "Vladimir Putin", "Alaska", "Ukraine"],
+      "section": "World",
+      "kind": "story",                       // story | roundup | deal
+      "outlet_count": 14,
+      "article_count": 31,
+      "latest_published": "2026-08-16T18:51:12Z",
+      "outlets": [
+        {"outlet": "BBC", "domain": "bbc.com", "articles": 6},
+        {"outlet": "NYT", "domain": "nytimes.com", "articles": 4}
+      ],
+      "articles": [
+        {
+          "title": "Trump Bows to Putin's Approach on Ukraine: No Cease-Fire...",
+          "link": "https://www.nytimes.com/2025/08/16/us/politics/...",
+          "published": "2026-08-16T18:51:12Z",
+          "outlet": "NYT",
+          "domain": "nytimes.com"
+        }
+      ]
+    }
+  ]
+}</pre>
+
+<p>Two deliberate changes from the current schema. Articles are a <em>list</em>, not an object keyed by title — the current shape can't hold two articles with identical titles, which happens with syndicated wire copy. And <code>published</code> is normalised to ISO 8601; the current file carries at least four RSS date formats (<code>"Sat, 16 Aug 2025 18:51:12 +0000"</code>, <code>"2025-08-16T04:31:19Z"</code>, and EST/GMT variants), which pushes parsing into the browser for no reason.</p>
+
+<h3>Section assignment</h3>
+<p>The mockups' section pills (World, US politics, Markets, Tech, Science, Local) don't exist in the data yet. Derive them from the feed, not the content: each entry in <code>data/sources.json</code> already needs a <code>section</code>, and a story takes the modal section of its articles. No classifier, no LLM call. It will be wrong occasionally, and that's acceptable for a filter pill.</p>
+
+<h3>Front-end changes</h3>
+<p>The board view shows <code>kind == "story"</code> only; roundups and deals stay reachable from a filter pill in the wire, so nothing is hidden but nothing commerce-shaped competes for the lead slot. The current app reads the three-level nesting directly in <code>newsStore.js</code> and ranks in <code>rankGroupings.js</code>. Against <code>stories.json</code> both get simpler: ranking moves to the backend (or becomes a one-line sort on <code>outlet_count</code>), and the drilldown collapses to one expand-in-place level. Search keeps working the way it does now — it just runs over story headlines, article titles, outlet names and keywords.</p>
+
+<h2>6 · Phasing</h2>
+
+<p>Each phase is shippable on its own and improves the current site even if the next one never lands.</p>
+
+<table>
+<thead><tr><th style="width:8%">Phase</th><th style="width:30%">Ships</th><th>Why this order</th></tr></thead>
+<tbody>
+<tr><td><strong>1</strong></td><td>Merge + source resolution → <code>stories.json</code>, no LLM</td><td>Removes the redundancy that makes the site feel like noise. Headlines are the best real headline. No new external dependency, no new cost. This alone gets you most of the way.</td></tr>
+<tr><td><strong>2</strong></td><td>LLM naming + cache + fallback</td><td>Fixes the fragment tags. Isolated behind a feature flag and a fallback, so a bad day for the API is a cosmetic regression, not an outage.</td></tr>
+<tr><td><strong>3</strong></td><td>Momentum: identity, rollup, 14-day backfill</td><td>Needs stable story ids from phase 1 to be meaningful. Unlocks the sparkline column and the "running N days" line.</td></tr>
+<tr><td><strong>4</strong></td><td>New front end on <code>stories.json</code> + <code>momentum.json</code></td><td>Board landing view, wire deep dive. Can start against a hand-written fixture the day phase 1's schema is agreed.</td></tr>
+</tbody>
+</table>
+
+<h3>Deferred, in priority order</h3>
+<ul>
+<li><strong>Entity filters.</strong> The NER pass from phase 3 already produces the entities; exposing them as first-class filters is mostly front-end work plus an entity index in <code>stories.json</code>.</li>
+<li><strong>Framing comparison.</strong> Needs no new data — two headlines from the same story on the same day, chosen for maximum lexical distance. A heuristic gets surprisingly far before any LLM is involved.</li>
+<li><strong>Barely-covered rail.</strong> Already computable from <code>outlet_count</code>; it's in the board mockup and needs no backend work at all.</li>
+<li><strong>Day navigation.</strong> Reading a past day means one more public file per day (<code>stories/2026-08-15.json</code>) written once and never updated. Cheap, but it multiplies the public bucket's object count, so decide on a retention window first.</li>
+<li><strong>Research domain.</strong> A separate corpus with its own weighting — venue, citation velocity, distinct groups working on a problem — rather than outlet count. Same shell, different ranking. Worth a spec of its own.</li>
+</ul>
+
+<h2>7 · Testing</h2>
+
+<p>Following the repo's stated philosophy — observable behaviour, real fixtures, mocks only at the network boundary:</p>
+
+<ul>
+<li><strong>Merge:</strong> fixture built from a production-feed file, asserting the twelve Alaska groupings collapse to one story and that the BBC video appears exactly once. Assert the total story count lands in the expected band. A QA-feed fixture cannot test this — no article appears in two top-level groups there.</li>
+<li><strong>Classification:</strong> the three real clusters quoted in section 2.5 as fixtures, asserting the earnings-call and hacks clusters classify as <code>roundup</code>, the monitor cluster as <code>deal</code>, and a genuine multi-outlet cluster as <code>story</code>. This is the test that stops a template cluster reaching the lead slot.</li>
+<li><strong>Source resolution:</strong> every feed in <code>rss_source.txt</code> resolves to a mapped outlet, or the test fails with the list of unmapped feeds. This is the test that keeps the table honest as feeds are added.</li>
+<li><strong>Naming:</strong> mock the API (it's an external service). Assert the cache prevents a second call for an unchanged fingerprint, that a changed fingerprint triggers one, and that a raised exception yields the fallback headline rather than propagating.</li>
+<li><strong>Momentum:</strong> two synthetic consecutive days where a story persists and another dies. Assert id carry-forward, <code>days_running</code>, and that the window never exceeds 14 entries.</li>
+<li><strong>Schemas:</strong> new JSON schemas for both files, validated in the existing S3 upload path alongside the current two.</li>
+</ul>
+
+<h2>8 · Open decisions</h2>
+
+<ol>
+<li><s>Run frequency.</s> <strong>Settled:</strong> unchanged at <code>rate(6 hours)</code> — four runs a day. Each run rewrites the current day's datapoint with <code>max(existing, this run)</code> on outlet count, so a day records its peak rather than whatever the 6am run happened to catch. Article counts follow the same rule. Only the current day is ever mutated; earlier days in the window are immutable once passed.</li>
+<li><strong>Merge threshold.</strong> Needs the archive sweep described above before it's fixed in code.</li>
+<li><strong>Naming stability.</strong> At four runs a day a story can be renamed up to four times, which is visible to anyone refreshing. Recommendation: rename only when the article set has grown by more than 50% since the naming that produced the current headline — store the article count alongside the cached name and compare. A story that gains two articles keeps its headline; one that doubles earns a new one. Worth confirming before phase 2 ships.</li>
+<li><strong>Backfill depth.</strong> 14 days seeds the sparklines. Going deeper is cheap offline and would let the site say "biggest story since June", which is the kind of line the archive uniquely enables.</li>
+</ol>
+
+<p class="meta">Backend read: <code>handler.py</code>, <code>models/grouping.py</code>, <code>feed/log.py</code>, <code>utils/s3.py</code>, <code>config/newvelles.ini</code>, <code>schemas/</code>, <code>docs/GROUPING_ALGORITHM.md</code>. Front end: <code>src/data/newsStore.js</code>, <code>src/data/rankGroupings.js</code>, <code>src/components/App.js</code>. Sample data: <code>data/latest_news.json</code>, 16 August fetch, 672 article entries across 179 top-level groupings.</p>
+
+</doc-page>
+
+</x-dc>
+</body>
+</html>

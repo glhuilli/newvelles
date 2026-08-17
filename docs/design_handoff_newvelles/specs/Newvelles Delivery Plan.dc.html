@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="./doc-page.js"></script>
+<style>
+doc-page:not(:defined){visibility:hidden}
+doc-page{font-family:"Inter",system-ui,sans-serif;color:#22242e;font-size:10.5pt;line-height:1.6}
+h1,h2,h3{font-weight:500;color:#161826;letter-spacing:-.015em;margin:0}
+h1{font-size:23pt;line-height:1.12}
+h2{font-size:14pt;margin:26pt 0 8pt;padding-bottom:5pt;border-bottom:1px solid #d7d8de}
+h3{font-size:11pt;margin:16pt 0 4pt}
+p{margin:0 0 8pt;orphans:3;widows:3}
+ul,ol{margin:0 0 9pt;padding-left:15pt}
+li{margin-bottom:4pt;orphans:3;widows:3}
+code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9pt;background:#f1f0f7;padding:1px 3px;border-radius:3px;color:#4b3f8f}
+pre{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.4pt;line-height:1.5;background:#f7f7fa;border:1px solid #e3e3ea;border-left:2px solid #6b5fc0;border-radius:4px;padding:10pt 12pt;margin:0 0 10pt;white-space:pre-wrap;break-inside:avoid;color:#2c2e38}
+table{width:100%;border-collapse:collapse;margin:0 0 12pt;font-size:9.2pt}
+th{text-align:left;font-weight:500;color:#161826;border-bottom:1px solid #9a9aa6;padding:5pt 8pt 5pt 0;vertical-align:bottom}
+td{border-bottom:1px solid #e6e6ec;padding:5pt 8pt 5pt 0;vertical-align:top;break-inside:avoid}
+.lede{font-size:11.5pt;line-height:1.55;color:#3f424d;margin-bottom:14pt}
+.kicker{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8pt;letter-spacing:.14em;text-transform:uppercase;color:#6b5fc0;margin-bottom:6pt}
+.note{background:#f4f3fb;border:1px solid #ddd9f2;border-radius:5px;padding:9pt 12pt;margin:0 0 12pt;break-inside:avoid;font-size:9.6pt;line-height:1.55}
+.note strong{color:#4b3f8f}
+.rec{background:#eef6f0;border:1px solid #cfe4d5;border-radius:5px;padding:9pt 12pt;margin:0 0 12pt;break-inside:avoid;font-size:9.6pt;line-height:1.55}
+.rec strong{color:#2f6b43}
+.meta{font-size:9pt;color:#6f7280}
+.repo{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8pt;background:#eceaf6;color:#4b3f8f;padding:1px 5px;border-radius:3px;white-space:nowrap}
+a{color:#4b3f8f}
+a:hover{color:#6b5fc0}
+</style>
+</helmet>
+
+<doc-page margin="0.8in">
+
+<div class="kicker">Newvelles · delivery plan · two repositories, one contract</div>
+<h1>How to build this without the two repos blocking each other</h1>
+<p class="lede">The build spec says what to make. This says in what order, which repository owns each piece, and how the front end gets built before the backend produces real data. It also settles the LLM question, which is the one genuinely new external dependency in the project.</p>
+
+<h2>1 · The rule that makes two repos work</h2>
+
+<p>You have <span class="repo">newvelles</span> (Python, Lambda, produces JSON) and <span class="repo">newvelles_web</span> (JS, reads JSON). They only ever meet at a file in a public S3 bucket. So the coordination mechanism is not a process, it's an artifact:</p>
+
+<div class="rec"><strong>Write <code>stories.json</code> by hand first.</strong> Before either repo changes, produce one realistic fixture — 30-odd stories, real headlines from a stored fetch, every field populated. Commit it to <em>both</em> repos: as <code>test/fixtures/stories_v0.3.0.json</code> in the backend and <code>data/fixtures/stories_v0.3.0.json</code> in the front end. The backend's job becomes "produce a file that validates like this one." The front end's job becomes "render this file." Neither waits for the other.</div>
+
+<p>That fixture is what turns a sequential project into a parallel one. It costs an afternoon, and it's the single highest-leverage thing on this plan. The mockups already encode the shape — the prototype's <code>STORIES</code> array is effectively a hand-written fixture, so lifting it into JSON is mechanical.</p>
+
+<h3>Versioning</h3>
+<p>Put <code>"version": "0.3.0"</code> at the top of both new files and have the front end refuse to render an unrecognised major version, logging loudly instead of failing silently. When the schema changes, the JSON schema file in <span class="repo">newvelles</span>/<code>schemas/</code> is the source of truth and the fixture is regenerated from a real run, not edited by hand.</p>
+
+<h2>2 · The LLM decision</h2>
+
+<p>This is the only piece needing a new account, key or bill, and the volume is so small that the interesting question isn't price — it's what you have to operate.</p>
+
+<h3>What the workload actually is</h3>
+<p>Roughly 600 input tokens (a dozen headlines plus the instructions) and 20 output tokens (one sentence) per story. With fingerprint caching, 30–60 new namings a day, so about 1,500 calls and under a million tokens a month. That is a rounding error at every price point below.</p>
+
+<table>
+<thead><tr><th style="width:30%">Option</th><th style="width:20%">Rate per MTok</th><th style="width:16%">Est. monthly</th><th>Operational cost to you</th></tr></thead>
+<tbody>
+<tr><td>Claude Haiku 4.5 via <strong>Amazon Bedrock</strong></td><td>$1 in / $5 out</td><td>~$1.05</td><td>No new vendor, no API key: the Lambda's IAM role gets <code>bedrock:InvokeModel</code>. One AWS bill.</td></tr>
+<tr><td>Claude Haiku 4.5, Anthropic direct</td><td>$1 in / $5 out</td><td>~$1.05</td><td>New account, <code>ANTHROPIC_API_KEY</code> to store and rotate</td></tr>
+<tr><td>OpenAI GPT-5.4 Nano</td><td>$0.20 in / $1.25 out</td><td>~$0.22</td><td>You already have the account; still a key to store and rotate</td></tr>
+<tr><td>No LLM — spaCy noun-phrase naming</td><td>free</td><td>$0</td><td>Zero new dependencies; noticeably worse names</td></tr>
+</tbody>
+</table>
+
+<p class="meta">Rates as published in August 2026; both vendors also offer a 50% batch discount and ~90% cached-input discount, neither of which this workload is big enough to need. Verify before committing — these move.</p>
+
+<div class="rec"><strong>Decided: Bedrock-hosted Haiku, behind a provider interface.</strong> The eighty-cent monthly difference against GPT Nano was not worth a decision; the operational difference was. Compute already runs in AWS with an IAM role, so Bedrock means no secret in the Lambda environment, no key rotation, no second invoice, and no new account to reason about when something breaks at 6am. The interface below stays in place regardless — if Bedrock model access is slow to enable in your region, ship phase 2 on the OpenAI account as a stopgap by changing one environment variable, rather than waiting on an access request.</div>
+
+<h3>Write it as an interface, not a call</h3>
+<p>Ten lines that keep the decision reversible. This is the only place in the codebase that knows which vendor you chose:</p>
+<p><strong>First step, before any code:</strong> Bedrock model access is per-account and per-region, and it is not on by default. Request access to <code>anthropic.claude-haiku-4-5</code> in the Bedrock console for the region your Lambda runs in, then add <code>bedrock:InvokeModel</code> for that model ARN to the Lambda execution role. Approval is usually quick, but it is the one item here with an external wait, so file it today and build the rest while it clears.</p>
+
+<pre># newvelles/models/naming.py
+
+def _name_via_bedrock(prompt: str) -&gt; str: ...
+def _name_via_anthropic(prompt: str) -&gt; str: ...
+def _name_via_openai(prompt: str) -&gt; str: ...
+def _name_via_local(headlines) -&gt; str: ...      # spaCy fallback, no network
+
+PROVIDERS = {
+    "bedrock":   _name_via_bedrock,
+    "anthropic": _name_via_anthropic,
+    "openai":    _name_via_openai,
+    "local":     _name_via_local,
+}
+
+def name_story(story) -&gt; tuple[str, str]:
+    """Returns (headline, headline_source)."""
+    provider = os.environ.get("NEWVELLES_NAMING_PROVIDER", "local")
+    try:
+        return PROVIDERS[provider](build_prompt(story)), provider
+    except Exception as e:
+        log.warning("naming failed (%s), falling back: %s", provider, e)
+        return best_real_headline(story), "fallback"</pre>
+
+<p>Three consequences worth naming. The default is <code>local</code>, so a missing configuration degrades instead of breaking. <code>headline_source</code> travels into <code>stories.json</code>, so you can see in the data — and in monitoring — how many stories were named by the model versus the fallback. And the local provider is a real implementation, not a stub, which means phase 1 can ship with readable names before any vendor decision is made at all.</p>
+
+<h3>Environment variables to add</h3>
+<pre>NEWVELLES_NAMING_PROVIDER   bedrock | anthropic | openai | local   (default: local)
+NEWVELLES_NAMING_MODEL      e.g. anthropic.claude-haiku-4-5-v1:0
+NEWVELLES_NAMING_TIMEOUT    seconds per call, default 8
+BEDROCK_REGION              only for bedrock; defaults to the Lambda's region
+ANTHROPIC_API_KEY           only for anthropic
+OPENAI_API_KEY              only for openai</pre>
+<p>Document all of them in <code>docs/ENVIRONMENT.md</code> — the repo's own convention, and the thing most likely to be skipped under time pressure.</p>
+
+<div class="note"><strong>Cost guardrail:</strong> whichever vendor, set a hard monthly budget alert at $10 and cap the per-run naming count (say 60) so a clustering bug that produces 900 tiny stories can't produce 900 calls. The cap is three lines and it's the only realistic runaway path in this design.</div>
+
+<h2>3 · Milestones</h2>
+
+<p>Six milestones. Each has one owning repo, an explicit dependency, and a definition of done you can check without asking anyone.</p>
+
+<table>
+<thead><tr><th style="width:7%">M</th><th style="width:23%">What</th><th style="width:13%">Repo</th><th style="width:13%">Depends on</th><th>Done when</th></tr></thead>
+<tbody>
+<tr><td><strong>M0</strong></td><td>Threshold sweep + hand-written fixture</td><td>both</td><td>—</td><td>Merge threshold chosen from real data; <code>stories_v0.3.0.json</code> committed to both repos; JSON schemas written</td></tr>
+<tr><td><strong>M1</strong></td><td>Merge, source resolution, sections → real <code>stories.json</code></td><td><span class="repo">newvelles</span></td><td>M0</td><td>QA bucket holds a <code>stories.json</code> that validates against the schema; the 12 Alaska groupings appear as 1 story; every production feed resolves to a mapped outlet</td></tr>
+<tr><td><strong>M2</strong></td><td>Board + wire on the fixture</td><td><span class="repo">newvelles_web</span></td><td>M0 only</td><td>Both views render from the committed fixture, search and filters work, no network call to S3 yet</td></tr>
+<tr><td><strong>M3</strong></td><td>LLM naming, cache, fallback, flag</td><td><span class="repo">newvelles</span></td><td>M1</td><td>Provider chosen and enabled in QA; cache prevents repeat calls; forced API failure yields fallback names and a clean run</td></tr>
+<tr><td><strong>M4</strong></td><td>Momentum: identity, rollup, 14-day backfill</td><td><span class="repo">newvelles</span></td><td>M1</td><td><code>momentum.json</code> in QA with a seeded 14-day window; ids survive a simulated two-day run</td></tr>
+<tr><td><strong>M5</strong></td><td>Point the front end at the real buckets; cut over</td><td><span class="repo">newvelles_web</span></td><td>M1–M4</td><td>Site reads production <code>stories.json</code> + <code>momentum.json</code>; old page still reachable until you're happy</td></tr>
+</tbody>
+</table>
+
+<h3>Where the parallelism is</h3>
+<p>M2 depends only on M0. That's the point of the fixture: the entire front end can be built while the backend is still merging clusters, and the two only meet at M5. If you're working alone, M2 is also the pleasant work to do while a threshold sweep runs.</p>
+
+<h3>What must be sequential</h3>
+<p>M4 needs M1's stable story ids, because momentum is meaningless if identity churns between runs. M3 and M4 are independent of each other and can land in either order — if the vendor decision drags, do M4 first.</p>
+
+<h2>4 · Coordination mechanics</h2>
+
+<h3>Order of operations at every cutover</h3>
+<p>Producer before consumer, always. The backend publishes a new field, the field sits unused in the bucket for a run or two, and only then does the front end start reading it. Never the reverse — the front end must never ship code that requires a field the pipeline doesn't yet write.</p>
+
+<h3>Use the QA bucket as the staging contract</h3>
+<p>The repo already has environment-aware buckets and <code>make qa-invoke</code> / <code>make qa-check-s3</code>. Have the front end read from an environment variable for the bucket base URL so the same build can point at QA or production. Then "does the new front end work with the new pipeline?" is answerable before anything touches the live site.</p>
+
+<h3>Feature flags, not branches</h3>
+<p>Both repos should stay on short-lived branches merged to main frequently, with behaviour gated by flags: <code>NEWVELLES_NAMING_PROVIDER=local</code> keeps naming off, and a front-end flag chooses fixture versus live data. Long-lived feature branches across two repos that must agree on a schema is how a solo project stalls.</p>
+
+<h3>Keep the old file until the new site is live</h3>
+<p><code>latest_news.json</code> keeps being written, unchanged, through all six milestones. It costs one extra upload per run and it means the current site never breaks while the new one is built. Delete it only once the new front end has been live and stable for a couple of weeks.</p>
+
+<h3>Monitoring additions</h3>
+<p>There's already a monitoring dashboard reading from S3. Four numbers per run are worth adding, because each one catches a specific failure that is otherwise invisible:</p>
+<ul>
+<li><strong>Story count</strong> — catches a merge threshold gone wrong. A jump to 150 or a drop to 6 is a bug, not a news day.</li>
+<li><strong>Fallback naming count</strong> — catches a silent API outage.</li>
+<li><strong>Unmapped feed count</strong> — catches a new feed nobody added to the source table.</li>
+<li><strong>Stories with carried ids</strong> — catches identity churn breaking momentum.</li>
+</ul>
+
+<h2>5 · A realistic solo sequence</h2>
+
+<p>If this is evenings and weekends, in this order, with each step leaving the project in a working state:</p>
+
+<ol>
+<li><strong>Threshold sweep and fixture (M0).</strong> Half a day on the sweep, an afternoon on the fixture. Ends with a number you trust and a file both repos can build against.</li>
+<li><strong>Backend merge + sources (M1).</strong> The biggest single improvement in the project, and no new dependencies. The old site keeps running throughout.</li>
+<li><strong>Front-end board + wire (M2).</strong> Satisfying, self-contained, and you already have the prototype as a reference implementation.</li>
+<li><strong>Momentum (M4).</strong> Do this before naming if the vendor decision isn't settled — it has no external dependency and it's what makes the design feel alive.</li>
+<li><strong>Naming (M3).</strong> Enable in QA, watch the names for a few days against real clusters, then production. The prompt will need a couple of rounds of tuning; budget for that rather than expecting the first version to be right.</li>
+<li><strong>Cut over (M5).</strong> New site at the root, old page kept at a path for a fortnight.</li>
+</ol>
+
+<h2>6 · Risks worth watching</h2>
+
+<table>
+<thead><tr><th style="width:30%">Risk</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td>Merge threshold is wrong and stories are absurd</td><td>M0's sweep over stored days, plus the story-count monitor. Ship phase 1 only when the count is stable across a week of archived runs.</td></tr>
+<tr><td>Generated headlines drift between refreshes</td><td>Fingerprint cache; consider renaming only when the article set changes materially. Decide before M3 ships.</td></tr>
+<tr><td>Lambda duration grows past its timeout</td><td>Naming is 4-way parallel and capped; measure before and after M3 and raise the timeout if needed. The clustering is already 10–20s, so there's headroom to check.</td></tr>
+<tr><td>Backfill missing at launch</td><td>M4's definition of done includes the seeded 14-day window, not just the code.</td></tr>
+<tr><td>Front end ships expecting a field the pipeline doesn't write</td><td>Producer-before-consumer, plus the version check that logs loudly.</td></tr>
+</tbody>
+</table>
+
+<h2>7 · Open items</h2>
+<ul>
+<li><s>The vendor call</s> — <strong>settled: Bedrock.</strong> Remaining action is the model access request plus the IAM policy on the Lambda role.</li>
+<li><s>Run frequency</s> — <strong>settled: unchanged at <code>rate(6 hours)</code></strong>, four runs a day. The momentum datapoint for a day is the peak outlet count across that day's four runs; see the build spec.</li>
+<li><strong>Naming stability rule.</strong> Rename a story only when its article set has grown by more than 50% since the naming that produced the current headline. Needs confirming before M3 — at four runs a day the alternative is a headline that changes up to four times while someone is reading.</li>
+<li><s>The fixture</s> — <strong>done.</strong> <code>stories_v0.3.0.json</code> and <code>momentum_v0.3.0.json</code> are built from a real fetch, with a README recording every derivation rule and the known limits of the momentum approximation.</li>
+</ul>
+
+<h2>8 · Local end-to-end, and what happens when it goes wrong</h2>
+
+<h3>Running the whole thing on a laptop, Haiku included</h3>
+
+<p>Confirmed, with one caveat. The CLI already runs the full pipeline without AWS: <code>newvelles --rss_file data/rss_source_short.txt</code> fetches, clusters, and — through <code>log_visualization()</code> — writes <code>./latest_news.json</code>, <code>/tmp/newvelles/latest_news.json</code> and a timestamped copy under <code>/tmp/newvelles/logs/</code>. The <code>--s3</code> flag is opt-in, so a local run touches no bucket.</p>
+
+<p>Bedrock does not change that. It is an ordinary boto3 client, so it authenticates from the same credentials <code>.env.local</code> already carries — no Lambda, no container, no deploy. A full local run with naming enabled costs roughly three cents at 40 stories.</p>
+
+<p>Two things to build so local runs stay pleasant:</p>
+<ul>
+<li><strong>A local naming cache path.</strong> The cache lives in the private bucket in production; point it at <code>./cache/story_names.json</code> locally via <code>NEWVELLES_NAMING_CACHE</code>, or every dev run re-pays for names and needs S3 to work at all.</li>
+<li><strong>An offline mode that is genuinely offline.</strong> <code>NEWVELLES_NAMING_PROVIDER=local</code> — the spaCy fallback — must run with no credentials and no network beyond RSS. That is the default, so a fresh clone works before anyone has Bedrock access.</li>
+</ul>
+
+<div class="note"><strong>One refactor to do first.</strong> <code>log_visualization()</code> (CLI) and <code>log_s3()</code> (Lambda) are separate functions that already duplicate their upload logic and have already drifted — the Lambda path omits the <code>latest_log_reference</code> field the CLI path writes. Adding two more output files to both will make that worse. Collapse them into one emit function with a writer strategy (local, S3, or both) before M1 adds files, not after.</div>
+
+<h3>The old files keep being written</h3>
+<p>Yes — <code>latest_news.json</code> and <code>latest_news_metadata.json</code> continue exactly as they are, on schema 0.2.1, through every milestone. <code>stories.json</code> and <code>momentum.json</code> are additional objects, not replacements, and carry their own <code>0.3.0</code> version field. The existing site keeps reading the file it reads today and cannot be affected by the new pipeline stages, because they append rather than modify.</p>
+
+<h3>Versioning: what you have, and the two gaps</h3>
+
+<table>
+<thead><tr><th style="width:30%">Layer</th><th style="width:14%">Status</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td>Code / deployment</td><td><strong>Solid</strong></td><td>Timestamped ECR image tags, <code>make list-prod-images</code>, <code>make rollback-prod</code> with EventBridge pause, grace period, test invocation and auto-resume on failure</td></tr>
+<tr><td>Data archive</td><td><strong>Solid</strong></td><td>Every run uploads <code>newvelles_visualization_&lt;version&gt;_&lt;datetime&gt;.json</code> to the private bucket. That is the 2021-onward history, and it is what momentum backfills from.</td></tr>
+<tr><td>Schema version</td><td><strong>Present</strong></td><td><code>VISUALIZATION_VERSION</code> in every archive filename, plus <code>latest_news_metadata.json</code> carrying datetime and version</td></tr>
+<tr><td>Public file history</td><td><strong>Missing</strong></td><td>S3 bucket versioning is not enabled anywhere in the repo. <code>latest_news.json</code> is overwritten in place on every run — the previous public file is simply gone.</td></tr>
+<tr><td>Data restore path</td><td><strong>Missing</strong></td><td>There is no <code>make restore-data</code>. Rolling back the Lambda image does not fix a bad file already published; the site keeps serving it until the next scheduled run succeeds.</td></tr>
+</tbody>
+</table>
+
+<p>So the honest answer to "can we go back": you can roll back the <em>code</em> in a few minutes with a well-built, well-documented tool. You cannot currently roll back the <em>data</em>, and with four runs a day a bad publish is visible on the site for up to six hours. Three additions close that, none of them large:</p>
+
+<ol>
+<li><strong>Enable S3 versioning on the public bucket</strong>, with a lifecycle rule expiring noncurrent versions after 30 days. At these file sizes the cost is negligible, and it makes any bad publish reversible with one <code>aws s3api</code> call instead of a hunt through the archive.</li>
+<li><strong>Add <code>make restore-data TIMESTAMP=...</code></strong> — copy a timestamped archive object from the private bucket over the public <code>latest_news.json</code>, and pause EventBridge so the next run doesn't immediately overwrite the restore. Ten lines of shell, and it belongs next to <code>rollback-prod</code> in the same guide.</li>
+<li><strong>Add a pre-publish sanity gate.</strong> Schema validation passes happily on a run that produced three stories or four hundred; both are bugs, not news days. Refuse to publish when story count deviates more than 60% from the previous run or article count falls below a floor — log loudly and leave the old file in place. This is the guard that means you rarely need the other two.</li>
+</ol>
+
+<p>Also worth fixing while in there: <code>log_s3()</code> writes metadata without <code>latest_log_reference</code>, so nothing in the public bucket records which archive object the live file came from. One line, and it turns a restore from a search into a lookup.</p>
+
+<div class="note"><strong>Recommended order:</strong> the sanity gate and the metadata reference land with M1, since M1 is the first release that can change the story count. Bucket versioning and <code>restore-data</code> can be done any time — but do them before M5, the cutover, which is the moment a bad publish would be most visible.</div>
+
+<p class="meta">Companion document: <em>Newvelles Build Spec</em> — schemas, merge algorithm, naming prompt, momentum file format. Prototype: <em>Newvelles Wire</em> — board landing view and ranked wire, both interactive.</p>
+
+</doc-page>
+
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Newvelles Stories Schema",
+  "description": "Schema for stories.json (version 0.3.0) - merged, classified, source-resolved stories",
+  "type": "object",
+  "required": ["version", "generated", "feeds", "article_count", "story_count", "stories"],
+  "properties": {
+    "version": {"type": "string", "pattern": "^0\\.3\\.\\d+$"},
+    "generated": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"},
+    "source_fetch": {"type": "string"},
+    "feeds": {"type": "integer", "minimum": 0},
+    "article_count": {"type": "integer", "minimum": 0},
+    "story_count": {"type": "integer", "minimum": 0},
+    "merge_threshold": {"type": "number", "minimum": 0, "maximum": 1},
+    "kind_counts": {
+      "type": "object",
+      "properties": {
+        "story": {"type": "integer", "minimum": 0},
+        "roundup": {"type": "integer", "minimum": 0},
+        "deal": {"type": "integer", "minimum": 0}
+      }
+    },
+    "classifier_note": {"type": "string"},
+    "stories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id", "headline", "headline_source", "keywords", "entities", "section",
+          "kind", "outlet_count", "article_count", "latest_published",
+          "first_seen", "days_running", "outlets", "articles"
+        ],
+        "properties": {
+          "id": {"type": "string", "pattern": "^st_[0-9a-f]{6}$"},
+          "headline": {"type": "string", "minLength": 1},
+          "headline_source": {"type": "string", "enum": ["llm", "fallback"]},
+          "keywords": {"type": "array", "items": {"type": "string"}},
+          "entities": {"type": "array", "items": {"type": "string"}},
+          "section": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "enum": ["story", "roundup", "deal"]},
+          "outlet_count": {"type": "integer", "minimum": 1},
+          "article_count": {"type": "integer", "minimum": 1},
+          "latest_published": {"type": "string"},
+          "first_seen": {"type": "string"},
+          "days_running": {"type": "integer", "minimum": 1},
+          "merged_from_groups": {"type": "integer", "minimum": 1},
+          "outlets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["outlet", "domain", "articles"],
+              "properties": {
+                "outlet": {"type": "string", "minLength": 1},
+                "domain": {"type": "string", "minLength": 1},
+                "articles": {"type": "integer", "minimum": 1}
+              }
+            }
+          },
+          "articles": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["title", "link", "published", "outlet", "domain"],
+              "properties": {
+                "title": {"type": "string", "minLength": 1},
+                "link": {"type": "string", "minLength": 1},
+                "published": {"type": "string"},
+                "outlet": {"type": "string", "minLength": 1},
+                "domain": {"type": "string", "minLength": 1},
+                "section": {"type": "string"},
+                "feed": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

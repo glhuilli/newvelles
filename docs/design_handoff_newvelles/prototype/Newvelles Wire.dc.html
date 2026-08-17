@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-dec5c8f3-e439-4b9e-bcb6-5401c1effb10/styles.css">
+<script src="_ds/nocturne-dec5c8f3-e439-4b9e-bcb6-5401c1effb10/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+html,body{margin:0;background:#12141f;font-family:"Inter",system-ui,sans-serif;color:#e9e9ed}
+*{box-sizing:border-box}
+.nv-row{cursor:pointer;transition:background .13s ease}
+.nv-row:hover{background:rgba(145,132,217,.05)}
+.nv-art{text-decoration:none;color:inherit;border-radius:5px;transition:background .12s ease}
+.nv-art:hover{background:rgba(145,132,217,.08)}
+.nv-art:hover .nv-arth{color:#e9e9ed}
+.nv-pill{cursor:pointer;transition:border-color .12s ease,color .12s ease}
+.nv-pill:hover{color:#d2cefd;border-color:#9184d9}
+.nv-in{background:transparent;border:0;outline:0;color:#e9e9ed;font:400 12.5px "Inter",system-ui,sans-serif;width:100%}
+.nv-in::placeholder{color:#595d6c}
+.nv-seg{cursor:pointer;transition:background .12s ease,color .12s ease}
+.nv-seg:hover{color:#d2cefd}
+:focus-visible{outline:2px solid #9184d9;outline-offset:2px}
+a{color:#9184d9}
+a:hover{color:#b5abfc}
+::selection{background:rgba(145,132,217,.3)}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#12141f;display:flex;justify-content:center;padding:0 20px 80px">
+<div style="width:100%;max-width:1080px;display:flex;flex-direction:column;gap:18px;padding-top:26px">
+
+<sc-if value="{{ isBoard }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:22px">
+
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid rgba(233,233,237,.16)">
+<div style="display:flex;flex-direction:column;gap:3px">
+<div style="font-size:24px;letter-spacing:-.02em;color:#e9e9ed;font-weight:500">newvelles</div>
+<div style="font-size:11.5px;color:#75798c">Saturday 16 August · updated 08:12 · {{ totalStories }} stories from 41 feeds</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px">
+<div style="display:flex;align-items:center;gap:8px;background:#232532;border:1px solid #3f424d;border-radius:8px;padding:7px 11px;width:250px">
+<i class="ph ph-magnifying-glass" style="font-size:14px;color:#75798c;line-height:1"></i>
+<input class="nv-in" type="text" placeholder="Search all stories" value="{{ query }}" onChange="{{ onSearchFromBoard }}">
+</div>
+<button class="btn btn-ghost" style="font-size:12px;padding:7px 11px;display:flex;align-items:center;gap:6px" onClick="{{ goWire }}">Full wire<i class="ph ph-arrow-right" style="font-size:11px;line-height:1"></i></button>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:26px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:16px">
+
+<div class="nv-row" style="display:flex;flex-direction:column;gap:14px;background:linear-gradient(160deg,#232532,#1b1d2b);border:1px solid #3f424d;border-radius:10px;padding:22px" onClick="{{ lead.open }}">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="width:16px;height:1px;background:#9184d9"></span>
+<span style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9184d9">Biggest story today</span>
+</div>
+<div style="font-size:27px;line-height:1.18;letter-spacing:-.022em;color:#e9e9ed;text-wrap:pretty">{{ lead.headline }}</div>
+<div style="display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:22px;color:#e9e9ed">{{ lead.outlets }}</span><span style="font-size:10.5px;color:#75798c">outlets</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:22px;color:#e9e9ed">{{ lead.articles }}</span><span style="font-size:10.5px;color:#75798c">articles</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:22px;color:#e9e9ed">{{ lead.days }}</span><span style="font-size:10.5px;color:#75798c">days running</span></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;align-items:flex-end;min-width:180px">
+<svg width="190" height="42" viewBox="0 0 190 42" fill="none" preserveAspectRatio="none"><polyline points="{{ lead.spark }}" stroke="#9184d9" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+<span style="font-size:10.5px;color:#75798c">{{ lead.range }}</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px;border-top:1px solid rgba(233,233,237,.12);padding-top:12px">
+<sc-for list="{{ lead.items }}" as="a" hint-placeholder-count="3">
+<a class="nv-art" href="{{ a.url }}" target="{{ a.target }}" rel="noopener" onClick="{{ a.onClick }}" style="display:flex;align-items:baseline;gap:12px;padding:6px 8px 6px 0">
+<span class="nv-arth" style="font-size:13.5px;line-height:1.4;color:#cfd3e5;flex:1;text-wrap:pretty">{{ a.title }}</span>
+<span style="font-size:11px;color:#75798c;white-space:nowrap">{{ a.source }}</span>
+</a>
+</sc-for>
+</div>
+<div style="font-size:11.5px;color:#9184d9">Open all {{ lead.articles }} articles</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+<sc-for list="{{ boardCards }}" as="c" hint-placeholder-count="4">
+<div class="nv-row" style="background:#232532;border:1px solid #3f424d;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px" onClick="{{ c.open }}">
+<div style="font-size:15.5px;line-height:1.3;color:#e9e9ed;text-wrap:pretty">{{ c.headline }}</div>
+<div style="font-size:11.5px;color:#75798c">{{ c.meta }}</div>
+<svg width="100%" height="22" viewBox="0 0 240 22" preserveAspectRatio="none" fill="none"><polyline points="{{ c.spark }}" stroke="{{ c.color }}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+</div>
+</sc-for>
+</div>
+
+<button class="btn btn-ghost" style="font-size:12px;padding:8px 12px;align-self:flex-start;display:flex;align-items:center;gap:7px" onClick="{{ goWire }}">See all {{ totalStories }} stories in the wire<i class="ph ph-arrow-right" style="font-size:11px;line-height:1"></i></button>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:26px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9397ab">Covered by everyone</div>
+<div style="display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ mostCovered }}" as="m" hint-placeholder-count="4">
+<div class="nv-row" style="display:flex;flex-direction:column;gap:5px;border-radius:6px" onClick="{{ m.open }}">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+<span style="font-size:12.5px;color:#cfd3e5;line-height:1.35">{{ m.label }}</span>
+<span style="font-size:11px;color:#75798c">{{ m.outlets }}</span>
+</div>
+<div style="height:4px;background:#292b31;border-radius:2px;overflow:hidden"><div style="width:{{ m.pct }};height:100%;background:{{ m.color }}"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9397ab">Barely covered</div>
+<div style="font-size:11.5px;color:#75798c;line-height:1.5;margin:-4px 0 0">Three outlets or fewer picked these up.</div>
+<div style="display:flex;flex-direction:column;gap:13px">
+<sc-for list="{{ thinCoverage }}" as="t" hint-placeholder-count="3">
+<div class="nv-row" style="display:flex;flex-direction:column;gap:3px;border-radius:6px" onClick="{{ t.open }}">
+<span style="font-size:13px;color:#cfd3e5;line-height:1.4;text-wrap:pretty">{{ t.headline }}</span>
+<span style="font-size:11px;color:#75798c">{{ t.meta }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid rgba(233,233,237,.12);padding-top:16px">
+<div style="font:600 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9397ab">By section</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ boardCats }}" as="b" hint-placeholder-count="6">
+<span class="nv-pill" style="font:400 10.5px 'Inter',system-ui,sans-serif;padding:4px 9px;border-radius:999px;border:1px solid #3f424d;background:#232532;color:#9397ab" onClick="{{ b.onClick }}">{{ b.label }}</span>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isWire }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid rgba(233,233,237,.16)">
+<div style="display:flex;flex-direction:column;gap:3px">
+<div style="display:flex;align-items:center;gap:12px">
+<span class="nv-pill" style="display:flex;align-items:center;gap:6px;font-size:12px;color:#9184d9" onClick="{{ goBoard }}"><i class="ph ph-arrow-left" style="font-size:12px;line-height:1"></i>Today</span>
+<div style="font-size:24px;letter-spacing:-.02em;color:#e9e9ed;font-weight:500">newvelles</div>
+</div>
+<div style="font-size:11.5px;color:#75798c">Saturday 16 August · {{ totalStories }} stories · 672 articles · 41 feeds · click a story to open its coverage</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px">
+<div style="display:flex;align-items:center;gap:8px;background:#232532;border:1px solid #3f424d;border-radius:8px;padding:7px 11px;width:280px">
+<i class="ph ph-magnifying-glass" style="font-size:14px;color:#75798c;line-height:1"></i>
+<input class="nv-in" type="text" placeholder="Filter stories, sources, headlines" value="{{ query }}" onChange="{{ onQuery }}">
+<i class="ph ph-x" style="font-size:13px;color:#75798c;line-height:1;cursor:pointer" onClick="{{ clearQuery }}"></i>
+</div>
+<div style="display:flex;border:1px solid #3f424d;border-radius:8px;overflow:hidden">
+<span class="nv-seg" style="font-size:11.5px;padding:7px 11px;color:{{ sortRankColor }};background:{{ sortRankBg }}" onClick="{{ sortByRank }}">Ranked</span>
+<span class="nv-seg" style="font-size:11.5px;padding:7px 11px;color:{{ sortNewColor }};background:{{ sortNewBg }};border-left:1px solid #3f424d" onClick="{{ sortByNew }}">Newest</span>
+<span class="nv-seg" style="font-size:11.5px;padding:7px 11px;color:{{ sortSrcColor }};background:{{ sortSrcBg }};border-left:1px solid #3f424d" onClick="{{ sortBySources }}">Most covered</span>
+</div>
+</div>
+</div>
+
+<sc-if value="{{ hasKeyword }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:rgba(145,132,217,.12);border:1px solid #9184d9;border-radius:8px;padding:9px 12px">
+<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#cfd3e5">
+<i class="ph ph-funnel" style="font-size:14px;line-height:1;color:#9184d9"></i>
+<span>Showing only stories tagged</span>
+<span style="font-weight:500;color:#e9e9ed">{{ keyword }}</span>
+<span style="color:#9397ab">· {{ keywordCount }}</span>
+</div>
+<button class="btn btn-ghost" style="font-size:11.5px;padding:5px 10px;display:flex;align-items:center;gap:6px" onClick="{{ clearKeyword }}"><i class="ph ph-x" style="font-size:11px;line-height:1"></i>Show all stories</button>
+</div>
+</sc-if>
+
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<div style="display:flex;gap:7px;flex-wrap:wrap">
+<sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
+<span class="nv-pill" style="font:400 11px 'Inter',system-ui,sans-serif;padding:4px 9px;border-radius:999px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }}" onClick="{{ c.onClick }}">{{ c.label }}</span>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ rows }}" as="s" hint-placeholder-count="6">
+<div style="border-top:1px solid rgba(233,233,237,.1);background:{{ s.rowBg }}">
+<div class="nv-row" style="display:grid;grid-template-columns:30px 1fr 136px 108px;gap:18px;align-items:start;padding:15px 8px" onClick="{{ s.toggle }}">
+<div style="font:500 13px ui-monospace,Menlo,monospace;color:{{ s.numColor }};padding-top:3px">{{ s.num }}</div>
+<div style="display:flex;flex-direction:column;gap:7px">
+<div style="font-size:{{ s.titleSize }};line-height:1.26;letter-spacing:-.015em;color:#e9e9ed">{{ s.headline }}</div>
+<div style="display:flex;align-items:center;gap:9px;font-size:12px;color:#9397ab">
+<span>{{ s.meta }}</span>
+<i class="ph ph-caret-down" style="font-size:11px;line-height:1;color:#75798c;transform:{{ s.caret }};transition:transform .15s ease"></i>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px;padding-top:3px">
+<svg width="136" height="32" viewBox="0 0 136 32" fill="none" preserveAspectRatio="none"><polyline points="{{ s.spark }}" stroke="{{ s.sparkColor }}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+<div style="font-size:10.5px;color:#75798c">{{ s.trend }}</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;padding-top:5px">
+<div style="display:flex;gap:3px;height:5px">
+<sc-for list="{{ s.bars }}" as="b" hint-placeholder-count="4">
+<div style="flex:{{ b.w }};background:{{ b.color }};border-radius:2px"></div>
+</sc-for>
+</div>
+<div style="font-size:10.5px;line-height:1.45;color:#75798c">{{ s.sourceLine }}</div>
+</div>
+</div>
+<sc-if value="{{ s.open }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 8px 18px 48px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<sc-for list="{{ s.tags }}" as="t" hint-placeholder-count="4">
+<span class="nv-pill" style="font:400 10.5px 'Inter',system-ui,sans-serif;padding:3px 8px;border-radius:999px;border:1px solid #3f424d;background:#232532;color:#9397ab" onClick="{{ t.onClick }}">{{ t.label }}</span>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px;border-left:1px solid #3f424d;padding-left:14px">
+<sc-for list="{{ s.articles }}" as="a" hint-placeholder-count="4">
+<a class="nv-art" href="{{ a.url }}" target="{{ a.target }}" rel="noopener" onClick="{{ a.onClick }}" style="display:flex;align-items:baseline;gap:12px;padding:7px 8px 7px 0">
+<span class="nv-arth" style="font-size:13.5px;line-height:1.4;color:#cfd3e5;flex:1;text-wrap:pretty">{{ a.title }}</span>
+<span style="font-size:11px;color:#75798c;white-space:nowrap">{{ a.source }} · {{ a.age }}</span>
+</a>
+</sc-for>
+</div>
+<sc-if value="{{ s.hasMore }}" hint-placeholder-val="{{ false }}">
+<div style="font-size:11.5px;color:#9184d9;padding-left:14px">{{ s.moreLabel }}</div>
+</sc-if>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="padding:44px 8px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;border-top:1px solid rgba(233,233,237,.1)">
+<div style="font-size:15px;color:#e9e9ed">Nothing matches {{ emptyTerm }}</div>
+<div style="font-size:12.5px;color:#75798c">Search covers story headlines, article titles, sources and keywords.</div>
+<button class="btn btn-ghost" style="font-size:12px;padding:6px 10px" onClick="{{ resetAll }}">Clear filters</button>
+</div>
+</sc-if>
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid rgba(233,233,237,.1);padding:14px 8px 0">
+<div style="font-size:12px;color:#595d6c">{{ footerLine }}</div>
+<div style="font-size:11.5px;color:#595d6c">Momentum bars read the last seven days of the S3 archive.</div>
+</div>
+
+</div>
+</sc-if>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+// url present = real entry from the 16 Aug fetch; omitted = placeholder row, click is inert
+const A = (t, s, age, url) => ({ title: t, source: s, age, url: url || '#', real: !!url });
+
+const STORIES = [
+  { id:'alaska', cat:'World', headline:'Trump and Putin meet in Alaska and leave without a ceasefire',
+    outlets:14, articles:31, days:4, updated:'2h ago', hours:2,
+    series:[2,3,5,9,13,11,8], trend:'peaked yesterday',
+    bars:[['BBC',6],['NYT',4],['Politico',3],['+11',5]],
+    tags:['alaska summit','ceasefire','ukraine','zelensky','putin'],
+    items:[
+      A('Trump Bows to Putin\u2019s Approach on Ukraine: No Cease-Fire, Deadlines or Sanctions','nytimes.com','2h','https://www.nytimes.com/2025/08/16/us/politics/trump-putin-approach-ukraine.html'),
+      A('Trump pursues peace deal after leaving Alaska without ceasefire pact','bbc.com','10h','https://www.bbc.com/news/articles/ce836yz8r69o'),
+      A('Ukraine\u2019s Zelenskyy to meet Trump on Monday after US-Russia summit secured no halt to fighting','abc7chicago.com','1h','https://abc7chicago.com/post/russia-ukraine-war-trump-zelenskyy-meeting-happen-monday-putin-secured-no-peace-agreement/17555667/'),
+      A('No ceasefire, no deal: What summit means for Trump, Putin and Ukraine','bbc.com','9h','https://www.bbc.com/news/articles/clyvd3gkg1po'),
+      A('Melania Trump appeals to Putin about abducted Ukrainian children','washingtontimes.com','5h','https://www.washingtontimes.com/news/2025/aug/16/melania-trump-appeals-putin-abducted-ukrainian-children/'),
+      A('Trump greets Putin with a red carpet. Ukrainians feel betrayed.','washingtontimes.com','7h','https://www.washingtontimes.com/news/2025/aug/16/trump-greets-putin-red-carpet-ukrainians-feel-betrayed/')] },
+  { id:'guarantees', cat:'World', headline:'European leaders press for security guarantees before any Ukraine deal',
+    outlets:9, articles:17, days:6, updated:'4h ago', hours:4,
+    series:[4,5,5,7,8,9,9], trend:'still climbing',
+    bars:[['Politico',5],['Reuters',4],['Guardian',3],['+6',5]],
+    tags:['security guarantees','nato','european union','coalition of the willing'],
+    items:[
+      A('Trump tells European leaders US could provide security guarantees for Ukraine','politico.com','4h','https://www.politico.com/news/2025/08/13/trump-european-leaders-security-ukraine-00508598'),
+      A('Macron and Merz call for a European seat at the negotiating table','reuters.com','6h'),
+      A('What security guarantees would actually require from Europe','theguardian.com','11h'),
+      A('Poland raises readiness along the eastern flank','reuters.com','14h')] },
+  { id:'fed', cat:'Markets', headline:'Federal Reserve minutes point to a September rate decision split',
+    outlets:7, articles:12, days:1, updated:'35m ago', hours:0.6,
+    series:[0,0,0,0,0,2,7], trend:'new today',
+    bars:[['Bloomberg',4],['WSJ',3],['CNBC',2],['+4',4]],
+    tags:['federal reserve','interest rates','september meeting','inflation'],
+    items:[
+      A('Fed officials divided over timing of the next cut, minutes show','bloomberg.com','35m'),
+      A('Traders trim September odds after minutes release','wsj.com','1h'),
+      A('Two governors argued for holding through year end','cnbc.com','2h')] },
+  { id:'smoke', cat:'Local', headline:'Wildfire smoke pushes air quality warnings across the Pacific Northwest',
+    outlets:6, articles:9, days:3, updated:'3h ago', hours:3,
+    series:[0,0,4,6,5,4,3], trend:'fading',
+    bars:[['AP',3],['ABC7',2],['Seattle Times',2],['+3',3]],
+    tags:['wildfire','air quality','pacific northwest','evacuations'],
+    items:[
+      A('Smoke from interior fires settles over Puget Sound','seattletimes.com','3h'),
+      A('Air quality alerts extended through Sunday in three counties','apnews.com','5h'),
+      A('Schools move weekend sports indoors','abc7news.com','8h')] },
+  { id:'chips', cat:'Tech', headline:'Chip export rules reshape supply deals across Asia',
+    outlets:5, articles:11, days:9, updated:'6h ago', hours:6,
+    series:[4,3,4,3,4,3,4], trend:'steady background',
+    bars:[['Reuters',3],['Nikkei',2],['FT',2],['+2',3]],
+    tags:['semiconductors','export controls','taiwan','supply chain'],
+    items:[
+      A('Taiwanese suppliers redraw contracts to satisfy new licensing terms','reuters.com','6h'),
+      A('Japan weighs matching restrictions on tooling exports','nikkei.com','12h'),
+      A('Analysts see margin pressure into next quarter','ft.com','1d')] },
+  { id:'court', cat:'US politics', headline:'Appeals court narrows the scope of a federal redistricting ruling',
+    outlets:6, articles:8, days:2, updated:'5h ago', hours:5,
+    series:[0,0,0,0,3,5,6], trend:'climbing',
+    bars:[['AP',3],['Politico',2],['NPR',2],['+3',3]],
+    tags:['redistricting','appeals court','voting rights'],
+    items:[
+      A('Panel sends the map back to a lower court with narrower instructions','apnews.com','5h'),
+      A('What the ruling changes before the filing deadline','politico.com','7h'),
+      A('State officials say the calendar is now the bigger problem','npr.org','9h')] },
+  { id:'seaice', cat:'Science', headline:'Antarctic sea ice extent hits a seasonal record low',
+    outlets:4, articles:5, days:2, updated:'8h ago', hours:8,
+    series:[0,0,0,0,0,3,4], trend:'new this week',
+    bars:[['BBC',2],['Nature',1],['Guardian',1],['+1',2]],
+    tags:['antarctica','sea ice','climate record'],
+    items:[
+      A('Satellite record shows the lowest mid-August extent measured','bbc.com','8h'),
+      A('Researchers caution against reading a single season as trend','nature.com','12h'),
+      A('Southern Ocean warming complicates the picture','theguardian.com','1d')] },
+  { id:'rail', cat:'Local', headline:'A regional rail line reopens after eleven years',
+    outlets:3, articles:4, days:1, updated:'11h ago', hours:11,
+    series:[0,0,0,0,0,0,3], trend:'new today',
+    bars:[['ABC7',2],['Local',1],['AP',1],['',0]],
+    tags:['rail','infrastructure','transit'],
+    items:[
+      A('First scheduled service in a decade runs the full corridor','abc7news.com','11h'),
+      A('Riders describe a commute cut by half','apnews.com','13h')] },
+  { id:'energy', cat:'Markets', headline:'Oil holds near a three-month low as supply forecasts are revised up',
+    outlets:5, articles:7, days:5, updated:'7h ago', hours:7,
+    series:[3,4,3,4,4,5,5], trend:'steady',
+    bars:[['Bloomberg',3],['Reuters',2],['CNBC',1],['+2',2]],
+    tags:['oil prices','opec','supply forecast'],
+    items:[
+      A('Forecasters raise non-OPEC output estimates for the fourth quarter','bloomberg.com','7h'),
+      A('Refining margins stay thin through the summer','reuters.com','10h')] },
+  { id:'ai', cat:'Tech', headline:'Regulators open a review of AI training data disclosures',
+    outlets:5, articles:6, days:3, updated:'9h ago', hours:9,
+    series:[0,0,2,3,4,4,5], trend:'climbing',
+    bars:[['Reuters',2],['Politico',2],['Verge',1],['+2',2]],
+    tags:['ai regulation','training data','disclosure'],
+    items:[
+      A('Inquiry asks model developers to document sourcing practices','reuters.com','9h'),
+      A('Industry groups warn of a compliance burden on small labs','politico.com','12h'),
+      A('What the review can and cannot compel','theverge.com','15h')] },
+  { id:'water', cat:'US politics', headline:'Court filing reopens a decade-old water rights dispute',
+    outlets:1, articles:1, days:1, updated:'12h ago', hours:12,
+    series:[0,0,0,0,0,0,1], trend:'single outlet',
+    bars:[['Politico',1],['',0],['',0],['',0]],
+    tags:['water rights','western states','litigation'],
+    items:[A('Filing revives a claim states thought was settled in 2014','politico.com','12h')] },
+  { id:'moscow', cat:'World', headline:'Putin invites Trump to Moscow in a rare English aside',
+    outlets:8, articles:13, days:2, updated:'20m ago', hours:0.3,
+    series:[0,0,0,0,0,6,8], trend:'sharp spike today',
+    bars:[['BBC',4],['Yahoo',3],['ABC7',2],['+5',4]],
+    tags:['moscow','putin','summit strategy','next time'],
+    items:[
+      A('\u2018Next time in Moscow?\u2019 - Putin invites Trump to Russia with rare use of English','bbc.com','20m','https://www.bbc.com/news/videos/clyrdnlnzyjo'),
+      A('\u2018Next time in Moscow?\u2019: Five takeaways after Trump and Putin\u2019s Alaska summit','bbc.com','3h','https://www.bbc.com/news/articles/c4gj9er0x0zo'),
+      A('How the Trump-Putin summit unfolded... in under 2 minutes','bbc.com','8h','https://www.bbc.com/news/videos/c62wdzlnv1do')] },
+  { id:'swaps', cat:'World', headline:'Territorial swaps emerge as the sticking point in Ukraine talks',
+    outlets:7, articles:14, days:3, updated:'1h ago', hours:1,
+    series:[0,0,0,3,6,7,7], trend:'holding high',
+    bars:[['Yahoo',4],['WT',3],['Reuters',2],['+4',3]],
+    tags:['territorial swaps','donbas','negotiations','kyiv'],
+    items:[
+      A('Trump says it will be up to Ukraine to decide on territorial swaps','yahoo.com','1h','https://www.yahoo.com/news/articles/trump-says-ukraine-decide-territorial-130914975.html'),
+      A('Trump tells Zelenskiy that Putin wants more of Ukraine, urges Kyiv make a deal','yahoo.com','6h','https://www.yahoo.com/news/articles/trump-putin-spar-ukraine-peace-040138502.html'),
+      A('Trump reverses on the need for a ceasefire before a potential peace deal','washingtontimes.com','4h','https://www.washingtontimes.com/news/2025/aug/16/trump-reverses-need-ceasefire-potential-peace-deal-ending-war-ukraine/')] },
+  { id:'alaskans', cat:'Local', headline:'Alaskans weigh the cost of hosting a summit in their backyard',
+    outlets:4, articles:6, days:3, updated:'14h ago', hours:14,
+    series:[0,0,0,4,4,3,2], trend:'fading',
+    bars:[['BBC',2],['ABC7',2],['AP',1],['+1',1]],
+    tags:['alaska','anchorage','local reaction'],
+    items:[
+      A('What do Alaskans make of the geopolitical circus arriving?','bbc.com','14h','https://www.bbc.com/news/articles/c7541g6d191o'),
+      A('Bay Area Ukrainians, Russians react to high-stakes Trump-Putin summit','abc7news.com','18h','https://abc7news.com/post/bay-area-ukrainians-russians-react-high-stakes-trump-putin-summit-alaska/17550046/')] },
+  { id:'mailin', cat:'US politics', headline:'Trump ties Putin\u2019s remarks to his case against mail-in voting',
+    outlets:5, articles:8, days:1, updated:'3h ago', hours:3,
+    series:[0,0,0,0,0,0,5], trend:'new today',
+    bars:[['Yahoo',3],['AP',2],['NPR',1],['+2',2]],
+    tags:['mail-in voting','elections','putin'],
+    items:[A('Trump says Putin agrees with him US should not have mail-in voting','yahoo.com','3h','https://www.yahoo.com/news/articles/trump-says-putin-agrees-him-043119727.html')] },
+  { id:'housing', cat:'Markets', headline:'Mortgage applications fall for a fourth straight week',
+    outlets:4, articles:6, days:4, updated:'8h ago', hours:8,
+    series:[2,3,3,4,4,4,4], trend:'steady',
+    bars:[['CNBC',2],['WSJ',2],['Bloomberg',1],['+1',1]],
+    tags:['mortgages','housing market','rates'],
+    items:[
+      A('Applications slip as the 30-year average holds above 6.6%','cnbc.com','8h'),
+      A('Builders trim incentives in the Sun Belt','wsj.com','13h')] },
+  { id:'measles', cat:'Science', headline:'Measles cases pass last year\u2019s total in a dozen states',
+    outlets:6, articles:9, days:5, updated:'6h ago', hours:6,
+    series:[2,3,4,5,5,6,6], trend:'climbing steadily',
+    bars:[['AP',3],['NPR',2],['NYT',2],['+3',2]],
+    tags:['measles','vaccination','public health'],
+    items:[
+      A('Health departments report clusters tied to under-vaccinated communities','apnews.com','6h'),
+      A('Why the outbreak pattern looks different this year','npr.org','11h')] },
+  { id:'strike', cat:'US politics', headline:'Port workers set a strike deadline for the end of the month',
+    outlets:5, articles:7, days:2, updated:'9h ago', hours:9,
+    series:[0,0,0,0,0,4,5], trend:'building',
+    bars:[['Reuters',2],['AP',2],['Politico',2],['+1',1]],
+    tags:['labor','ports','strike','supply chain'],
+    items:[
+      A('Union sets 31 August deadline as talks stall over automation','reuters.com','9h'),
+      A('Retailers pull holiday shipments forward','apnews.com','12h')] },
+  { id:'drought', cat:'Science', headline:'Reservoir levels hit new lows across the Colorado basin',
+    outlets:4, articles:5, days:7, updated:'1d ago', hours:26,
+    series:[3,3,3,4,3,4,4], trend:'steady background',
+    bars:[['AP',2],['Guardian',1],['NPR',1],['+1',1]],
+    tags:['drought','colorado river','water'],
+    items:[
+      A('Basin states face automatic cuts if levels stay below the trigger','apnews.com','1d'),
+      A('Farmers weigh fallowing another season','theguardian.com','1d')] },
+  { id:'quantum', cat:'Tech', headline:'A quantum error-correction result draws cautious optimism',
+    outlets:3, articles:4, days:2, updated:'16h ago', hours:16,
+    series:[0,0,0,0,0,2,3], trend:'new this week',
+    bars:[['Nature',1],['Verge',1],['Reuters',1],['',0]],
+    tags:['quantum computing','error correction','research'],
+    items:[
+      A('Team reports a logical qubit holding coherence past the threshold','nature.com','16h'),
+      A('Researchers stress the gap between benchmark and machine','theverge.com','19h')] },
+  { id:'transit', cat:'Local', headline:'City council approves a bus rapid transit corridor',
+    outlets:3, articles:4, days:1, updated:'10h ago', hours:10,
+    series:[0,0,0,0,0,0,3], trend:'new today',
+    bars:[['Local',2],['ABC7',1],['AP',1],['',0]],
+    tags:['transit','city council','brt'],
+    items:[
+      A('Council votes 7-2 after three years of hearings','abc7news.com','10h'),
+      A('Construction starts next spring on the first segment','apnews.com','14h')] },
+  { id:'earnings', cat:'Markets', headline:'Retail earnings show shoppers trading down again',
+    outlets:6, articles:10, days:4, updated:'5h ago', hours:5,
+    series:[0,3,5,6,6,5,6], trend:'plateau',
+    bars:[['CNBC',3],['Bloomberg',2],['WSJ',2],['+3',3]],
+    tags:['retail earnings','consumer spending','discounters'],
+    items:[
+      A('Discounters gain share as mid-tier chains cut forecasts','cnbc.com','5h'),
+      A('Private label growth accelerates in packaged food','bloomberg.com','9h')] },
+  { id:'privacy', cat:'Tech', headline:'A state privacy law takes effect with no enforcement staff',
+    outlets:4, articles:5, days:3, updated:'13h ago', hours:13,
+    series:[0,0,0,2,3,4,4], trend:'climbing',
+    bars:[['Politico',2],['Verge',1],['Reuters',1],['+1',1]],
+    tags:['privacy law','enforcement','state regulation'],
+    items:[
+      A('Rules apply from today, but the office has no budget line','politico.com','13h'),
+      A('Companies weigh whether to comply early','theverge.com','17h')] }
+];
+
+const CATS = ['All','World','US politics','Markets','Tech','Science','Local'];
+const RAMP = ['#9184d9','#5d5294','#423a6a','#3f424d'];
+
+class Component extends DCLogic {
+  state = { view:'board', query:'', cat:'All', keyword:null, sort:'rank', open:{} };
+
+  dive(id) {
+    this.setState({ view:'wire', cat:'All', keyword:null, query:'', open:{ [id]:true } });
+  }
+
+  line(series, w, h) {
+    const max = Math.max(1, ...series);
+    const pts = series.map((v, i) => `${4 + i * ((w - 8) / (series.length - 1))},${(h - 4) - (v / max) * (h - 8)}`);
+    return pts.join(' ');
+  }
+
+  matches(s, q) {
+    if (!q) return true;
+    const hay = [s.headline, s.cat, s.tags.join(' '), s.items.map(i => i.title + ' ' + i.source).join(' ')].join(' ').toLowerCase();
+    return hay.includes(q);
+  }
+
+  spark(series) {
+    const max = Math.max(1, ...series);
+    const pts = [];
+    series.forEach((v, i) => {
+      if (v === 0 && series.slice(0, i + 1).every(x => x === 0)) return;
+      pts.push(`${4 + i * 21},${29 - (v / max) * 25}`);
+    });
+    return pts.length > 1 ? pts.join(' ') : `${4 + (series.length - 1) * 21},4 ${4 + (series.length - 1) * 21},29`;
+  }
+
+  renderVals() {
+    const { view, query, cat, keyword, sort, open } = this.state;
+    const byOutlets = [...STORIES].sort((a, b) => b.outlets - a.outlets);
+    const lead = byOutlets[0];
+    const artOf = s => s.items.map(a => ({
+      ...a, target: a.real ? '_blank' : '_self',
+      onClick: a.real ? undefined : e => e.preventDefault()
+    }));
+    const board = {
+      isBoard: view === 'board',
+      isWire: view === 'wire',
+      goWire: () => this.setState({ view:'wire' }),
+      goBoard: () => this.setState({ view:'board', query:'', keyword:null, cat:'All' }),
+      onSearchFromBoard: e => this.setState({ view:'wire', query: e.target.value }),
+      lead: {
+        headline: lead.headline, outlets: lead.outlets, articles: lead.articles, days: lead.days,
+        spark: this.line(lead.series, 190, 42),
+        range: '10 \u2013 16 Aug',
+        items: artOf(lead).slice(0, 3),
+        open: () => this.dive(lead.id)
+      },
+      boardCards: byOutlets.slice(1, 5).map(s => ({
+        headline: s.headline,
+        meta: `${s.outlets} outlets \u00b7 ${s.days === 1 ? 'new today' : s.days + ' days'}`,
+        spark: this.line(s.series, 240, 22),
+        color: s.outlets >= 7 ? '#796cbf' : '#5d5294',
+        open: () => this.dive(s.id)
+      })),
+      mostCovered: byOutlets.slice(0, 4).map(s => ({
+        label: s.tags[0], outlets: `${s.outlets} outlets`,
+        pct: `${Math.round((s.outlets / lead.outlets) * 100)}%`,
+        color: s.outlets >= 9 ? '#9184d9' : (s.outlets >= 6 ? '#796cbf' : '#5d5294'),
+        open: () => this.dive(s.id)
+      })),
+      thinCoverage: STORIES.filter(s => s.outlets <= 3).sort((a, b) => a.hours - b.hours).slice(0, 4).map(s => ({
+        headline: s.headline,
+        meta: `${s.bars[0][0]} \u00b7 ${s.outlets === 1 ? 'single outlet' : s.outlets + ' outlets'}`,
+        open: () => this.dive(s.id)
+      })),
+      boardCats: CATS.filter(c => c !== 'All').map(c => ({
+        label: `${c} ${STORIES.filter(s => s.cat === c).length}`,
+        onClick: () => this.setState({ view:'wire', cat:c, keyword:null, query:'' })
+      }))
+    };
+    const q = query.trim().toLowerCase();
+    let list = STORIES.filter(s =>
+      (cat === 'All' || s.cat === cat) &&
+      (!keyword || s.tags.includes(keyword)) &&
+      this.matches(s, q));
+
+    if (sort === 'new') list = [...list].sort((a, b) => a.hours - b.hours);
+    else if (sort === 'sources') list = [...list].sort((a, b) => b.outlets - a.outlets);
+
+    const catCounts = {};
+    CATS.forEach(c => {
+      catCounts[c] = STORIES.filter(s =>
+        (c === 'All' || s.cat === c) && (!keyword || s.tags.includes(keyword)) && this.matches(s, q)).length;
+    });
+
+    const segColor = k => (sort === k ? '#d2cefd' : '#75798c');
+    const segBg = k => (sort === k ? 'rgba(145,132,217,.16)' : 'transparent');
+
+    return {
+      ...board,
+      totalStories: STORIES.length,
+      query,
+      keyword,
+      hasKeyword: !!keyword,
+      keywordCount: `${list.length} ${list.length === 1 ? 'story' : 'stories'}`,
+      isEmpty: list.length === 0,
+      emptyTerm: q ? `\u201c${query.trim()}\u201d` : 'these filters',
+      footerLine: list.length === STORIES.length
+        ? `${STORIES.length} stories merged from 179 raw groupings`
+        : `${list.length} of ${STORIES.length} stories`,
+      onQuery: e => this.setState({ query: e.target.value }),
+      clearQuery: () => this.setState({ query: '' }),
+      clearKeyword: () => this.setState({ keyword: null }),
+      resetAll: () => this.setState({ query: '', cat: 'All', keyword: null }),
+      sortByRank: () => this.setState({ sort: 'rank' }),
+      sortByNew: () => this.setState({ sort: 'new' }),
+      sortBySources: () => this.setState({ sort: 'sources' }),
+      sortRankColor: segColor('rank'), sortRankBg: segBg('rank'),
+      sortNewColor: segColor('new'), sortNewBg: segBg('new'),
+      sortSrcColor: segColor('sources'), sortSrcBg: segBg('sources'),
+      cats: CATS.map(c => ({
+        label: c === 'All' ? `All ${catCounts[c]}` : `${c} ${catCounts[c]}`,
+        border: cat === c ? '#9184d9' : '#3f424d',
+        bg: cat === c ? 'rgba(145,132,217,.16)' : '#232532',
+        color: cat === c ? '#d2cefd' : (catCounts[c] === 0 ? '#595d6c' : '#9397ab'),
+        onClick: () => this.setState({ cat: c })
+      })),
+      rows: list.map((s, i) => {
+        const isOpen = !!open[s.id];
+        const lead = i === 0 && sort === 'rank';
+        return {
+          num: String(i + 1).padStart(2, '0'),
+          numColor: lead ? '#9184d9' : '#595d6c',
+          rowBg: lead ? 'linear-gradient(90deg,rgba(145,132,217,.06),transparent 62%)' : 'transparent',
+          titleSize: lead ? '19px' : '16px',
+          headline: s.headline,
+          meta: `${s.outlets} outlets \u00b7 ${s.articles} articles \u00b7 ${s.days === 1 ? 'new today' : 'running ' + s.days + ' days'} \u00b7 ${s.updated}`,
+          caret: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+          spark: this.spark(s.series),
+          sparkColor: s.outlets >= 9 ? '#9184d9' : (s.outlets >= 5 ? '#796cbf' : '#5d5294'),
+          trend: s.trend,
+          bars: s.bars.map((b, bi) => ({ w: b[1] || 0.001, color: RAMP[bi] })),
+          sourceLine: s.bars.filter(b => b[0]).map(b => (b[0].startsWith('+') ? b[0] : `${b[0]} ${b[1]}`)).join(' \u00b7 '),
+          open: isOpen,
+          tags: s.tags.map(t => ({ label: t, onClick: e => { e.stopPropagation(); this.setState({ keyword: t, cat: 'All' }); } })),
+          articles: s.items.map(a => ({
+            ...a,
+            target: a.real ? '_blank' : '_self',
+            onClick: a.real ? undefined : e => e.preventDefault()
+          })),
+          hasMore: s.articles > s.items.length,
+          moreLabel: `${s.articles - s.items.length} more from this story`,
+          toggle: () => this.setState(st => ({ open: { ...st.open, [s.id]: !st.open[s.id] } }))
+        };
+      })
+    };
+  }
+}
+
+</script>
+</body>
+</html>

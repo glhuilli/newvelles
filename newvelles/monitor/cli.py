@@ -1,10 +1,11 @@
 """CLI interface for Newvelles monitoring dashboard."""
 
 import logging
-from typing import Optional
+import shutil
 
 import click
 from rich.console import Console
+from rich.table import Table
 
 from newvelles.monitor.cache import CacheManager
 from newvelles.monitor.config import (
@@ -16,16 +17,17 @@ from newvelles.monitor.fetcher import (
     fetch_incremental_data,
     get_latest_metadata,
     save_raw_file,
-    load_raw_file,
-    has_raw_file,
 )
 from newvelles.monitor.metrics import (
-    aggregate_daily_metrics,
     calculate_trends,
     extract_file_metrics,
     get_overall_statistics,
 )
-from newvelles.monitor.visualizer import display_dashboard
+from newvelles.monitor.visualizer import (
+    display_dashboard,
+    display_header,
+    display_summary_stats,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,10 +108,10 @@ def dashboard(days: int, refresh: bool, bucket: str):
             return
 
         # Calculate overall statistics
-        stats = get_overall_statistics(daily_metrics)
+        overall_stats = get_overall_statistics(daily_metrics)
 
         # Display dashboard
-        display_dashboard(metadata, stats, daily_metrics, days=days)
+        display_dashboard(metadata, overall_stats, daily_metrics, days=days)
 
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
@@ -188,7 +190,7 @@ def stats():
             return
 
         # Calculate overall statistics
-        stats = get_overall_statistics(daily_metrics)
+        overall_stats = get_overall_statistics(daily_metrics)
 
         # Get latest metadata
         try:
@@ -197,11 +199,9 @@ def stats():
             metadata = {"datetime": "Unknown", "version": "Unknown"}
 
         # Display header and stats only (no plots)
-        from newvelles.monitor.visualizer import display_header, display_summary_stats
-
         display_header(console, metadata)
         console.print()
-        display_summary_stats(console, stats)
+        display_summary_stats(console, overall_stats)
 
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
@@ -233,8 +233,6 @@ def analyze(days: int):
         console.print(f"\n[bold cyan]Trend Analysis (Last {days} Days)[/bold cyan]\n")
 
         # Display trend information
-        from rich.table import Table
-
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Metric", style="cyan")
         table.add_column("Trend", style="yellow")
@@ -247,7 +245,7 @@ def analyze(days: int):
             ("Sources per Update", "sources", "avg_sources_per_update"),
         ]
 
-        for label, key, avg_key in metrics_info:
+        for label, key, _avg_key in metrics_info:
             if key in trends:
                 trend = trends[key]
                 direction = trend.get("trend", "stable")
@@ -286,8 +284,6 @@ def clear_cache():
     console = Console()
 
     try:
-        import shutil
-
         cache_dir = str(CACHE_DIR)
 
         # Remove cache directory

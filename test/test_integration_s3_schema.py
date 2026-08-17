@@ -128,6 +128,37 @@ class TestS3SchemaValidation:
             assert len(metadata_data['datetime']) > 0
             assert len(metadata_data['version']) > 0
 
+    def test_s3_stories_upload_schema_validation(self, schema_loader, mock_rss_data, s3_mock_setup):
+        """stories.json uploaded through log_s3 must conform to the stories schema."""
+        from newvelles.models.stories import build_stories
+
+        s3_client = s3_mock_setup["client"]
+        bucket_name = s3_mock_setup["bucket"]
+        public_bucket_name = s3_mock_setup["public_bucket"]
+
+        with patch('newvelles.feed.log._S3_BUCKET', bucket_name), \
+             patch('newvelles.feed.log._S3_PUBLIC_BUCKET', public_bucket_name):
+            visualization_data, _ = build_visualization(mock_rss_data, cluster_limit=1)
+            stories_data = build_stories(visualization_data)
+
+            log_s3(visualization_data, stories_data=stories_data)
+
+            objects = s3_client.list_objects_v2(Bucket=public_bucket_name)
+            uploaded_files = {obj['Key'] for obj in objects['Contents']}
+            # legacy files still present, stories.json added beside them
+            assert 'latest_news.json' in uploaded_files
+            assert 'latest_news_metadata.json' in uploaded_files
+            assert 'stories.json' in uploaded_files
+
+            stories_obj = s3_client.get_object(Bucket=public_bucket_name, Key='stories.json')
+            downloaded = json.loads(stories_obj['Body'].read().decode('utf-8'))
+            jsonschema.validate(downloaded, schema_loader("stories"))
+            assert downloaded == stories_data
+
+            # latest_news.json is byte-identical to a run without stories
+            news_obj = s3_client.get_object(Bucket=public_bucket_name, Key='latest_news.json')
+            assert json.loads(news_obj['Body'].read().decode('utf-8')) == visualization_data
+
     def test_schema_validation_with_real_example(self, schema_loader):
         """Test schema validation against real example data."""
         # Test with the actual example files

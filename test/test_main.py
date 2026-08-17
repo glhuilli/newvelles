@@ -15,7 +15,8 @@ class TestRun:
     @patch("newvelles.__main__.print_viz")
     @patch("newvelles.__main__.print_sorted_grouped_titles")
     @patch("newvelles.__main__.log_groups")
-    @patch("newvelles.__main__.log_visualization")
+    @patch("newvelles.__main__.build_stories")
+    @patch("newvelles.__main__.emit_visualization")
     @patch("newvelles.__main__.build_visualization")
     @patch("newvelles.__main__.build_data_from_rss_feeds")
     @patch("newvelles.__main__.CONFIG")
@@ -25,7 +26,8 @@ class TestRun:
         mock_config,
         mock_build_data,
         mock_build_viz,
-        mock_log_viz,
+        mock_emit,
+        mock_build_stories,
         mock_log_groups,
         mock_print_titles,
         mock_print_viz,
@@ -42,6 +44,8 @@ class TestRun:
         mock_visualization_data = {"group1": {"subgroup1": {"Article 1": {}}}}
         mock_group_sentences = {1: ["Article 1"]}
         mock_build_viz.return_value = (mock_visualization_data, mock_group_sentences)
+        mock_stories = {"version": "0.3.0", "stories": []}
+        mock_build_stories.return_value = mock_stories
 
         rss_file = "test_rss.txt"
 
@@ -50,7 +54,10 @@ class TestRun:
         # Verify the pipeline was called correctly
         mock_build_data.assert_called_once_with(rss_file)
         mock_build_viz.assert_called_once_with(mock_title_data, cluster_limit=2)
-        mock_log_viz.assert_called_once_with(mock_visualization_data, s3=False)
+        mock_build_stories.assert_called_once_with(mock_visualization_data)
+        mock_emit.assert_called_once_with(
+            mock_visualization_data, writers="local", stories_data=mock_stories
+        )
         mock_log_groups.assert_called_once_with(mock_group_sentences)
 
         # Debug prints should not be called when DEBUG=False
@@ -60,7 +67,8 @@ class TestRun:
     @patch("newvelles.__main__.print_viz")
     @patch("newvelles.__main__.print_sorted_grouped_titles")
     @patch("newvelles.__main__.log_groups")
-    @patch("newvelles.__main__.log_visualization")
+    @patch("newvelles.__main__.build_stories")
+    @patch("newvelles.__main__.emit_visualization")
     @patch("newvelles.__main__.build_visualization")
     @patch("newvelles.__main__.build_data_from_rss_feeds")
     @patch("newvelles.__main__.CONFIG")
@@ -70,7 +78,8 @@ class TestRun:
         mock_config,
         mock_build_data,
         mock_build_viz,
-        mock_log_viz,
+        mock_emit,
+        mock_build_stories,
         mock_log_groups,
         mock_print_titles,
         mock_print_viz,
@@ -86,6 +95,8 @@ class TestRun:
         mock_visualization_data = {"group1": {"subgroup1": {"Article 1": {}}}}
         mock_group_sentences = {1: ["Article 1"]}
         mock_build_viz.return_value = (mock_visualization_data, mock_group_sentences)
+        mock_stories = {"version": "0.3.0", "stories": []}
+        mock_build_stories.return_value = mock_stories
 
         rss_file = "test_rss.txt"
 
@@ -95,8 +106,10 @@ class TestRun:
         mock_print_titles.assert_called_once_with(mock_group_sentences)
         mock_print_viz.assert_called_once_with(mock_visualization_data)
 
-        # Verify S3 logging is enabled
-        mock_log_viz.assert_called_once_with(mock_visualization_data, s3=True)
+        # Verify S3 logging is enabled (writers="both" uploads and writes locally)
+        mock_emit.assert_called_once_with(
+            mock_visualization_data, writers="both", stories_data=mock_stories
+        )
 
     @patch("newvelles.__main__.build_data_from_rss_feeds")
     @patch("newvelles.__main__.CONFIG")
@@ -107,8 +120,8 @@ class TestRun:
         mock_build_data.return_value = {}
 
         with patch("newvelles.__main__.build_visualization") as mock_build_viz, patch(
-            "newvelles.__main__.log_visualization"
-        ), patch("newvelles.__main__.log_groups"):
+            "newvelles.__main__.emit_visualization"
+        ), patch("newvelles.__main__.build_stories"), patch("newvelles.__main__.log_groups"):
 
             mock_build_viz.return_value = ({}, {})
 
