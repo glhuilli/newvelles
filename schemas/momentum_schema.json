@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Newvelles Momentum Schema",
+  "description": "Schema for momentum.json (version 0.3.0) - rolling 14-day series per live story",
+  "type": "object",
+  "required": ["version", "generated", "window_days", "stories"],
+  "properties": {
+    "version": {"type": "string", "pattern": "^0\\.3\\.\\d+$"},
+    "generated": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"},
+    "window_days": {"type": "integer", "minimum": 1},
+    "window_start": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "window_end": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "approximation": {"type": "boolean"},
+    "approximation_note": {"type": "string"},
+    "stories": {
+      "type": "object",
+      "propertyNames": {"pattern": "^st_[0-9a-f]{6}$"},
+      "additionalProperties": {
+        "type": "object",
+        "required": ["first_seen", "days_running", "series", "peak_date", "trend"],
+        "properties": {
+          "first_seen": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+          "days_running": {"type": "integer", "minimum": 1},
+          "series": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["date", "outlets", "articles"],
+              "properties": {
+                "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+                "outlets": {"type": "integer", "minimum": 0},
+                "articles": {"type": "integer", "minimum": 0}
+              }
+            }
+          },
+          "peak_date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+          "trend": {
+            "type": "string",
+            "enum": ["new", "climbing", "peaked", "cooling", "steady", "single day"],
+            "description": "UI contract, printed verbatim under the sparkline. Production emits new|climbing|peaked|cooling|steady; 'single day' appears only in the approximated fixture."
+          }
+        }
+      }
+    }
+  }
+}
