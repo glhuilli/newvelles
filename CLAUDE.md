@@ -273,6 +273,11 @@ newvelles/
 - All Docker images are timestamped (e.g., `py312-qa-20250817-181418`)
 - Use `make list-prod-images` to see available images
 - Use `make rollback-prod` for interactive rollback to previous versions
+- Use `make restore-data TIMESTAMP=...` to restore a bad *published file* from the
+  private-bucket archive (pauses EventBridge; resume when fixed). Public bucket has
+  S3 versioning with 30-day noncurrent expiry as a second net.
+- A pre-publish sanity gate (`newvelles/utils/publish_gate.py`) blocks `stories.json`
+  publishes with anomalous story counts (>60% deviation) or too few articles
 - See `docs/PRODUCTION_ROLLBACK_GUIDE.md` for detailed rollback procedures
 
 ## Additional Documentation

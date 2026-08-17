@@ -45,6 +45,31 @@ make list-prod-images
 - Check image timestamps and sizes
 - Plan rollback strategy before executing
 
+### **Method 3: Data Restore (bad published file, not bad code)**
+```bash
+make restore-data TIMESTAMP=2026-08-16T13:00:43
+```
+
+Rolling back the Lambda image does not fix a bad file already published — the
+site keeps serving it until the next scheduled run. `restore-data` copies a
+timestamped archive object from the private bucket over the public
+`latest_news.json` and pauses EventBridge so the restore isn't overwritten.
+Resume with `make resume-eventbridge` once the pipeline is fixed.
+
+**Finding the timestamp:**
+- The live file's provenance is recorded in `latest_news_metadata.json`
+  (`latest_log_reference` names the archive object it came from)
+- Or list recent archives: `aws s3 ls s3://newvelles-data-bucket/ | tail`
+
+**Additional safety nets:**
+- The public bucket has S3 versioning enabled with a 30-day noncurrent-version
+  expiry — any overwritten file can also be recovered with one
+  `aws s3api list-object-versions` / copy of the prior `VersionId`
+- A pre-publish sanity gate refuses to publish a `stories.json` whose story
+  count deviates >60% from the previous run or whose article count is below a
+  floor (see `docs/ENVIRONMENT.md` → Publish Sanity Gate), so most bad runs
+  never reach the bucket
+
 ## 📋 Step-by-Step Rollback Process
 
 ### **1. Assess the Situation**

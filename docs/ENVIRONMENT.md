@@ -50,6 +50,16 @@ This document describes all environment variables needed to run the Newvelles pr
   - Values: `true` | `false`
   - Default: `false`
 
+### Publish Sanity Gate (stories.json)
+- **`NEWVELLES_GATE_MAX_DEVIATION`** (Optional)
+  - Maximum allowed story-count deviation vs. the previously published `stories.json`
+    before the publish is refused (legacy files publish normally either way)
+  - Default: `0.6` (block when deviation exceeds 60%)
+
+- **`NEWVELLES_GATE_MIN_ARTICLES`** (Optional)
+  - Minimum article count for a run to be considered publishable
+  - Default: `50` (production runs carry ~600; QA ~120)
+
 ### Testing Configuration
 - **`NEWVELLES_TEST_UPLOAD_TIMEOUT`** (Optional)
   - Timeout in seconds for S3 upload operations during testing

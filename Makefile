@@ -540,6 +540,27 @@ rollback-prod:
 	@echo "🔄 Starting production rollback..."
 	./bin/rollback-production.sh
 
+# Restore the public latest_news.json from a timestamped private-bucket archive.
+# Pauses EventBridge so the next scheduled run doesn't immediately overwrite the
+# restore; resume with 'make resume-eventbridge' when the pipeline is fixed.
+# Find the timestamp to restore: the current file's provenance is recorded in
+# latest_news_metadata.json (latest_log_reference), or list the archive with
+#   aws s3 ls s3://newvelles-data-bucket/ | tail
+restore-data:
+	@if [ -z "$(TIMESTAMP)" ]; then \
+		echo "Usage: make restore-data TIMESTAMP=2026-08-16T13:00:43"; \
+		echo "       (timestamp of a newvelles_visualization archive object)"; \
+		exit 1; \
+	fi
+	@echo "🛟 Restoring latest_news.json from archive $(TIMESTAMP)..."
+	aws s3 cp "s3://newvelles-data-bucket/newvelles_visualization_0.2.1_$(TIMESTAMP).json" \
+		"s3://public-newvelles-data-bucket/latest_news.json"
+	-aws s3api put-object-acl --bucket public-newvelles-data-bucket \
+		--key latest_news.json --acl public-read 2>/dev/null
+	@echo "⏸️ Pausing EventBridge so the restore isn't overwritten by the next run..."
+	$(MAKE) pause-eventbridge
+	@echo "✅ Restore complete. Fix the pipeline, then run: make resume-eventbridge"
+
 # List available production images for rollback
 list-prod-images:
 	@echo "📦 Available Production Images:"
