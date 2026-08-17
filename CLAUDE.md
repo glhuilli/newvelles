@@ -108,6 +108,10 @@ See `docs/MONITORING_DASHBOARD.md` for complete documentation.
    - Fetches news from 84 RSS feeds (13 in QA mode)
    - Filters news published within last 2 weeks
    - Extracts title, link, date, source metadata
+   - Records per-feed fetch health (`newvelles/feed/health.py`): status, entry
+     count, newest-article age, latency. Summary lines go to stdout/CloudWatch
+     every run; in Lambda the full doc uploads to the private bucket as
+     `feed_health/feed_health_<ts>.json` (fail-open — never breaks the run)
 
 2. **Text Processing** (`newvelles/utils/text.py`)
    - Preprocesses titles: removes stop words, numbers, special chars
@@ -274,6 +278,7 @@ newvelles/
 - `schemas/latest_news_metadata_schema.json` - Metadata schema
 - `schemas/stories_schema.json` - Stories data schema (0.3.0); contract fixture in `test/fixtures/stories_v0.3.0.json`
 - `schemas/momentum_schema.json` - Momentum data schema (0.3.0); contract fixture in `test/fixtures/momentum_v0.3.0.json`
+- `schemas/feed_health_schema.json` - Per-run feed health doc schema (`newvelles/feed/health.py`)
 - `newvelles/models/momentum.py` - Cross-day story identity + 14-day rollup
 
 ## Important Testing Notes

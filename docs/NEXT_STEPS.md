@@ -54,12 +54,15 @@ from only **65 of 84 configured feeds**; the 2021 archive shows long-dead feeds
 (HuffPost, CNN top stories, CBS locals, old NY Daily News URLs) that silently
 rotted out of the corpus. Nothing currently records *which* feeds fail or why.
 
-**Step 1 — build fetch logging (prerequisite).** In `newvelles/feed/`
-(`load.py`/`parser.py`), record per feed per run: URL, HTTP outcome, parse
-outcome, article count, newest-article age, fetch latency. Emit as a
-`feed_health.json` uploaded to the **private** bucket per run (timestamped or
-rolling), plus a one-line summary in the Lambda log (visible in CloudWatch,
-like the naming stats line). Keep it dependency-free.
+**Step 1 — build fetch logging (prerequisite). ✅ DONE (2026-08-17).**
+`newvelles/feed/health.py` builds one record per feed per run (url,
+http_status, resolved_url, entry_count, newest_entry_age_days, latency_ms,
+bozo, error, ok). `parse_feed(..., health=[])` collects them;
+`build_data_from_rss_feeds_list` emits: summary lines to stdout/CloudWatch
+always, full doc to the private bucket at
+`feed_health/feed_health_<ts>.json` when `AWS_LAMBDA=true`. Fail-open —
+health problems never break a news run. Schema:
+`schemas/feed_health_schema.json`; tests: `test/test_feed_health.py`.
 
 **Step 2 — a Claude Code skill** (`.claude/skills/rss-feed-review/SKILL.md`)
 that does a full review when invoked:
