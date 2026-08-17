@@ -113,6 +113,85 @@ def test_merge_threshold_boundary_inclusive():
     assert merge_groups([a, b], threshold=0.5) == [[0, 1]]
 
 
+EARNINGS_TITLES = [
+    "Select Water Solutions Q2 Earnings Call Highlights",
+    "Essential Utilities Q2 Earnings Call Highlights",
+    "Watts Water Technologies Q2 Earnings Call Highlights",
+    "Warby Parker Q2 Earnings Call Highlights",
+]
+
+HACKS_TITLES = [
+    "Five Hacks Every Amazfit Balance 3 User Should Know",
+    "Five Hacks Every Amazfit Cheetah 2 Ultra User Should Know",
+    "10 Screenshot Hacks Every Mac User Should Know",
+]
+
+DEAL_TITLES = [
+    "This 27-Inch Asus OLED Gaming Monitor Is $120 Off Right Now",
+    "This LG Ultrawide OLED Gaming Monitor Is $200 Off Right Now",
+    "This 45-Inch LG UltraGear OLED Curved Monitor Is $700 Off",
+]
+
+NEWS_TITLES = [
+    "Trump Bows to Putin's Approach on Ukraine: No Cease-Fire, Deadlines or Sanctions",
+    "Watch: Moment Trump and Putin meet in Alaska",
+    "Trump and Putin end summit without ceasefire deal for Ukraine",
+]
+
+
+def test_earnings_cluster_is_roundup():
+    from newvelles.models.stories import classify_story
+    assert classify_story(EARNINGS_TITLES, outlet_count=1) == "roundup"
+
+
+def test_hacks_cluster_is_roundup():
+    from newvelles.models.stories import classify_story
+    assert classify_story(HACKS_TITLES, outlet_count=1) == "roundup"
+
+
+def test_monitor_cluster_is_deal():
+    from newvelles.models.stories import classify_story
+    assert classify_story(DEAL_TITLES, outlet_count=1) == "deal"
+
+
+def test_multi_outlet_news_is_story():
+    from newvelles.models.stories import classify_story
+    assert classify_story(NEWS_TITLES, outlet_count=3) == "story"
+
+
+def test_multi_outlet_template_still_story():
+    """Roundup requires single-outlet; a template across outlets is real syndication."""
+    from newvelles.models.stories import classify_story
+    assert classify_story(EARNINGS_TITLES, outlet_count=4) == "story"
+
+
+def test_proper_noun_run_does_not_count_as_template():
+    """Two outlets covering one event share a long run carrying proper nouns —
+    that's a subject, not a template (sentence-case titles here)."""
+    from newvelles.models.stories import classify_story
+    titles = [
+        "Judge orders U.S. to dispense $600M for vaccines RFK Jr. held up",
+        "Court says administration must dispense $600M for vaccines RFK Jr. held up",
+    ]
+    assert classify_story(titles, outlet_count=1) == "story"
+
+
+def test_template_run_counts_contiguous_words():
+    from newvelles.models.stories import template_run
+    assert template_run(EARNINGS_TITLES) >= 3     # "Q2 Earnings Call Highlights"
+    assert template_run(NEWS_TITLES) < 3
+
+
+def test_weekday_month_names_are_generic():
+    from newvelles.models.stories import classify_story
+    titles = [
+        "Gold prices today, Monday, August 4",
+        "Gold prices today, Tuesday, August 5",
+        "Gold prices today, Wednesday, August 6",
+    ]
+    assert classify_story(titles, outlet_count=1) == "roundup"
+
+
 def test_intra_group_dedupe_on_real_example_file():
     """data/latest_news_example.json: 410 entries resolve to 121 unique links,
     all duplication is within-group across sub-groups."""
