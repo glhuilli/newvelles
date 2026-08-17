@@ -1,5 +1,6 @@
-# Claude
-.claude
+# Claude (settings stay local; skills are shared and checked in)
+.claude/*
+!.claude/skills/
 
 # AWS
 .aws_user_id
