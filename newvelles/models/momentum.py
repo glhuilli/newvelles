@@ -28,8 +28,11 @@ def utc_today() -> str:
 
 def load_state_s3() -> Optional[dict]:
     """Read momentum_state.json from the private bucket; None on first run."""
-    from newvelles.feed.log import _MOMENTUM_STATE_NAME, _S3_BUCKET
-    from newvelles.utils.s3 import read_json_from_s3
+    # Imported lazily: feed.log resolves bucket names from env/config at import
+    # time, and tests monkeypatch them there — resolving at call time keeps the
+    # patched values visible.
+    from newvelles.feed.log import _MOMENTUM_STATE_NAME, _S3_BUCKET  # pylint: disable=import-outside-toplevel
+    from newvelles.utils.s3 import read_json_from_s3  # pylint: disable=import-outside-toplevel
     return read_json_from_s3(_S3_BUCKET, f"{_MOMENTUM_STATE_NAME}.json")
 
 

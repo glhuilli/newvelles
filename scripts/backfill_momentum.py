@@ -26,9 +26,9 @@ import boto3
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from newvelles.models.momentum import WINDOW_DAYS, apply_momentum  # noqa: E402
-from newvelles.models.stories import build_stories  # noqa: E402
-from newvelles.utils.s3 import upload_to_s3  # noqa: E402
+from newvelles.models.momentum import WINDOW_DAYS, apply_momentum  # noqa: E402  pylint: disable=wrong-import-position
+from newvelles.models.stories import build_stories  # noqa: E402  pylint: disable=wrong-import-position
+from newvelles.utils.s3 import upload_to_s3  # noqa: E402  pylint: disable=wrong-import-position
 
 SOURCE_ARCHIVE_BUCKET = "newvelles-data-bucket"
 ARCHIVE_PREFIX = "newvelles_visualization_0.2.1_"
@@ -96,8 +96,10 @@ def main() -> None:
           f"{len(state['stories'])} in state")
 
     if args.dry_run:
-        Path("momentum_backfill.json").write_text(json.dumps(momentum_doc, indent=1))
-        Path("momentum_state_backfill.json").write_text(json.dumps(state, indent=1))
+        Path("momentum_backfill.json").write_text(json.dumps(momentum_doc, indent=1),
+                                                  encoding="utf-8")
+        Path("momentum_state_backfill.json").write_text(json.dumps(state, indent=1),
+                                                        encoding="utf-8")
         print("Dry run: wrote momentum_backfill.json + momentum_state_backfill.json locally")
         return
 

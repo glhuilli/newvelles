@@ -131,15 +131,27 @@ See `docs/MONITORING_DASHBOARD.md` for complete documentation.
    - Emits `stories.json` beside `latest_news.json`; fallback headlines only
      (LLM naming is Stage B, not yet implemented)
 
-5. **Visualization** (`newvelles/display/show.py`)
+5. **Momentum** (`newvelles/models/momentum.py`)
+   - Carries story identity across runs/days: Jaccard over keywords ∪ entities
+     (>= 0.4) against stories last seen today/yesterday; a match inherits the
+     previous story id
+   - Maintains a rolling 14-day series per story (per-day datapoint = max
+     outlets/articles across that day's runs; only the current day mutates)
+   - Emits `momentum.json` (public, only live stories) and keeps
+     `momentum_state.json` (private, full window); both ride the sanity gate
+   - Trend vocabulary is a UI contract: new | climbing | peaked | cooling | steady
+   - Seed after a gap with `make backfill-momentum ENV=qa|prod` (replays the
+     production archive)
+
+6. **Visualization** (`newvelles/display/show.py`)
    - Generates JSON output with grouped news structure
    - Schema version: 0.2.1 (defined in `VISUALIZATION_VERSION`)
 
-6. **S3 Upload** (`newvelles/utils/s3.py`, `newvelles/feed/log.py`)
+7. **S3 Upload** (`newvelles/utils/s3.py`, `newvelles/feed/log.py`)
    - Single emit path: `emit_visualization()` with writer strategy (`local`/`s3`/`both`);
      `log_visualization`/`log_s3` are thin wrappers
    - Private bucket: timestamped visualization runs
-   - Public bucket: `latest_news.json`, `latest_news_metadata.json`, `stories.json`
+   - Public bucket: `latest_news.json`, `latest_news_metadata.json`, `stories.json`, `momentum.json`
    - All uploads validated against JSON schemas in `schemas/`
 
 ### Entry Points
@@ -249,6 +261,8 @@ newvelles/
 - `schemas/latest_news_schema.json` - Visualization data schema
 - `schemas/latest_news_metadata_schema.json` - Metadata schema
 - `schemas/stories_schema.json` - Stories data schema (0.3.0); contract fixture in `test/fixtures/stories_v0.3.0.json`
+- `schemas/momentum_schema.json` - Momentum data schema (0.3.0); contract fixture in `test/fixtures/momentum_v0.3.0.json`
+- `newvelles/models/momentum.py` - Cross-day story identity + 14-day rollup
 
 ## Important Testing Notes
 

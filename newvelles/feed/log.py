@@ -87,8 +87,9 @@ def log_groups(
     # Note: Actual outputs are handled by log_s3() which uploads directly to S3
 
 
-def emit_visualization(
+def emit_visualization(  # pylint: disable=too-many-arguments
     visualization_data,
+    *,
     writers: str = "local",
     output_path: str = _LOG_PATH,
     stories_data=None,
