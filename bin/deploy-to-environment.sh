@@ -36,21 +36,21 @@ fi
 case $ENVIRONMENT in
     "prod"|"production")
         LAMBDA_FUNCTION="RunNewvelles"
-        ENV_VARS='Variables={"NEWVELLES_NAMING_PROVIDER":"bedrock","NEWVELLES_NAMING_MODEL":"us.anthropic.claude-haiku-4-5-20251001-v1:0"}'
+        ENV_VARS='{"Variables":{"NEWVELLES_NAMING_PROVIDER":"bedrock","NEWVELLES_NAMING_MODEL":"us.anthropic.claude-haiku-4-5-20251001-v1:0"}}'
         S3_PRIVATE="newvelles-data-bucket"
         S3_PUBLIC="public-newvelles-data-bucket"
         echo "🏭 Deploying to PRODUCTION environment"
         ;;
     "qa"|"shadow")
         LAMBDA_FUNCTION="RunNewvelles-qa"
-        ENV_VARS='Variables={"AWS_S3_BUCKET":"newvelles-qa-bucket","AWS_S3_PUBLIC_BUCKET":"public-newvelles-qa-bucket","NEWVELLES_NAMING_PROVIDER":"bedrock","NEWVELLES_NAMING_MODEL":"us.anthropic.claude-haiku-4-5-20251001-v1:0"}'
+        ENV_VARS='{"Variables":{"AWS_S3_BUCKET":"newvelles-qa-bucket","AWS_S3_PUBLIC_BUCKET":"public-newvelles-qa-bucket","NEWVELLES_NAMING_PROVIDER":"bedrock","NEWVELLES_NAMING_MODEL":"us.anthropic.claude-haiku-4-5-20251001-v1:0"}}'
         S3_PRIVATE="newvelles-qa-bucket"
         S3_PUBLIC="public-newvelles-qa-bucket"
         echo "🛡️ Deploying to QA/Shadow environment"
         ;;
     "test"|"testing")
         LAMBDA_FUNCTION="RunNewvelles-test"
-        ENV_VARS='Variables={"AWS_S3_BUCKET":"newvelles-test-bucket","AWS_S3_PUBLIC_BUCKET":"public-newvelles-test-bucket","NEWVELLES_NAMING_PROVIDER":"bedrock","NEWVELLES_NAMING_MODEL":"us.anthropic.claude-haiku-4-5-20251001-v1:0"}'
+        ENV_VARS='{"Variables":{"AWS_S3_BUCKET":"newvelles-test-bucket","AWS_S3_PUBLIC_BUCKET":"public-newvelles-test-bucket","NEWVELLES_NAMING_PROVIDER":"bedrock","NEWVELLES_NAMING_MODEL":"us.anthropic.claude-haiku-4-5-20251001-v1:0"}}'
         S3_PRIVATE="newvelles-test-bucket"
         S3_PUBLIC="public-newvelles-test-bucket"
         echo "🧪 Deploying to TESTING environment"
@@ -244,7 +244,7 @@ update_lambda_config_with_retry() {
 
 # Update environment variables
 echo "🔧 Updating environment variables..."
-ENV_COMMAND="aws lambda update-function-configuration --function-name \"$LAMBDA_FUNCTION\" --environment \"$ENV_VARS\""
+ENV_COMMAND="aws lambda update-function-configuration --function-name \"$LAMBDA_FUNCTION\" --environment '$ENV_VARS'"
 
 if update_lambda_config_with_retry "environment variables" "$ENV_COMMAND"; then
     echo "✅ Environment variables updated successfully"
