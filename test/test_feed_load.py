@@ -180,3 +180,32 @@ class TestBuildDataFromRssFeeds:
         result = build_data_from_rss_feeds_list(rss_list, log=False)
 
         assert len(result) == 0
+
+
+class TestFeedHealthWiring:
+    @patch("newvelles.feed.load.emit_feed_health")
+    @patch("newvelles.feed.load.log_entries")
+    @patch("newvelles.feed.load.parse_feed")
+    def test_health_emitted_when_logging(self, mock_parse, mock_log, mock_emit):
+        def fake_parse(rss_list, health=None):
+            if health is not None:
+                health.append({"url": rss_list[0], "ok": False})
+            return iter([])
+
+        mock_parse.side_effect = fake_parse
+        build_data_from_rss_feeds_list(["https://dead.example/rss"], log=True)
+        mock_emit.assert_called_once_with([{"url": "https://dead.example/rss", "ok": False}])
+
+    @patch("newvelles.feed.load.emit_feed_health")
+    @patch("newvelles.feed.load.parse_feed")
+    def test_health_not_emitted_when_log_false(self, mock_parse, mock_emit):
+        mock_parse.side_effect = lambda rss_list, health=None: iter([])
+        build_data_from_rss_feeds_list(["https://a.example/rss"], log=False)
+        mock_emit.assert_not_called()
+
+
+def test_load_rss_skips_blank_lines(tmp_path):
+    rss_file = tmp_path / "rss.txt"
+    rss_file.write_text("https://a.example/rss\n\nhttps://b.example/rss\n")
+    assert list(load_rss(str(rss_file))) == ["https://a.example/rss",
+                                             "https://b.example/rss"]
