@@ -159,6 +159,117 @@ class TestDormantProviders:
         assert mock_post.call_args.kwargs["headers"]["x-api-key"] == "sk-test"
 
 
+class TestNameStories:
+    def _doc(self, stories):
+        return {"version": "0.3.0", "generated": "2026-08-16T12:00:00",
+                "story_count": len(stories), "stories": stories}
+
+    def _fake_provider(self, calls):
+        def provider(prompt):
+            calls.append(prompt)
+            return f"Generated headline number {len(calls)}"
+        return provider
+
+    def test_new_story_named_and_cached(self):
+        from newvelles.models.naming import name_stories
+        calls = []
+        with patch.dict(PROVIDERS, {"bedrock": self._fake_provider(calls)}):
+            doc, cache, stats = name_stories(self._doc([_story(ALASKA_TITLES)]), {},
+                                             provider_name="bedrock")
+        assert len(calls) == 1
+        story = doc["stories"][0]
+        assert story["headline"] == "Generated headline number 1"
+        assert story["headline_source"] == "llm"
+        assert cache["st_abc123"]["headline"] == "Generated headline number 1"
+        assert cache["st_abc123"]["article_count"] == 3
+        assert stats == {"llm_named": 1, "cache_hits": 0, "fallbacks": 0, "renamed": 0}
+
+    def test_cache_hit_prevents_second_call(self):
+        from newvelles.models.naming import name_stories
+        calls = []
+        cache = {"st_abc123": {"headline": "Cached headline", "headline_source": "llm",
+                               "article_count": 3, "named_at": "2026-08-16"}}
+        with patch.dict(PROVIDERS, {"bedrock": self._fake_provider(calls)}):
+            doc, _, stats = name_stories(self._doc([_story(ALASKA_TITLES)]), cache,
+                                         provider_name="bedrock")
+        assert calls == []
+        assert doc["stories"][0]["headline"] == "Cached headline"
+        assert doc["stories"][0]["headline_source"] == "llm"
+        assert stats["cache_hits"] == 1
+
+    def test_rename_only_when_grown_more_than_fifty_percent(self):
+        from newvelles.models.naming import name_stories
+        # cached at 4 articles; story now has 6 (= exactly 1.5x) -> keep
+        cache = {"st_abc123": {"headline": "Cached headline", "headline_source": "llm",
+                               "article_count": 4, "named_at": "2026-08-16"}}
+        six = _story(ALASKA_TITLES + [("A", "X"), ("B", "Y"), ("C", "Z")])
+        calls = []
+        with patch.dict(PROVIDERS, {"bedrock": self._fake_provider(calls)}):
+            doc, _, stats = name_stories(self._doc([six]), dict(cache),
+                                         provider_name="bedrock")
+        assert calls == [] and doc["stories"][0]["headline"] == "Cached headline"
+
+        # story now has 7 articles (> 1.5 x 4) -> rename
+        seven = _story(ALASKA_TITLES + [("A", "X"), ("B", "Y"), ("C", "Z"), ("D", "W")])
+        with patch.dict(PROVIDERS, {"bedrock": self._fake_provider(calls)}):
+            doc, new_cache, stats = name_stories(self._doc([seven]), dict(cache),
+                                                 provider_name="bedrock")
+        assert len(calls) == 1
+        assert doc["stories"][0]["headline"] == "Generated headline number 1"
+        assert stats["renamed"] == 1
+        assert new_cache["st_abc123"]["article_count"] == 7
+
+    def test_provider_failure_keeps_fallback_and_does_not_cache(self):
+        from newvelles.models.naming import name_stories
+
+        def exploding(prompt):
+            raise RuntimeError("bedrock down")
+
+        story = _story(ALASKA_TITLES)
+        original = story["headline"]
+        with patch.dict(PROVIDERS, {"bedrock": exploding}):
+            doc, cache, stats = name_stories(self._doc([story]), {}, provider_name="bedrock")
+        assert doc["stories"][0]["headline"] == original
+        assert doc["stories"][0]["headline_source"] == "fallback"
+        assert cache == {}
+        assert stats["fallbacks"] == 1
+
+    def test_cap_prioritizes_story_kind_and_skips_rest(self, monkeypatch):
+        from newvelles.models.naming import name_stories
+        monkeypatch.setenv("NEWVELLES_NAMING_MAX_CALLS", "2")
+        calls = []
+        deal = _story([("This Monitor Is $120 Off", "Lifehacker")], id="st_deal01", kind="deal")
+        s1 = _story(ALASKA_TITLES, id="st_news01")
+        s2 = _story(ALASKA_TITLES, id="st_news02")
+        with patch.dict(PROVIDERS, {"bedrock": self._fake_provider(calls)}):
+            doc, cache, stats = name_stories(self._doc([deal, s1, s2]), {},
+                                             provider_name="bedrock")
+        assert len(calls) == 2
+        by_id = {s["id"]: s for s in doc["stories"]}
+        assert by_id["st_news01"]["headline_source"] == "llm"
+        assert by_id["st_news02"]["headline_source"] == "llm"
+        assert by_id["st_deal01"]["headline_source"] == "fallback"  # capped out
+        assert "st_deal01" not in cache  # retried next run
+        assert stats["fallbacks"] == 1
+
+    def test_local_provider_marks_fallback_source(self):
+        from newvelles.models.naming import name_stories
+        doc, cache, stats = name_stories(self._doc([_story(ALASKA_TITLES)]), {},
+                                         provider_name="local")
+        assert doc["stories"][0]["headline_source"] == "fallback"
+        assert stats["llm_named"] == 0
+        assert cache["st_abc123"]["headline_source"] == "fallback"
+
+    def test_cache_prunes_old_entries(self):
+        from newvelles.models.naming import name_stories
+        stale = {"st_old999": {"headline": "Old", "headline_source": "llm",
+                               "article_count": 2, "named_at": "2026-06-01"}}
+        with patch.dict(PROVIDERS, {"bedrock": self._fake_provider([])}):
+            _, cache, _ = name_stories(self._doc([]), stale, provider_name="bedrock",
+                                       today="2026-08-16")
+        assert "st_old999" not in cache
+
+
 class TestProviderRegistry:
     def test_all_four_providers_registered(self):
         assert set(PROVIDERS) == {"bedrock", "anthropic", "openai", "local"}

@@ -176,3 +176,127 @@ PROVIDERS = {
     "openai": _name_via_openai,
     "local": _name_via_local,
 }
+_REMOTE_PROVIDERS = {"bedrock", "anthropic", "openai"}
+
+
+def _max_calls() -> int:
+    return int(os.environ.get("NEWVELLES_NAMING_MAX_CALLS", DEFAULT_MAX_CALLS))
+
+
+def _needs_naming(story: dict, cache: dict) -> bool:
+    cached = cache.get(story["id"])
+    if cached is None:
+        return True
+    return story["article_count"] > cached["article_count"] * RENAME_GROWTH_FACTOR
+
+
+def _call_provider(provider_name: str, story: dict) -> str:
+    if provider_name == "local":
+        return _name_via_local(story)
+    return PROVIDERS[provider_name](build_prompt(story))
+
+
+def name_stories(
+    stories_data: dict,
+    cache: dict,
+    provider_name: Optional[str] = None,
+    today: Optional[str] = None,
+) -> Tuple[dict, dict, dict]:
+    """Name stories via the configured provider, reusing cached names.
+
+    Returns (stories_data, new_cache, stats). A cached story is re-named only
+    when its article set has grown by more than 50% since the naming that
+    produced the current headline. Failures and over-cap stories keep their
+    existing best-real-headline (already set by build_stories) and are NOT
+    cached, so they retry next run. Naming never raises.
+    """
+    provider_name = provider_name or resolve_provider()
+    today = today or date.today().isoformat()
+    stories = stories_data.get("stories", [])
+    stats = {"llm_named": 0, "cache_hits": 0, "fallbacks": 0, "renamed": 0}
+
+    to_name = []
+    for story in stories:
+        if _needs_naming(story, cache):
+            to_name.append(story)
+        else:
+            cached = cache[story["id"]]
+            story["headline"] = cached["headline"]
+            story["headline_source"] = cached["headline_source"]
+            stats["cache_hits"] += 1
+
+    # cap new calls per run; real news first, in list (rank) order
+    to_name.sort(key=lambda s: s.get("kind") != "story")
+    budget = _max_calls()
+    selected, capped = to_name[:budget], to_name[budget:]
+
+    def _name_one(story):
+        try:
+            return story, _call_provider(provider_name, story)
+        except Exception as error:  # noqa: BLE001 — naming must never fail a run
+            print(f"⚠️ Naming failed for {story['id']} via {provider_name}: {error}")
+            return story, None
+
+    if provider_name in _REMOTE_PROVIDERS and len(selected) > 1:
+        with ThreadPoolExecutor(max_workers=NAMING_CONCURRENCY) as pool:
+            results = list(pool.map(lambda s: _name_one(s), selected))
+    else:  # local spaCy is not thread-safe; small batches gain nothing
+        results = [_name_one(story) for story in selected]
+
+    new_cache = dict(cache)
+    for story, headline in results:
+        if headline is None:
+            stats["fallbacks"] += 1
+            continue
+        source = "llm" if provider_name in _REMOTE_PROVIDERS else "fallback"
+        if story["id"] in cache:
+            stats["renamed"] += 1
+        if source == "llm":
+            stats["llm_named"] += 1
+        story["headline"] = headline
+        story["headline_source"] = source
+        new_cache[story["id"]] = {
+            "headline": headline,
+            "headline_source": source,
+            "article_count": story["article_count"],
+            "named_at": today,
+        }
+    stats["fallbacks"] += len(capped)
+
+    # prune cache entries not touched within the retention window
+    horizon = (date.fromisoformat(today) - timedelta(days=CACHE_RETENTION_DAYS)).isoformat()
+    new_cache = {sid: entry for sid, entry in new_cache.items()
+                 if entry.get("named_at", today) >= horizon}
+    return stories_data, new_cache, stats
+
+
+def load_naming_cache_s3() -> dict:
+    from newvelles.feed.log import _S3_BUCKET  # pylint: disable=import-outside-toplevel
+    from newvelles.utils.s3 import read_json_from_s3  # pylint: disable=import-outside-toplevel
+    return read_json_from_s3(_S3_BUCKET, "story_names.json") or {}
+
+
+def save_naming_cache_s3(cache: dict) -> None:
+    from newvelles.feed.log import _S3_BUCKET  # pylint: disable=import-outside-toplevel
+    from newvelles.utils.s3 import upload_to_s3  # pylint: disable=import-outside-toplevel
+    upload_to_s3(bucket_name=_S3_BUCKET, file_name="story_names.json",
+                 string_byte=json.dumps(cache).encode("utf-8"))
+
+
+def _local_cache_path() -> str:
+    return os.environ.get("NEWVELLES_NAMING_CACHE", LOCAL_NAMING_CACHE_PATH)
+
+
+def load_naming_cache_local() -> dict:
+    try:
+        with open(_local_cache_path(), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_naming_cache_local(cache: dict) -> None:
+    path = _local_cache_path()
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(cache, f)
