@@ -101,7 +101,8 @@ def merge_groups(groups: list, threshold: float = MERGE_THRESHOLD) -> list:
 
 
 DEAL_RE = re.compile(
-    r"(\$\s?\d[\d,]*(\.\d+)?\s*off|\d+\s?%\s*off|\bpre-?order\b|\bdeals?\b|\bdiscount\b|\bcoupon\b)",
+    r"(\$\s?\d[\d,]*(\.\d+)?\s*off|\d+\s?%\s*off"
+    r"|\bpre-?order\b|\bdeals?\b|\bdiscount\b|\bcoupon\b)",
     re.IGNORECASE,
 )
 TEMPLATE_MIN_RUN = 3
