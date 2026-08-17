@@ -37,6 +37,11 @@ Write one plain sentence naming what happened. Rules:
 - Use the names of people, places and organisations that appear
 - If the headlines disagree about what happened, name the disputed
   fact, not one side's version
+- If the headlines cover several unrelated items, ignore all but one:
+  write your sentence about the single item with the most headlines,
+  breaking ties in favour of headline 1. Never describe or evaluate the
+  headlines themselves, and never say they are unrelated or cannot be
+  combined — your reply must always be about a news event, nothing else.
 
 Headlines:
 {headlines}
@@ -53,6 +58,22 @@ def build_prompt(story: dict) -> str:
     return PROMPT_TEMPLATE.format(headlines="\n".join(lines))
 
 
+# A refusal to name an incoherent cluster must never reach the site as a
+# "headline" — reject meta-commentary so the story keeps its real headline.
+# Observed live in the first QA run ("These headlines appear to cover
+# different events and cannot be combined into a single news story name").
+_META_RESPONSE_MARKERS = (
+    "these headlines", "the headlines", "headlines provided", "i cannot",
+    "cannot be combined", "unable to determine", "unrelated to a single",
+    "single news story name", "as an ai",
+    # generic "no common event" phrasings — for a truly incoherent cluster the
+    # right outcome is the real-headline fallback, not a synthetic summary
+    "articles cover", "articles covered", "without a common", "no single event",
+    "no common event", "different topics", "various topics", "multiple topics",
+    "unrelated items", "unrelated stories", "unrelated events",
+)
+
+
 def _postprocess(text: str) -> str:
     """First line, stripped of quotes/whitespace/trailing period; reject junk."""
     line = text.strip().splitlines()[0].strip() if text.strip() else ""
@@ -61,6 +82,10 @@ def _postprocess(text: str) -> str:
         raise ValueError("empty headline from provider")
     if len(line) > MAX_HEADLINE_CHARS:
         raise ValueError(f"headline too long ({len(line)} chars)")
+    lowered = line.lower()
+    for marker in _META_RESPONSE_MARKERS:
+        if marker in lowered:
+            raise ValueError(f"meta-commentary instead of a headline: {line[:60]!r}")
     return line
 
 

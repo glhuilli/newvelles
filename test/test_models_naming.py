@@ -40,6 +40,9 @@ class TestBuildPrompt:
         prompt = build_prompt(_story(ALASKA_TITLES))
         assert "6 to 12 words" in prompt
         assert "Reply with the sentence and nothing else." in prompt
+        # incoherent-cluster instruction: name the dominant event, never comment on the input
+        assert "the single item with the most headlines" in prompt
+        assert "Never describe or evaluate the" in prompt
         for title, outlet in ALASKA_TITLES:
             assert title in prompt
             assert outlet in prompt
@@ -71,6 +74,25 @@ class TestPostprocess:
     def test_empty_raises(self):
         with pytest.raises(ValueError):
             _postprocess("   \n ")
+
+    @pytest.mark.parametrize("meta", [
+        "These headlines appear to cover different events and cannot be combined",
+        "These headlines are primarily product recommendations and shopping guides",
+        "The headlines describe unrelated stories",
+        "I cannot name this story as one event",
+        "Unable to determine a single event from the provided headlines",
+        "Articles covered different technology topics without a common event",
+        "Coverage spans various topics with no single event",
+    ])
+    def test_meta_commentary_rejected(self, meta):
+        """A refusal to name the cluster must fall back to a real headline,
+        never reach the site as a 'headline'. Observed live in the first QA run."""
+        with pytest.raises(ValueError):
+            _postprocess(meta)
+
+    def test_legitimate_headline_mentioning_news_is_kept(self):
+        assert _postprocess("Newspaper industry faces steep advertising decline") \
+            == "Newspaper industry faces steep advertising decline"
 
     def test_too_long_raises(self):
         with pytest.raises(ValueError):
