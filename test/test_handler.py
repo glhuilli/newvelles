@@ -93,7 +93,7 @@ class TestRun:
         mock_state = {"version": "0.3.0", "stories": {}}
         mock_apply.return_value = (mock_stories, mock_momentum, mock_state)
         mock_name.return_value = (mock_stories, {},
-                                  {"llm_named": 0, "cache_hits": 0,
+                                  {"llm_named": 0, "local_named": 0, "cache_hits": 0,
                                    "fallbacks": 0, "renamed": 0})
 
         result = run()

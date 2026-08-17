@@ -204,7 +204,7 @@ class TestNameStories:
         assert story["headline_source"] == "llm"
         assert cache["st_abc123"]["headline"] == "Generated headline number 1"
         assert cache["st_abc123"]["article_count"] == 3
-        assert stats == {"llm_named": 1, "cache_hits": 0, "fallbacks": 0, "renamed": 0}
+        assert stats == {"llm_named": 1, "local_named": 0, "cache_hits": 0, "fallbacks": 0, "renamed": 0}
 
     def test_cache_hit_prevents_second_call(self):
         from newvelles.models.naming import name_stories
