@@ -133,7 +133,13 @@ incl. spaCy NER). Early-era files carry the heavy intra-group duplication
 archive to `archive/YYYY/` (gitignored), resumable, ~16-way parallel.
 Transfer cost ≈ $0.25, roughly an evening of runtime overall.
 
-**Step 2 — backfill dataset** (`scripts/backfill_history.py`, to build):
+**Step 2 — backfill dataset. ✅ DONE (2026-08-17).** `scripts/backfill_history.py`
+built and run over the full mirror: 9,311 runs → 446,519 (run, story) rows →
+114,927 unique stories across 1,832 days in `analysis/data/stories.parquet`
+(gitignored; rebuild via the pipeline in `analysis/README.md`). Archive is
+100% source-mapped (`scripts/scan_archive_sources.py`). A tabbed dashboard
+over the real data lives at `analysis/site/index.html` (Timeline/Ledger/
+Lifetimes/Archetypes; single exportable file). The original spec (kept):
 replay the mirror chronologically through `build_stories()` (parallel) + the
 momentum identity matcher (sequential), emitting an **analysis-ready columnar
 dataset**, not per-run JSONs:
