@@ -91,7 +91,11 @@ def build_curves(per_day, stories, min_days):
 
 def ledger(stories, curves, n=80):
     led = (stories[stories["kind"] == "story"]
-           .nlargest(n, ["peak_outlets", "days_seen"]))
+           .nlargest(n * 3, ["peak_outlets", "days_seen"])
+           # identity occasionally splits one story across a gap; keep the
+           # strongest row per headline so the ledger reads one row per story
+           .drop_duplicates(subset="headline", keep="first")
+           .head(n))
     out = []
     for _, s in led.iterrows():
         c = curves.get(s["story_uid"])
@@ -148,15 +152,14 @@ def lifetimes(stories, base_n=3200, named_n=12):
 
 def _cluster_name(curve):
     c = np.asarray(curve)
-    cmax = c.max() or 1.0
-    c = c / cmax
+    c = c / (c.max() or 1.0)
     peaks = ((c[1:-1] > np.maximum(c[:-2], c[2:])) & (c[1:-1] > 0.5)).sum()
-    argmax = int(np.argmax(c))
-    pos = argmax / (len(c) - 1)
+    pos = int(np.argmax(c)) / (len(c) - 1)
+    width = float((c > 0.5).mean())
     if peaks >= 2:
         return "Double peak"
     if pos <= 0.2:
-        return "Flash"
+        return "Flash" if width < 0.3 else "Fast start, long tail"
     if pos >= 0.7:
         return "Late surge"
     if c.mean() >= 0.45:
@@ -188,6 +191,12 @@ def archetypes(curves, k=5, members_per=12):
             "members": [[round(float(v), 3) for v in X[i]] for i in sample],
         })
     clusters.sort(key=lambda c: -c["size"])
+    seen: dict = {}
+    for c in clusters:  # same-name clusters get their peak position as a distinguisher
+        if c["name"] in seen or sum(1 for o in clusters if o["name"] == c["name"]) > 1:
+            pos = int(100 * np.argmax(c["medoid"]) / (len(c["medoid"]) - 1))
+            seen[c["name"]] = True
+            c["name"] = f"{c['name']} · peak at {pos}%"
     return {"clusters": clusters, "silhouette": round(sil, 3), "n": int(len(X))}
 
 

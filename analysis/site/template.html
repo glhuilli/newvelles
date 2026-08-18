@@ -134,7 +134,9 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
   <section class="panel" id="panel-timeline">
     <p class="panel-note">Brush the strip to zoom. The river below shows weekly story
     counts per section; <b>share</b> re-normalizes each week to 100%. Flags mark the
-    stories that broke the cycle.</p>
+    stories that broke the cycle. <b>Honesty note:</b> level shifts (notably mid-2026)
+    reflect pipeline changes — more feeds, new story merging — not news volume; compare
+    shapes within an era, or use <b>share</b> across eras.</p>
     <div class="chart-box" style="margin-bottom:12px">
       <div id="strip"></div>
     </div>
@@ -289,7 +291,7 @@ function renderStream() {
   const x = d3.scaleTime().domain([rows[0].d, rows[rows.length - 1].d]).range([TL.ML, TL.W - TL.MR]);
   const y = d3.scaleLinear()
     .domain([d3.min(series, (s) => d3.min(s, (p) => p[0])), d3.max(series, (s) => d3.max(s, (p) => p[1]))])
-    .range([TL.HD - 24, 26]);
+    .range([TL.HD - 24, 42]);
   const area = d3.area().x((p) => x(p.data.d)).y0((p) => y(p[0])).y1((p) => y(p[1])).curve(d3.curveBasis);
   const paths = svg.append("g").selectAll("path").data(series).join("path")
     .attr("d", area).style("fill", (s) => SCOLOR[s.key])
@@ -313,17 +315,19 @@ function renderStream() {
         .style("stroke-width", 3).style("stroke-opacity", 0.75).text(s.key);
     }
   }
-  for (const an of anns.filter((an) => an.d >= a && an.d <= b)) {
-    svg.append("line").attr("x1", x(an.d)).attr("x2", x(an.d)).attr("y1", 14).attr("y2", TL.HD - 24)
+  const inWin = anns.filter((an) => an.d >= a && an.d <= b);
+  inWin.forEach((an, i) => {
+    const ly = 12 + (i % 2) * 14;   // alternate rows so nearby labels don't collide
+    svg.append("line").attr("x1", x(an.d)).attr("x2", x(an.d)).attr("y1", ly + 2).attr("y2", TL.HD - 24)
       .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3")
       .style("pointer-events", "none");
     const onRight = x(an.d) > TL.W * 0.7;
-    svg.append("text").attr("x", x(an.d) + (onRight ? -4 : 4)).attr("y", 12)
+    svg.append("text").attr("x", x(an.d) + (onRight ? -4 : 4)).attr("y", ly)
       .attr("text-anchor", onRight ? "end" : "start")
       .style("font-size", "10.5px").style("fill", "var(--ink-2)")
       .style("paint-order", "stroke").style("stroke", "var(--surface)").style("stroke-width", 3)
-      .text(an.label.length > 34 ? an.label.slice(0, 34) + "…" : an.label);
-  }
+      .text(an.label.length > 30 ? an.label.slice(0, 30) + "…" : an.label);
+  });
   svg.append("g").attr("class", "axis").attr("transform", `translate(0,${TL.HD - 24})`)
     .call(d3.axisBottom(x).ticks(8).tickSizeOuter(0)).select(".domain").remove();
 }
@@ -399,7 +403,9 @@ function renderLifetimes() {
       <div>ran ${p.span}d · peak ${p.peak} outlets</div>`, ev))
     .on("mouseleave", hideTip);
   svg.append("g").selectAll("text.nl").data(L.named).join("text")
-    .attr("x", (p) => x(P(p.d)) + r(p.peak) + 5).attr("y", (p) => y(Math.max(1, p.span)) + 4)
+    .attr("x", (p) => { const cx = x(P(p.d)); return cx > W * 0.75 ? cx - r(p.peak) - 5 : cx + r(p.peak) + 5; })
+    .attr("y", (p) => y(Math.max(1, p.span)) + 4)
+    .attr("text-anchor", (p) => (x(P(p.d)) > W * 0.75 ? "end" : "start"))
     .style("font-size", "11px").style("font-weight", 600).style("fill", "var(--ink)")
     .style("paint-order", "stroke").style("stroke", "var(--surface)").style("stroke-width", 3)
     .text((p) => p.label);
