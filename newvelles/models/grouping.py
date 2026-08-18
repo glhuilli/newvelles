@@ -1,14 +1,14 @@
 import json
 import re
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from newvelles.config import debug
 from newvelles.feed import NewsEntry
-from newvelles.utils.text import process_content, remove_stopwords, get_sentence_score
+from newvelles.utils.text import NLP, process_content, remove_stopwords, get_sentence_score
 
 # This version needs to be updated in case major
 # changes are done to the visualization files below.
@@ -76,6 +76,37 @@ def group_similar_titles(
     return groups
 
 
+# Broad label set on purpose: en_core_web_sm often mislabels people
+# ("Tupac Shakur" -> NORP, "Tupac Shakur's" -> GPE), so a narrow PERSON/ORG
+# guard would miss them. Extra tokens only relax the guard back to
+# similarity-only merging — they can never block a legitimate merge.
+_GUARD_ENTITY_LABELS = {"PERSON", "ORG", "GPE", "LOC", "NORP", "FAC", "EVENT"}
+
+
+def _entity_tokens(titles: List[str]) -> Set[str]:
+    """Word-level named-entity tokens for a group of titles."""
+    tokens: Set[str] = set()
+    for title in titles:
+        for ent in NLP(title).ents:
+            if ent.label_ not in _GUARD_ENTITY_LABELS:
+                continue
+            for tok in ent:
+                if tok.is_alpha and not tok.is_stop and len(tok.text) >= 3:
+                    tokens.add(tok.text.lower())
+    return tokens
+
+
+def _entities_compatible(tokens_a: Set[str], tokens_b: Set[str]) -> bool:
+    """Two groups may merge only if their entity tokens intersect.
+
+    Groups without PERSON/ORG entities can't be discriminated by entities,
+    so they fall back to similarity-only merging.
+    """
+    if not tokens_a or not tokens_b:
+        return True
+    return bool(tokens_a & tokens_b)
+
+
 def cluster_groups(
     groups: List[List[int]],
     titles: List[str],
@@ -104,6 +135,12 @@ def cluster_groups(
     tfidf_matrix = vectorizer.fit_transform(group_representations)
     similarity_matrix = cosine_similarity(tfidf_matrix)
 
+    # Entity guard: TF-IDF at this level rewards shared event-type vocabulary
+    # (e.g. "murder trial", "opening statements"), which merges unrelated
+    # stories about the same kind of event. Requiring named-entity overlap
+    # keeps "similar words" from being mistaken for "same story".
+    entity_sets = [_entity_tokens([titles[i] for i in group]) for group in groups]
+
     top_level_groups = []
     used_groups = set()
 
@@ -118,7 +155,8 @@ def cluster_groups(
             if j in used_groups:
                 continue
 
-            if similarity_matrix[i, j] >= context_similarity_threshold:
+            if (similarity_matrix[i, j] >= context_similarity_threshold
+                    and _entities_compatible(entity_sets[i], entity_sets[j])):
                 top_level_group.append(groups[j])
                 used_groups.add(j)
 

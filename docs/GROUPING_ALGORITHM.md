@@ -156,10 +156,25 @@ Cluster related groups into higher-level topics to create the top-level hierarch
    - Same similarity measure as Level 1
    - But comparing groups instead of individual titles
 
-4. **Cluster groups with similarity ≥ 0.5** (context threshold)
+4. **Cluster groups with similarity ≥ 0.2** (context threshold,
+   `DEFAULT_CONTEXT_SIMILARITY_THRESHOLD`)
    - Lower threshold than Level 1 (more permissive)
    - Allows related but not identical topics to cluster together
    - Creates "top-level groups"
+
+5. **Entity guard** (added 2026-08-17)
+   - At this permissive threshold, TF-IDF rewards shared *event-type*
+     vocabulary: three unrelated murder trials (Tupac Shakur, Luigi Mangione,
+     Lindsay Clancy) once merged into a single top-level group because
+     "murder trial" / "opening statements" terms were distinctive corpus-wide.
+   - A merge now also requires named-entity agreement: word-level entity
+     tokens (spaCy NER, broad label set because `en_core_web_sm` mislabels
+     people) are extracted per group; if **both** groups have entities, their
+     token sets must intersect. Groups without entities keep the
+     similarity-only behavior.
+   - The guard can only prevent merges, never create them.
+   - Functions: `_entity_tokens()`, `_entities_compatible()`; regression test:
+     `TestEntityGuardedClustering` in `test/test_models_grouping.py`.
 
 ### Example
 
