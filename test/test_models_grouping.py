@@ -387,3 +387,26 @@ class TestConstants:
         """Test that VISUALIZATION_VERSION is defined."""
         assert isinstance(VISUALIZATION_VERSION, str)
         assert len(VISUALIZATION_VERSION) > 0
+
+
+class TestEntityGuardHelpers:
+    def test_entity_tokens_extracts_person_word_tokens(self):
+        from newvelles.models.grouping import _entity_tokens
+        tokens = _entity_tokens(["Opening statements begin in Tupac Shakur murder trial"])
+        assert "tupac" in tokens and "shakur" in tokens
+
+    def test_entity_tokens_ignores_places(self):
+        from newvelles.models.grouping import _entity_tokens
+        tokens = _entity_tokens(["Hurricane nears Florida coast"])
+        assert "florida" not in tokens
+
+    def test_entities_compatible_requires_overlap_when_both_present(self):
+        from newvelles.models.grouping import _entities_compatible
+        assert _entities_compatible({"tupac", "shakur"}, {"tupac"}) is True
+        assert _entities_compatible({"tupac", "shakur"}, {"luigi", "mangione"}) is False
+
+    def test_entities_compatible_falls_back_when_either_empty(self):
+        from newvelles.models.grouping import _entities_compatible
+        assert _entities_compatible(set(), {"luigi"}) is True
+        assert _entities_compatible({"tupac"}, set()) is True
+        assert _entities_compatible(set(), set()) is True

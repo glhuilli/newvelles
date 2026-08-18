@@ -1,14 +1,14 @@
 import json
 import re
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from newvelles.config import debug
 from newvelles.feed import NewsEntry
-from newvelles.utils.text import process_content, remove_stopwords, get_sentence_score
+from newvelles.utils.text import NLP, process_content, remove_stopwords, get_sentence_score
 
 # This version needs to be updated in case major
 # changes are done to the visualization files below.
@@ -74,6 +74,33 @@ def group_similar_titles(
             groups.append(group)
 
     return groups
+
+
+_GUARD_ENTITY_LABELS = {"PERSON", "ORG"}
+
+
+def _entity_tokens(titles: List[str]) -> Set[str]:
+    """Word-level PERSON/ORG entity tokens for a group of titles."""
+    tokens: Set[str] = set()
+    for title in titles:
+        for ent in NLP(title).ents:
+            if ent.label_ not in _GUARD_ENTITY_LABELS:
+                continue
+            for tok in ent:
+                if tok.is_alpha and not tok.is_stop and len(tok.text) >= 3:
+                    tokens.add(tok.text.lower())
+    return tokens
+
+
+def _entities_compatible(tokens_a: Set[str], tokens_b: Set[str]) -> bool:
+    """Two groups may merge only if their entity tokens intersect.
+
+    Groups without PERSON/ORG entities can't be discriminated by entities,
+    so they fall back to similarity-only merging.
+    """
+    if not tokens_a or not tokens_b:
+        return True
+    return bool(tokens_a & tokens_b)
 
 
 def cluster_groups(
