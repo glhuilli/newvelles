@@ -161,6 +161,13 @@ glhuilli.github.io.
 
 ---
 
+## Smaller follow-ups
+
+- **Dependabot for Python deps:** spaCy drifts often (we were 12 patch
+  releases behind when the entity guard landed). Check whether
+  `.github/dependabot.yml` covers the `pip` ecosystem / `requirements.txt`;
+  if not, add it so version bumps arrive as PRs automatically.
+
 ## Pointers
 
 - Redesign handoff & specs: `docs/design_handoff_newvelles/`
