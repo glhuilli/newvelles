@@ -169,6 +169,16 @@ glhuilli.github.io.
 
 ## Smaller follow-ups
 
+- **Restore the Bedrock hard-stop to $15 in September 2026.** Raised to $60 on
+  2026-08-18 to absorb the one-off ~$30 historical-classification run (Haiku
+  labeling of 114k archive stories) without tripping the auto-deny on the
+  Lambda role. Restore with:
+  `aws budgets update-budget --account-id 617641631577 --new-budget '{...same
+  definition, "Amount": "15"}'` (dump current first with describe-budget).
+  Longer term: tag analysis Bedrock usage separately so ad-hoc analysis spend
+  never counts against the pipeline guardrail. The $10 alert budget was left
+  unchanged and will fire this month — expected, informational.
+
 - **Dependabot for Python deps:** spaCy drifts often (we were 12 patch
   releases behind when the entity guard landed). Check whether
   `.github/dependabot.yml` covers the `pip` ecosystem / `requirements.txt`;
