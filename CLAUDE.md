@@ -121,6 +121,9 @@ See `docs/MONITORING_DASHBOARD.md` for complete documentation.
    - Groups similar news using TF-IDF + cosine similarity (title threshold: 0.25)
    - Two-level greedy grouping: first groups similar titles (0.25), then clusters
      those groups by context similarity (0.2) into top-level groups
+   - Level-2 merges also require named-entity overlap (entity guard) so distinct
+     stories sharing event-type vocabulary (e.g. two unrelated murder trials)
+     stay separate; entity-less groups fall back to similarity-only
    - Extracts common substrings for group headers
    - Filters groups with fewer than 2 titles (`MIN_GROUP_SIZE`)
 
