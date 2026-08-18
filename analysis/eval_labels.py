@@ -44,11 +44,16 @@ def main() -> None:
         (m.loc[m["major_gold"] == m["major_pred"], "sub_gold"]
          == m.loc[m["major_gold"] == m["major_pred"], "sub_pred"]).mean())
 
+    def as_set(v):
+        if v is None:
+            return set()
+        return set(list(v))
+
     def jac(a, b):
-        A, B = set(a or []), set(b or [])
+        A, B = as_set(a), as_set(b)
         return len(A & B) / len(A | B) if A | B else 0.0
 
-    tag_overlap = float(m.apply(lambda r: bool(set(r["tags_gold"]) & set(r["tags_pred"] or [])),
+    tag_overlap = float(m.apply(lambda r: bool(as_set(r["tags_gold"]) & as_set(r["tags_pred"])),
                                 axis=1).mean())
     tag_jaccard = float(m.apply(lambda r: jac(r["tags_gold"], r["tags_pred"]), axis=1).mean())
 

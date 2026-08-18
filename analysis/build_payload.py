@@ -267,6 +267,42 @@ def core_stats(df, per_day):
             "n_sources": int(len(totals))}
 
 
+def categories(per_day, stories):
+    """Core stats per sub-category, ranked by distinct stories."""
+    labels_path = HERE / "data" / "story_labels.parquet"
+    if not labels_path.exists():
+        return None
+    labels = pd.read_parquet(labels_path)
+    lab = labels.set_index("story_uid")
+    st = stories.join(lab, on="story_uid", how="inner")
+    pdl = per_day.merge(labels[["story_uid", "major", "sub"]], on="story_uid", how="inner")
+
+    from collections import Counter
+    out = []
+    per_sub_day = pdl.groupby(["sub", "day"])["story_uid"].nunique()
+    total_stories = len(st)
+    for (major, sub), g in st.groupby(["major", "sub"]):
+        tag_counts = Counter(t for tags in g["tags"] for t in list(tags))
+        exemplar = g.loc[g["peak_outlets"].idxmax()]
+        out.append({
+            "major": major, "sub": sub,
+            "stories": int(len(g)),
+            "share": round(len(g) / total_stories, 4),
+            "story_days": int(g["days_seen"].sum()),
+            "median_per_day": round(float(per_sub_day.loc[sub].median()), 1)
+            if sub in per_sub_day.index.get_level_values(0) else 0,
+            "active_days": int(per_sub_day.loc[sub].shape[0])
+            if sub in per_sub_day.index.get_level_values(0) else 0,
+            "top_tags": [t for t, _ in tag_counts.most_common(5)],
+            "exemplar": exemplar["headline"][:90],
+        })
+    out.sort(key=lambda r: -r["stories"])
+    majors_order = list(pd.Series([r["major"] for r in out]).drop_duplicates())
+    coverage = round(len(st) / len(stories), 4)
+    return {"subs": out, "coverage": coverage, "labeled": int(len(st)),
+            "majors_order": majors_order}
+
+
 def discords(daily, m=14, top=5):
     v = daily["articles"].to_numpy(dtype=float)
     n = len(v) - m + 1
@@ -323,6 +359,7 @@ def build(site: bool):
         "archetypes": archetypes(curves),
         "discords": discords(daily),
         "stats": core_stats(df, per_day),
+        "categories": categories(per_day, stories),
     }
     out = HERE / "site" / "data.json"
     out.parent.mkdir(exist_ok=True)

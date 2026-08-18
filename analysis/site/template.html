@@ -129,6 +129,7 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
     <button role="tab" data-tab="lifetimes" aria-selected="false">Lifetimes</button>
     <button role="tab" data-tab="archetypes" aria-selected="false">Archetypes</button>
     <button role="tab" data-tab="stats" aria-selected="false">Stats</button>
+    <button role="tab" data-tab="categories" aria-selected="false">Categories</button>
   </nav>
 </header>
 <main>
@@ -181,6 +182,11 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
     14-day windows farthest from every other window in five years.</p>
     <div class="discord-row" id="discords"></div>
   </section>
+  <section class="panel" id="panel-categories" hidden>
+    <p class="panel-note" id="cat-note"></p>
+    <div class="chart-box ledger-wrap"><div id="cat-table"></div></div>
+  </section>
+
   <section class="panel" id="panel-stats" hidden>
     <p class="panel-note"><b>Definitions.</b> A <b>run</b> is one pipeline execution
     (median 5 per day). An <b>observation</b> is a story seen in one run. <b>Distinct</b>
@@ -235,7 +241,7 @@ document.getElementById("colophon").textContent =
 
 /* ---------- tabs ---------- */
 const rendered = {};
-const RENDERERS = { timeline: renderTimeline, ledger: renderLedger, lifetimes: renderLifetimes, archetypes: renderArchetypes, stats: renderStats };
+const RENDERERS = { timeline: renderTimeline, ledger: renderLedger, lifetimes: renderLifetimes, archetypes: renderArchetypes, stats: renderStats, categories: renderCategories };
 document.querySelectorAll("nav.tabs button").forEach((btn) => {
   btn.addEventListener("click", () => activate(btn.dataset.tab));
 });
@@ -468,6 +474,38 @@ function renderArchetypes() {
       .attr("d", d3.line().x((v, i) => sx(i)).y((v) => sy(v)).curve(d3.curveMonotoneX))
       .style("fill", "none").style("stroke", "var(--s8)").style("stroke-width", 1.8);
   }
+}
+
+/* ---------- categories ---------- */
+function renderCategories() {
+  const C = D.categories;
+  const note = document.getElementById("cat-note");
+  if (!C) {
+    note.textContent = "Categories need story_labels.parquet — run the classification and rebuild.";
+    return;
+  }
+  note.innerHTML = `Every story classified into a 3-level taxonomy (major → sub-category → meta
+    tags) by Claude Haiku on Bedrock, validated against a ${'Fable'}-labeled golden set.
+    <b>${C.labeled.toLocaleString()}</b> stories labeled (${(100 * C.coverage).toFixed(1)}% of the archive).
+    Ranked by distinct stories.`;
+  const majorColor = Object.fromEntries(C.majors_order.map((mj, i) => [mj, `var(--s${(i % 8) + 1})`]));
+  const maxShare = Math.max(...C.subs.map((s) => s.share));
+  document.getElementById("cat-table").innerHTML = `
+    <table class="ledger"><thead><tr>
+      <th>Sub-category</th><th>Major</th><th>Stories</th><th>Share</th>
+      <th>Story-days</th><th>Median distinct/day</th><th>Top tags</th><th>Exemplar story</th></tr></thead>
+    <tbody>${C.subs.map((s) => `
+      <tr><td class="headline">${s.sub}</td>
+      <td><span class="sec-chip"><span class="sw" style="background:${majorColor[s.major]}"></span>${s.major}</span></td>
+      <td class="num">${s.stories.toLocaleString()}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div style="height:8px;border-radius:4px;background:${majorColor[s.major]};width:${Math.max(2, Math.round(110 * s.share / maxShare))}px"></div>
+        <span style="font-variant-numeric:tabular-nums">${(100 * s.share).toFixed(1)}%</span></div></td>
+      <td class="num">${s.story_days.toLocaleString()}</td>
+      <td class="num">${s.median_per_day}</td>
+      <td class="why">${s.top_tags.join(", ")}</td>
+      <td class="why">${s.exemplar}</td></tr>`).join("")}
+    </tbody></table>`;
 }
 
 /* ---------- stats ---------- */
