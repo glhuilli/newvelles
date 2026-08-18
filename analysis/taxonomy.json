@@ -1,0 +1,127 @@
+{
+  "version": "1.0",
+  "notes": "Seeded from IPTC Media Topics, adapted to the Newvelles corpus (US-leaning general news, 2021-2026). Every story gets exactly one major and one sub. 'other-*' subs are the escape valve; a healthy classification puts <8% of stories there.",
+  "majors": {
+    "Politics & government": {
+      "elections": "Campaigns, primaries, election nights, results, voting logistics",
+      "white-house": "The president, the administration, executive orders, cabinet",
+      "congress": "House/Senate action, bills, hearings, shutdown fights, confirmations",
+      "courts-law": "Supreme Court and appellate rulings, judicial nominations, legal doctrine",
+      "policy-regulation": "Agency rules, public policy debates, regulation and deregulation",
+      "state-local-politics": "Governors, mayors, state legislatures, ballot measures",
+      "other-politics": "Political stories fitting no sub above"
+    },
+    "Conflict & security": {
+      "war": "Interstate war and large-scale armed conflict, invasions, offensives, ceasefires",
+      "terrorism": "Terror attacks, plots, counterterrorism",
+      "military-defense": "Armed forces, weapons programs, defense budgets, exercises",
+      "diplomacy-geopolitics": "Summits, treaties, sanctions, alliances, international tension short of war",
+      "unrest-protests": "Protests, riots, civil unrest, coups",
+      "other-conflict": "Security stories fitting no sub above"
+    },
+    "Crime & justice": {
+      "violent-crime": "Homicide, assault, kidnapping (non-shooting or unspecified)",
+      "shooting": "Gun violence incidents, mass shootings",
+      "trials-courts": "Criminal and civil trials, verdicts, sentencing, high-profile litigation",
+      "policing": "Police conduct, arrests, investigations, law enforcement policy",
+      "fraud-corruption": "Fraud, corruption, white-collar crime, scandals with legal exposure",
+      "immigration-enforcement": "Border enforcement, deportation, immigration courts and policy",
+      "other-crime": "Crime stories fitting no sub above"
+    },
+    "Economy & work": {
+      "job-market": "Employment, layoffs, hiring, wages, labor data",
+      "inflation-prices": "Inflation, cost of living, prices of goods and services",
+      "housing": "Housing market, rents, mortgages, real estate, homelessness",
+      "labor-unions": "Strikes, union drives, labor disputes",
+      "trade-supply-chain": "Tariffs, trade deals, imports/exports, supply chains",
+      "corporate": "Company news: earnings, leadership, strategy, layoff announcements framed as company events",
+      "other-economy": "Economic stories fitting no sub above"
+    },
+    "Markets & finance": {
+      "stock-market": "Equities, indexes, market moves, IPOs",
+      "crypto": "Cryptocurrency, exchanges, digital assets",
+      "banking-finance": "Banks, credit, interest rates as market events, financial stability",
+      "personal-finance": "Consumer money advice, retirement, taxes for individuals",
+      "other-markets": "Market stories fitting no sub above"
+    },
+    "Tech": {
+      "ai": "Artificial intelligence: models, companies, policy, adoption",
+      "big-tech": "Platform companies: product, antitrust, moderation, corporate moves",
+      "social-media": "Social networks as story subject, creator economy, online culture",
+      "cybersecurity": "Hacks, breaches, ransomware, cyber policy",
+      "gadgets-consumer-tech": "Devices, launches, reviews, consumer software",
+      "other-tech": "Tech stories fitting no sub above"
+    },
+    "Science & space": {
+      "space": "Launches, missions, astronomy, space industry",
+      "research": "Scientific findings and studies outside health",
+      "archaeology-history": "Discoveries about the past",
+      "other-science": "Science stories fitting no sub above"
+    },
+    "Health": {
+      "pandemic-outbreaks": "COVID and other infectious-disease waves, vaccines in outbreak context",
+      "medicine-drugs": "Treatments, drugs, approvals, medical practice",
+      "mental-health": "Mental health, addiction",
+      "public-health-policy": "Health systems, insurance, health agencies and policy",
+      "other-health": "Health stories fitting no sub above"
+    },
+    "Climate & environment": {
+      "extreme-weather": "Storms, heat waves, floods, weather events as news",
+      "disasters-accidents": "Earthquakes, wildfires as events, crashes, industrial accidents",
+      "climate-policy-science": "Climate change findings, policy, activism",
+      "energy": "Oil and gas, renewables, power grid, energy prices as sector news",
+      "other-environment": "Environment stories fitting no sub above"
+    },
+    "Sports": {
+      "football-nfl": "American football",
+      "basketball": "NBA, WNBA, college basketball",
+      "baseball": "MLB and baseball",
+      "soccer": "Global football, World Cup, MLS",
+      "olympics": "Olympic games and olympic sports in games context",
+      "other-sports": "All other sports: tennis, golf, hockey, combat, motorsport, college"
+    },
+    "Culture & entertainment": {
+      "movies": "Film industry, releases, box office, awards",
+      "tv-streaming": "Television and streaming shows and platforms",
+      "music": "Musicians, releases, tours, music industry",
+      "celebrities": "Celebrity news not centered on a work: relationships, deaths, controversies",
+      "media-industry": "News media, publishing, journalism as subject",
+      "arts-books": "Books, visual arts, theater, cultural institutions",
+      "other-culture": "Cultural stories fitting no sub above"
+    },
+    "Everyday life": {
+      "lifestyle-wellness": "Advice, how-to, wellness, relationships, work-life",
+      "food-travel": "Food, restaurants, travel, tourism",
+      "shopping-deals": "Product roundups, sales, deals, consumer picks",
+      "human-interest": "Feature stories about people, animals, oddities, viral moments",
+      "obituaries": "Deaths of notable people as the story",
+      "other-everyday": "Everyday stories fitting no sub above"
+    },
+    "US news (general)": {
+      "local-incidents": "Local news events without a clearer category: fires, closures, community",
+      "transportation": "Aviation, transit, roads, travel disruptions",
+      "education": "Schools, universities, students, education policy",
+      "religion": "Religious institutions and communities",
+      "other-general": "Stories that resist every other category"
+    }
+  },
+  "section_mapping": {
+    "Politics & government": "US politics",
+    "Conflict & security": "World",
+    "Crime & justice": "General",
+    "Economy & work": "Markets",
+    "Markets & finance": "Markets",
+    "Tech": "Tech",
+    "Science & space": "Science",
+    "Health": "Science",
+    "Climate & environment": "General",
+    "Sports": "General",
+    "Culture & entertainment": "General",
+    "Everyday life": "General",
+    "US news (general)": "Local"
+  },
+  "meta_tags": {
+    "definition": "2-6 lowercase tags per story. Two kinds: (1) salient named entities from the title (people, orgs, places, events); (2) group keywords more granular than the sub-category that cluster related stories even when the word is absent from the title (e.g. 'trial', 'world cup', 'immigration crisis', 'layoffs', 'ceasefire', 'recall').",
+    "style": "lowercase, singular where natural, multi-word allowed, no hashtags, no duplicates of the sub-category name"
+  }
+}

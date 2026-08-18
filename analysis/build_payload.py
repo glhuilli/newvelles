@@ -200,6 +200,73 @@ def archetypes(curves, k=5, members_per=12):
     return {"clusters": clusters, "silhouette": round(sil, 3), "n": int(len(X))}
 
 
+def _msummary(series):
+    s = pd.Series(series)
+    if s.empty:
+        return None
+    return {"median": round(float(s.median()), 1),
+            "p25": round(float(s.quantile(0.25)), 1),
+            "p75": round(float(s.quantile(0.75)), 1)}
+
+
+def core_stats(df, per_day):
+    """The core-stats matrix at run/day/week grain, plus the top-10 source table.
+
+    Definitions: an observation is one (run, story) row; distinct counts unique
+    story_uids in the window; new counts stories on their first_seen day.
+    """
+    if "outlets" not in df.columns:
+        return None
+    first_seen = df.groupby("story_uid")["day"].min()
+    d = per_day.copy()
+    d["week"] = pd.to_datetime(d["day"]).dt.to_period("W-SUN").dt.start_time.dt.strftime("%Y-%m-%d")
+    dfw = df.merge(d[["story_uid", "day", "week"]].drop_duplicates(), on=["story_uid", "day"])
+
+    def grain(g_obs, g_distinct, g_new):
+        return {"observations": _msummary(g_obs), "distinct": _msummary(g_distinct),
+                "new": _msummary(g_new)}
+
+    per_run = df.groupby("run_ts")["story_uid"]
+    new_day = first_seen.value_counts()
+    new_week = (pd.Series(pd.to_datetime(first_seen.values))
+                .dt.to_period("W-SUN").dt.start_time.dt.strftime("%Y-%m-%d").value_counts())
+    first_run = df.groupby("story_uid")["run_ts"].min().value_counts()
+    grains = {
+        "run": grain(per_run.size(), per_run.nunique(),
+                     first_run.reindex(df["run_ts"].unique(), fill_value=0)),
+        "day": grain(df.groupby("day").size(), df.groupby("day")["story_uid"].nunique(),
+                     new_day.reindex(df["day"].unique(), fill_value=0)),
+        "week": grain(dfw.groupby("week").size(), dfw.groupby("week")["story_uid"].nunique(),
+                      new_week),
+    }
+
+    # per-source: explode outlets on the per-(story, day) strongest observation
+    rows = df.loc[df.groupby(["story_uid", "day"])["outlet_count"].idxmax(),
+                  ["story_uid", "day", "run_ts", "outlets"]]
+    rows = rows.assign(outlet=rows["outlets"].apply(
+        lambda j: [o.get("outlet") for o in json.loads(j)])).explode("outlet").dropna(subset=["outlet"])
+    per_src_day = rows.groupby(["outlet", "day"])["story_uid"].nunique()
+    src_day_medians = per_src_day.groupby("outlet").median()
+    grains["per_source"] = {
+        "distinct_per_day": _msummary(src_day_medians),
+        "note": "median across sources of each source's median distinct stories per active day",
+    }
+
+    totals = rows.groupby("outlet").agg(stories=("story_uid", "nunique"),
+                                        obs_days=("story_uid", "size"),
+                                        days=("day", "nunique"))
+    all_story_days = int(totals["obs_days"].sum())
+    top = totals.nlargest(10, "stories")
+    top_sources = [{
+        "source": src, "stories": int(r["stories"]), "story_days": int(r["obs_days"]),
+        "active_days": int(r["days"]),
+        "median_per_day": round(float(per_src_day.loc[src].median()), 1),
+        "share": round(float(r["obs_days"]) / all_story_days, 4),
+    } for src, r in top.iterrows()]
+    return {"grains": grains, "top_sources": top_sources,
+            "n_sources": int(len(totals))}
+
+
 def discords(daily, m=14, top=5):
     v = daily["articles"].to_numpy(dtype=float)
     n = len(v) - m + 1
@@ -255,6 +322,7 @@ def build(site: bool):
         "lifetimes": lifetimes(stories),
         "archetypes": archetypes(curves),
         "discords": discords(daily),
+        "stats": core_stats(df, per_day),
     }
     out = HERE / "site" / "data.json"
     out.parent.mkdir(exist_ok=True)

@@ -35,7 +35,7 @@ from newvelles.models.momentum import _jaccard, _signature  # noqa: E402
 
 JACCARD_THRESHOLD = 0.4
 STORY_FIELDS = ("headline", "section", "kind", "outlet_count", "article_count",
-                "keywords", "entities")
+                "keywords", "entities", "outlets")
 
 
 def run_ts_of(path: Path) -> str:
@@ -102,7 +102,7 @@ def write_parquet(rows: Iterator[Tuple[str, str, dict]], out: Path) -> int:
 
     cols: dict = {k: [] for k in
                   ("run_ts", "day", "story_uid", "headline", "section", "kind",
-                   "outlet_count", "article_count", "keywords", "entities")}
+                   "outlet_count", "article_count", "keywords", "entities", "outlets")}
     for run_ts, day, s in rows:
         cols["run_ts"].append(run_ts)
         cols["day"].append(day)
@@ -114,6 +114,7 @@ def write_parquet(rows: Iterator[Tuple[str, str, dict]], out: Path) -> int:
         cols["article_count"].append(int(s.get("article_count") or 0))
         cols["keywords"].append(json.dumps(s.get("keywords") or []))
         cols["entities"].append(json.dumps(s.get("entities") or []))
+        cols["outlets"].append(json.dumps(s.get("outlets") or []))
     table = pa.table(cols)
     out.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(table, out, compression="zstd")
@@ -124,7 +125,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--archive-dir", default="archive")
     ap.add_argument("--out", default="analysis/data/stories.parquet")
-    ap.add_argument("--cache", default="analysis/cache/runs")
+    ap.add_argument("--cache", default="analysis/cache/runs_v2")
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--since", default="")
     ap.add_argument("--until", default="9999")
