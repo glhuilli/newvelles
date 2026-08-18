@@ -76,11 +76,15 @@ def group_similar_titles(
     return groups
 
 
-_GUARD_ENTITY_LABELS = {"PERSON", "ORG"}
+# Broad label set on purpose: en_core_web_sm often mislabels people
+# ("Tupac Shakur" -> NORP, "Tupac Shakur's" -> GPE), so a narrow PERSON/ORG
+# guard would miss them. Extra tokens only relax the guard back to
+# similarity-only merging — they can never block a legitimate merge.
+_GUARD_ENTITY_LABELS = {"PERSON", "ORG", "GPE", "LOC", "NORP", "FAC", "EVENT"}
 
 
 def _entity_tokens(titles: List[str]) -> Set[str]:
-    """Word-level PERSON/ORG entity tokens for a group of titles."""
+    """Word-level named-entity tokens for a group of titles."""
     tokens: Set[str] = set()
     for title in titles:
         for ent in NLP(title).ents:

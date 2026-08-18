@@ -390,15 +390,22 @@ class TestConstants:
 
 
 class TestEntityGuardHelpers:
-    def test_entity_tokens_extracts_person_word_tokens(self):
+    def test_entity_tokens_extracts_name_word_tokens(self):
+        """Word-level tokens, even when en_core_web_sm mislabels the person
+        ("Tupac Shakur" is tagged NORP) — the broad label set must catch it."""
         from newvelles.models.grouping import _entity_tokens
         tokens = _entity_tokens(["Opening statements begin in Tupac Shakur murder trial"])
         assert "tupac" in tokens and "shakur" in tokens
 
-    def test_entity_tokens_ignores_places(self):
+    def test_entity_tokens_handles_possessives(self):
         from newvelles.models.grouping import _entity_tokens
-        tokens = _entity_tokens(["Hurricane nears Florida coast"])
-        assert "florida" not in tokens
+        tokens = _entity_tokens(["Luigi Mangione's state murder trial postponed"])
+        assert "luigi" in tokens and "mangione" in tokens
+        assert "'s" not in tokens
+
+    def test_entity_tokens_empty_for_entity_less_title(self):
+        from newvelles.models.grouping import _entity_tokens
+        assert _entity_tokens(["Opening statements begin in murder trial"]) == set()
 
     def test_entities_compatible_requires_overlap_when_both_present(self):
         from newvelles.models.grouping import _entities_compatible
