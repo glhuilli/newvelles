@@ -417,3 +417,81 @@ class TestEntityGuardHelpers:
         assert _entities_compatible(set(), {"luigi"}) is True
         assert _entities_compatible({"tupac"}, set()) is True
         assert _entities_compatible(set(), set()) is True
+
+
+class TestEntityGuardedClustering:
+    """Regression: three concurrent murder trials (Tupac Shakur, Luigi Mangione,
+    Lindsay Clancy) share courtroom vocabulary that becomes high-IDF against a
+    normal news corpus, which merged them into one top-level group in production
+    (2026-08-17). The entity guard must keep them separate."""
+
+    TRIAL_TITLES = [
+        "Opening statements begin in Tupac Shakur murder trial in Las Vegas over 1996 killing",
+        "First witnesses speak in Tupac Shakur's long-awaited murder trial",
+        "Tupac Shakur murder trial: gang leader plotted killing to avenge beating of nephew, court hears",
+        "Tupac Shakur murder trial: Opening statements begin in Las Vegas over rapper's 1996 killing - WATCH LIVE",
+        "Mangione state murder trial postponed after federal guilty plea in CEO killing",
+        "Luigi Mangione's state murder trial postponed indefinitely amid double jeopardy fight",
+        "Luigi Mangione's New York murder trial adjourned until December over double jeopardy concerns",
+        "Key moments from the Lindsay Clancy trial as the defense starts to make its case",
+        "Prosecution rests in the murder trial of Lindsay Clancy. Defense begins calling witnesses",
+    ]
+    # Unrelated topic clusters with no courtroom vocabulary: their role is to
+    # push corpus IDF so shared trial vocabulary becomes distinctive, which is
+    # the condition under which the false merge reproduces.
+    FILLER_TITLES = [
+        "Fed holds interest rates steady as inflation cools",
+        "Federal Reserve keeps interest rates unchanged amid cooling inflation",
+        "Interest rates on hold as Fed cites cooling inflation data",
+        "Hurricane strengthens to Category 4 as it nears Florida coast",
+        "Florida braces as hurricane strengthens to Category 4",
+        "Category 4 hurricane approaches Florida, evacuations ordered",
+        "Apple unveils new iPhone with AI camera features",
+        "New iPhone launch: Apple bets on AI camera",
+        "Apple's latest iPhone adds AI-powered camera tools",
+        "Lakers beat Celtics in overtime thriller",
+        "Celtics fall to Lakers in overtime",
+        "Lakers edge Celtics in dramatic overtime win",
+        "Oil prices surge after OPEC output cut",
+        "OPEC production cut sends oil prices higher",
+        "Crude oil jumps as OPEC trims output",
+        "SpaceX launches new crew to space station",
+        "SpaceX crew mission docks with space station",
+        "New SpaceX astronauts arrive at space station",
+        "Wildfires force evacuations in southern California hills",
+        "Southern California wildfires trigger evacuations",
+        "Evacuations ordered as wildfires spread in California",
+        "Congress passes stopgap funding bill to avert shutdown",
+        "Government shutdown averted as Congress passes funding bill",
+        "Stopgap funding bill clears Congress ahead of deadline",
+    ]
+
+    @staticmethod
+    def _defendant(title):
+        for name in ("tupac", "mangione", "clancy"):
+            if name in title.lower():
+                return name
+        return None
+
+    def test_distinct_trials_stay_in_distinct_top_level_clusters(self):
+        titles = self.TRIAL_TITLES + self.FILLER_TITLES
+        groups = group_similar_titles(titles)
+        top_level = cluster_groups(groups, titles)
+
+        for cluster in top_level:
+            defendants = {
+                self._defendant(titles[i])
+                for group in cluster for i in group
+                if self._defendant(titles[i])
+            }
+            assert len(defendants) <= 1, (
+                f"top-level cluster mixes distinct trials: {defendants}"
+            )
+
+    def test_same_defendant_groups_may_still_merge(self):
+        """The guard must not block merges within one real story: both Mangione
+        subgroups share entity tokens, so similarity alone decides, as before."""
+        from newvelles.models.grouping import _entities_compatible, _entity_tokens
+        group_a = _entity_tokens(self.TRIAL_TITLES[4:6])
+        group_b = _entity_tokens([self.TRIAL_TITLES[6]])
+        assert _entities_compatible(group_a, group_b) is True

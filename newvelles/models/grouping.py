@@ -135,6 +135,12 @@ def cluster_groups(
     tfidf_matrix = vectorizer.fit_transform(group_representations)
     similarity_matrix = cosine_similarity(tfidf_matrix)
 
+    # Entity guard: TF-IDF at this level rewards shared event-type vocabulary
+    # (e.g. "murder trial", "opening statements"), which merges unrelated
+    # stories about the same kind of event. Requiring named-entity overlap
+    # keeps "similar words" from being mistaken for "same story".
+    entity_sets = [_entity_tokens([titles[i] for i in group]) for group in groups]
+
     top_level_groups = []
     used_groups = set()
 
@@ -149,7 +155,8 @@ def cluster_groups(
             if j in used_groups:
                 continue
 
-            if similarity_matrix[i, j] >= context_similarity_threshold:
+            if (similarity_matrix[i, j] >= context_similarity_threshold
+                    and _entities_compatible(entity_sets[i], entity_sets[j])):
                 top_level_group.append(groups[j])
                 used_groups.add(j)
 
