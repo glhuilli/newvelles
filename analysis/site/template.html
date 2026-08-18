@@ -372,7 +372,7 @@ function renderLifetimes() {
   const L = D.lifetimes;
   document.getElementById("lifetimes-title").textContent =
     `${L.shown.toLocaleString()} of ${L.total.toLocaleString()} stories drawn ` +
-    `(every story with span ≥ 7d or peak ≥ 10 outlets; the 1–3 day mass is sampled)`;
+    `(long-running and high-coverage stories kept preferentially; the rest sampled)`;
   const W = 1180, H = 460, M = { l: 52, r: 14, t: 12, b: 26 };
   const svg = svgIn("#lifetimes", W, H);
   const x = d3.scaleTime().domain([T0, T1]).range([M.l, W - M.r]);

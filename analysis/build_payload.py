@@ -126,10 +126,14 @@ def annotations(led, n=15, min_gap_days=45):
     return sorted(chosen, key=lambda c: c["d"])
 
 
-def lifetimes(stories, rng, base_n=3000, named_n=12):
+def lifetimes(stories, base_n=3200, named_n=12):
     keep = stories[(stories["span"] >= 7) | (stories["peak_outlets"] >= 10)]
-    rest = stories.drop(keep.index)
-    sample = rest.sample(n=min(base_n - len(keep), len(rest)), random_state=7) if len(rest) else rest
+    if len(keep) > 2600:
+        top = keep.nlargest(600, ["peak_outlets", "span"])
+        keep = pd.concat([top, keep.drop(top.index).sample(2000, random_state=7)])
+    rest = stories.drop(stories.index.intersection(keep.index), errors="ignore")
+    n_fill = max(0, base_n - len(keep))
+    sample = rest.sample(n=min(n_fill, len(rest)), random_state=7) if len(rest) else rest
     base = pd.concat([keep, sample])
     named = stories.assign(score=stories["span"] * stories["peak_outlets"]).nlargest(named_n, "score")
     return {
@@ -239,7 +243,7 @@ def build(site: bool):
                    for _, r in wk.iterrows()],
         "ledger": led,
         "annotations": annotations(led),
-        "lifetimes": lifetimes(stories, None),
+        "lifetimes": lifetimes(stories),
         "archetypes": archetypes(curves),
         "discords": discords(daily),
     }
