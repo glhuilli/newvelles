@@ -14,7 +14,25 @@ Standalone workspace for the historical analysis of the news archive
 
 | File | What it is |
 |---|---|
-| `visualization_options.html` | Self-contained gallery of nine candidate visualizations for the 5-year archive, each as a working D3 sketch over **synthetic data**. D3 v7 is inlined — the file makes zero network requests. Open it directly in a browser. |
+| `visualization_options.html` | Self-contained gallery of nine candidate visualizations, each as a working D3 sketch over **synthetic data**. The design exploration that picked the dashboard below. |
+| `build_payload.py` | Aggregates `data/stories.parquet` into the dashboard payload (daily/weekly series, ledger, lifetimes, archetype k-means, matrix-profile discords) and builds the site. Runs in `analysis/.venv`. |
+| `site/template.html` | Dashboard template (tokens, tabs, all chart code). `/*__D3__*/` and `/*__DATA__*/` markers are filled at build time. |
+| `site/index.html` | The built dashboard — one self-contained file over **real archive data**. This is the file to export to glhuilli.github.io. |
+| `vendor/d3.min.js` | D3 v7.9.0, vendored for offline builds. |
+
+## Pipeline (real data)
+
+```
+make pull-archive                                   # 1. mirror S3 archive (resumable)
+source .python/newvelles/bin/activate               # 2. main venv (build_stories + spaCy)
+pip install pyarrow                                 #    ad hoc, NOT a deployment dep
+python scripts/scan_archive_sources.py              # 3. confirm sources.json coverage
+python scripts/backfill_history.py --workers 10     # 4. archive -> stories.parquet (resumable)
+analysis/.venv/bin/python analysis/build_payload.py --site   # 5. payload + site/index.html
+```
+
+Export = copy `analysis/site/index.html` anywhere; it has zero external
+dependencies.
 
 ## The nine options (summary)
 
