@@ -134,11 +134,12 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
 </header>
 <main>
   <section class="panel" id="panel-timeline">
-    <p class="panel-note">Brush the strip to zoom. The river below shows weekly story
-    counts per section; <b>share</b> re-normalizes each week to 100%. Flags mark the
-    stories that broke the cycle. <b>Honesty note:</b> level shifts (notably mid-2026)
-    reflect pipeline changes — more feeds, new story merging — not news volume; compare
-    shapes within an era, or use <b>share</b> across eras.</p>
+    <p class="panel-note">Brush the strip to zoom. The river below shows weekly distinct
+    stories per <b>major category</b> (3-level taxonomy, top 7 + Other); <b>share</b>
+    re-normalizes each week to 100%. Flags mark the stories that broke the cycle.
+    <b>Honesty note:</b> level shifts (notably mid-2026) reflect pipeline changes — more
+    feeds, new story merging — not news volume; compare shapes within an era, or use
+    <b>share</b> across eras.</p>
     <div class="chart-box" style="margin-bottom:12px">
       <div id="strip"></div>
     </div>
@@ -303,7 +304,7 @@ function renderStream() {
   const rows = weekly.filter((r) => r.d >= d3.timeMonday.floor(a) && r.d <= b);
   if (rows.length < 2) return;
   document.getElementById("stream-title").textContent =
-    `Stories per week by section · ${fmtMo(rows[0].d)} – ${fmtMo(rows[rows.length - 1].d)}`;
+    `Distinct stories per week by major category · ${fmtMo(rows[0].d)} – ${fmtMo(rows[rows.length - 1].d)}`;
   const svg = svgIn("#stream", TL.W, TL.HD);
   const stack = d3.stack().keys(SECTIONS)
     .offset(streamMode === "wiggle" ? d3.stackOffsetWiggle : d3.stackOffsetExpand)
@@ -422,7 +423,7 @@ function renderLifetimes() {
     .attr("cx", (p) => x(P(p.d))).attr("cy", (p) => y(Math.max(1, p.span))).attr("r", (p) => r(p.peak))
     .style("fill", "var(--s1)").style("stroke", "var(--surface)").style("stroke-width", 2)
     .on("mousemove", (ev, p) => showTip(`<div class="t-strong">${p.label}</div>
-      <div>ran ${p.span}d · peak ${p.peak} outlets</div>`, ev))
+      <div>ran ${p.span}d · peak ${p.peak} outlets${p.cat ? ` · ${p.cat}` : ""}</div>`, ev))
     .on("mouseleave", hideTip);
   svg.append("g").selectAll("text.nl").data(L.named).join("text")
     .attr("x", (p) => { const cx = x(P(p.d)); return cx > W * 0.75 ? cx - r(p.peak) - 5 : cx + r(p.peak) + 5; })

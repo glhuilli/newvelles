@@ -56,10 +56,19 @@ def daily_series(df):
 
 
 def weekly_sections(per_day):
+    """Weekly distinct stories per group: taxonomy majors when labels exist,
+    legacy sections otherwise. Top 7 groups + Other (palette ceiling)."""
     d = per_day.copy()
+    labels_path = HERE / "data" / "story_labels.parquet"
+    if labels_path.exists():
+        lab = pd.read_parquet(labels_path)
+        d = d.merge(lab[["story_uid", "major"]], on="story_uid", how="left")
+        d["group"] = d["major"].fillna("Other")
+    else:
+        d["group"] = d["section"]
     d["week"] = pd.to_datetime(d["day"]).dt.to_period("W-SUN").dt.start_time.dt.strftime("%Y-%m-%d")
-    top = d.groupby("section")["story_uid"].nunique().nlargest(TOP_SECTIONS).index.tolist()
-    d["sec"] = d["section"].where(d["section"].isin(top), "Other")
+    top = d.groupby("group")["story_uid"].nunique().nlargest(TOP_SECTIONS).index.tolist()
+    d["sec"] = d["group"].where(d["group"].isin(top), "Other")
     wk = (d.groupby(["week", "sec"])["story_uid"].nunique().unstack(fill_value=0)
           .reset_index())
     order = [s for s in top if s in wk.columns] + (["Other"] if "Other" in wk.columns else [])
@@ -150,11 +159,13 @@ def lifetimes(stories, base_n=3200, named_n=12):
     sample = rest.sample(n=min(n_fill, len(rest)), random_state=7) if len(rest) else rest
     base = pd.concat([keep, sample])
     named = stories.assign(score=stories["span"] * stories["peak_outlets"]).nlargest(named_n, "score")
+    subs = _label_map()
     return {
         "base": [{"d": r["first"], "span": int(r["span"]), "peak": int(r["peak_outlets"])}
                  for _, r in base.iterrows()],
         "named": [{"d": r["first"], "span": int(r["span"]), "peak": int(r["peak_outlets"]),
-                   "label": r["headline"][:40]} for _, r in named.iterrows()],
+                   "label": r["headline"][:40],
+                   "cat": subs.get(r["story_uid"], "")} for _, r in named.iterrows()],
         "total": int(len(stories)),
         "shown": int(len(base)),
     }
