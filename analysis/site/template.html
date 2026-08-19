@@ -132,6 +132,7 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
     <button role="tab" data-tab="stats" aria-selected="false">Stats</button>
     <button role="tab" data-tab="categories" aria-selected="false">Categories</button>
     <button role="tab" data-tab="topstories" aria-selected="false">Top stories</button>
+    <button role="tab" data-tab="learnings" aria-selected="false">Learnings</button>
   </nav>
 </header>
 <main>
@@ -147,10 +148,13 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
       <div id="strip"></div>
     </div>
     <div class="chart-box">
+      <div id="drill-title" hidden
+        style="font-family:'Iowan Old Style',Palatino,Georgia,serif;font-size:21px;font-weight:600;margin-bottom:2px"></div>
       <div class="box-head">
         <span class="box-title" id="stream-title">Stories per week by section</span>
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
           <span class="legend" id="stream-legend"></span>
+          <div class="controls" id="drill-mode" hidden></div>
           <div class="controls">
             <button id="stream-back" hidden>← all categories</button>
           </div>
@@ -216,6 +220,86 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
       <div id="stats-sources"></div>
     </div>
   </section>
+  <section class="panel" id="panel-learnings" hidden>
+    <div class="discord-title" style="margin-top:0">Classifying 114,927 stories: four routes vs one golden set</div>
+    <p class="panel-note">Every story carries a 3-level classification (13 major categories →
+    ~60 sub-categories → open meta tags; taxonomy seeded from IPTC Media Topics). The
+    reference is a <b>golden set of 4,020 stories</b> — stratified by year, section, and
+    story length — labeled in-session by <b>Claude Fable 5</b> (frontier model, batch-of-250
+    structured labeling; 0 invalid lines; 6.4% fell to "other-*" escape subs, under the 8%
+    design bar). Every route below is scored as agreement with those labels.</p>
+    <div class="chart-box" style="margin-bottom:12px">
+      <table class="ledger"><thead><tr>
+        <th>Route</th><th>n scored</th><th>Major</th><th>Sub</th><th>Sub | major ✓</th>
+        <th>Tags any-overlap</th><th>Tags Jaccard</th><th>Cost / notes</th></tr></thead>
+      <tbody>
+        <tr><td class="headline">Claude Haiku 4.5 (Bedrock) — production route</td>
+          <td class="num">3,704</td><td class="num"><b>0.823</b></td><td class="num"><b>0.662</b></td>
+          <td class="num">0.793</td><td class="num"><b>0.975</b></td><td class="num"><b>0.495</b></td>
+          <td class="why">~$33 for the full corpus, ~1.5 h batched (150 stories/call)</td></tr>
+        <tr><td class="headline">MiniLM embeddings + logistic regression</td>
+          <td class="num">1,005</td><td class="num">0.778</td><td class="num">0.631</td>
+          <td class="num">0.734</td><td class="num">0.644</td><td class="num">0.203</td>
+          <td class="why">trained on 3,015 golden rows; tags via k-NN transfer (open vocabulary is not classifiable)</td></tr>
+        <tr><td class="headline">qwen3:8b (local, ollama)</td>
+          <td class="num">2,605</td><td class="num">0.427 <span style="color:var(--muted)">(0.595 case-normalized)</span></td>
+          <td class="num">0.262</td><td class="num">0.441</td><td class="num">0.654</td><td class="num">0.193</td>
+          <td class="why">only 64.8% of output lines parsed as valid JSON; frequent index misalignment</td></tr>
+      </tbody></table>
+    </div>
+    <p class="panel-note"><b>What the numbers taught us.</b>
+    (1) <b>Meta tags are the genuinely generative part</b>: the LLM writes "immigration
+    crisis" without those words in the title; a classifier can only inherit neighbors'
+    tags — hence 0.50 vs 0.20 Jaccard, the widest gap in the table.
+    (2) <b>Sub-category disagreement is often boundary fuzziness, not error</b>: the trained
+    model and Haiku make the <i>same</i> confusions (Economy↔Markets, Crime↔Politics
+    trials). Reviewing top divergences found one systematic split — Haiku classifies by
+    topical domain, the golden set by story <i>function</i> (a betting-promo roundup is
+    shopping-deals, not football) — now codified as taxonomy v1.1 boundary rules.
+    (3) <b>The local 8B model fails structurally before it fails semantically</b>: a third
+    of its output wasn't parseable JSON, and its top "confusions" were lowercased category
+    names. (4) A manual review of the 200 per-category top stories produced 49 label
+    overrides (~6% of reviewed rows — consistent with 0.82 major agreement).</p>
+
+    <div class="discord-title">Ranking importance: five functions, one survivor</div>
+    <p class="panel-note">Candidate scores built from per-story features: days reported,
+    distinct outlets over the story's life, total articles, and broke-to-peak distance —
+    each era-normalized against the year's median, so pipeline growth (more feeds in
+    2026) can't masquerade as importance.</p>
+    <div class="chart-box" style="margin-bottom:12px">
+      <table class="ledger"><thead><tr>
+        <th>Function</th><th>Definition</th><th>Spearman vs F1</th><th>Why it loses</th></tr></thead>
+      <tbody>
+        <tr><td class="headline">F1 · era-relative peak outlets — <b>in use</b></td>
+          <td class="why">peak outlet count ÷ year median</td><td class="num">1.00</td>
+          <td class="why">it doesn't: outlet concentration at peak is the one signal robust to
+          listicles, identity fragmentation, and era feed-count</td></tr>
+        <tr><td class="headline">F5 · burst × legs</td>
+          <td class="why">F1 × persistence × build-up bonus</td><td class="num">0.96</td>
+          <td class="why">rewards fragmented multi-day follow-ups; a weather story cracked
+          Culture's top 10</td></tr>
+        <tr><td class="headline">F3 · breadth × persistence</td>
+          <td class="why">total outlets × log days</td><td class="num">0.89</td>
+          <td class="why">2026-biased; buried the Will Smith slap at #150 because its
+          follow-ups live under separate story identities</td></tr>
+        <tr><td class="headline">F4 · composite z-score</td>
+          <td class="why">mean z of peak, breadth, days, volume</td><td class="num">0.83</td>
+          <td class="why">inherits every failure mode below at once</td></tr>
+        <tr><td class="headline">F2 · total article volume</td>
+          <td class="why">Σ articles over the story's life</td><td class="num">0.60</td>
+          <td class="why">poisoned by recurring listicle series — "Best Movies to Stream
+          This Week" accumulates 114 articles and outranks real news</td></tr>
+      </tbody></table>
+    </div>
+    <p class="panel-note"><b>Selection design.</b> The visible quality problems were never
+    the score: an earlier per-year quota (4 × 5 years) silently consumed all 20 slots
+    before 2026 existed, and wide spacing rules forced weak stories in. Current design:
+    <b>top 25 by pure F1</b> (7-day spacing only, to dedupe follow-ups) as the main view,
+    with <b>5 per year</b> as the guaranteed-coverage alternate — visible in both the
+    Timeline drill (toggle beside the back button) and the Top stories tab. Landmark
+    events are the exception: a hand-curated list of 20, matched to archive stories by
+    search terms + date windows.</p>
+  </section>
 </main>
 <footer id="colophon"></footer>
 <div id="tooltip" role="status"></div>
@@ -256,7 +340,7 @@ document.getElementById("colophon").textContent =
 
 /* ---------- tabs ---------- */
 const rendered = {};
-const RENDERERS = { timeline: renderTimeline, ledger: renderLedger, lifetimes: renderLifetimes, archetypes: renderArchetypes, stats: renderStats, categories: renderCategories, topstories: renderTopStories };
+const RENDERERS = { timeline: renderTimeline, ledger: renderLedger, lifetimes: renderLifetimes, archetypes: renderArchetypes, stats: renderStats, categories: renderCategories, topstories: renderTopStories, learnings: () => {} };
 document.querySelectorAll("nav.tabs button").forEach((btn) => {
   btn.addEventListener("click", () => activate(btn.dataset.tab));
 });
@@ -272,6 +356,7 @@ function activate(tab) {
 const TL = { W: 1180, HS: 96, HD: 380, ML: 8, MR: 8 };
 let window0 = [d3.timeMonth.offset(T1, -18), T1];
 let drillTo = null;   // null = all majors; otherwise a major name
+let drillMode = "top";   // marker list in drill view: "top" | "top_yearly"
 
 /* numbered marker whose title expands in place on hover */
 function drawMarker(svg, cx, cy, item, hInner) {
@@ -357,10 +442,20 @@ function renderStream() {
   const allRows = view
     ? view.weekly.map((r) => ({ ...r, d: P(r.d) }))
     : weekly;
-  const markers = (view ? view.top.map((t) => ({ ...t, dd: P(t.d) })) : EVENTS)
+  const markers = (view ? view[drillMode].map((t) => ({ ...t, dd: P(t.d) })) : EVENTS)
     .filter((m) => m.dd >= a && m.dd <= b);
   const rows = allRows.filter((r) => r.d >= d3.timeMonday.floor(a) && r.d <= b);
   document.getElementById("stream-back").hidden = !drillTo;
+  const dt = document.getElementById("drill-title");
+  dt.hidden = !drillTo;
+  dt.textContent = drillTo || "";
+  const dm = document.getElementById("drill-mode");
+  dm.hidden = !drillTo;
+  d3.select(dm).selectAll("button")
+    .data([["top", "top 25"], ["top_yearly", "5 per year"]]).join("button")
+    .attr("aria-pressed", ([k]) => String(k === drillMode))
+    .text(([, label]) => label)
+    .on("click", (ev, [k]) => { drillMode = k; renderStream(); });
   d3.select("#stream-legend").selectAll("span.li").data(keys).join("span").attr("class", "li")
     .html((s) => `<span class="sw" style="background:${color[s]}"></span>${s}`);
   if (rows.length < 2) return;
