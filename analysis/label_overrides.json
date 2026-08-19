@@ -1,0 +1,250 @@
+{
+ "notes": "Manual corrections found reviewing the per-major top-story lists (Fable review, 2026-08-19). Applied on top of story_labels.parquet by build_payload.load_labels().",
+ "overrides": {
+  "h_5dd7bd871d": {
+   "major": "Conflict & security",
+   "sub": "war",
+   "note": "Russia launches military operation in Ukraine, Putin warns i"
+  },
+  "h_96752fa249": {
+   "major": "Conflict & security",
+   "sub": "terrorism",
+   "note": "Ukrainian authorities investigating Kyiv mass shooting as a "
+  },
+  "h_e3c895f71a": {
+   "major": "Conflict & security",
+   "sub": "terrorism",
+   "note": "Ukrainian authorities investigating Kyiv mass shooting as a "
+  },
+  "h_5a97af6208": {
+   "major": "Politics & government",
+   "sub": "policy-regulation",
+   "note": "Biden\u2019s tax hikes on high earners are unlikely to make it th"
+  },
+  "h_f1a22a4894": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_6ebe452df1": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_668ead6217": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_ba6f12ea6f": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_9d83b77d2b": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_62a04d06a7": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_a2e4cb0ae4": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_27d83f7f95": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_f303bae5fb": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_3ef11f3840": {
+   "major": "Conflict & security",
+   "sub": "military-defense",
+   "note": "Pentagon will send troops to border to boost security, airli"
+  },
+  "h_5a7492987a": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_5615cc323d": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_d090b75822": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_39b2f40732": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_5fb285b361": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_3c3c7b0a72": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_92383e02e3": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_b26ceb3ad4": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_3168ebba27": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_c142f71191": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_a741d7bbfa": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_a6ae6a1518": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_5de9656a6e": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_5ffb285a40": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_19f6d12402": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_68b3bc244d": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_04758ffb97": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_14f4237924": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_bbfdfd3c5b": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_ba586541af": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_df0f1b9f6c": {
+   "major": "Politics & government",
+   "sub": "other-politics",
+   "note": "Democrats go all in on unproven insider trading allegations "
+  },
+  "h_3221930fd1": {
+   "major": "Tech",
+   "sub": "big-tech",
+   "note": "Elon Musk suggests his SpaceX company will keep funding sate"
+  },
+  "h_dd643c556a": {
+   "major": "Tech",
+   "sub": "big-tech",
+   "note": "Elon Musk suggests his SpaceX company will keep funding sate"
+  },
+  "h_57198d5668": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "Biden escalates shutdown stare-down with hurricane aid, Afgh"
+  },
+  "h_3fbfc66781": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "Biden escalates shutdown stare-down with hurricane aid, Afgh"
+  },
+  "h_0c5ac65f12": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "Biden escalates shutdown stare-down with hurricane aid, Afgh"
+  },
+  "h_8466722dcf": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "Biden escalates shutdown stare-down with hurricane aid, Afgh"
+  },
+  "h_ff1d55337e": {
+   "major": "US news (general)",
+   "sub": "local-incidents",
+   "note": "How an N.F.L.-Backed Plan to Revitalize Canton, Ohio, Falter"
+  },
+  "h_c87d740e18": {
+   "major": "US news (general)",
+   "sub": "local-incidents",
+   "note": "How an N.F.L.-Backed Plan to Revitalize Canton, Ohio, Falter"
+  },
+  "h_f12298e638": {
+   "major": "Culture & entertainment",
+   "sub": "music",
+   "note": "Bad Bunny Will Headline Super Bowl Halftime Show"
+  },
+  "h_b31b486c8e": {
+   "major": "Politics & government",
+   "sub": "elections",
+   "note": "Herschel Walker, Georgia\u2019s GOP Senate candidate, admits he\u2019s"
+  },
+  "h_075ca43605": {
+   "major": "Tech",
+   "sub": "big-tech",
+   "note": "Apple C.E.O.s Through the Years: From Michael Scott (Not Tha"
+  },
+  "h_a43c57b170": {
+   "major": "Tech",
+   "sub": "big-tech",
+   "note": "Apple C.E.O.s Through the Years: From Michael Scott (Not Tha"
+  },
+  "h_fe01b265f7": {
+   "major": "US news (general)",
+   "sub": "transportation",
+   "note": "How American Airlines is preparing for summer travel as Memo"
+  },
+  "h_699dcfcb01": {
+   "major": "Politics & government",
+   "sub": "policy-regulation",
+   "note": "\u2018Through The Stroke Of A Pen, Lives Will Be Changed\u2019: REFORM"
+  }
+ }
+}

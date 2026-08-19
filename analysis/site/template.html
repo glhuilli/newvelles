@@ -138,7 +138,8 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
   <section class="panel" id="panel-timeline">
     <p class="panel-note">Brush the strip to zoom. The river shows each week's share of
     stories per <b>major category</b> — <b>click a band to drill into its
-    sub-categories</b>, where markers become that category's top 20 stories. The strip
+    sub-categories</b>, where markers become that category's top 25 stories by relevance
+    (era-relative peak coverage). The strip
     is era-normalized (volume vs a trailing 91-day baseline; 1.0 = a typical day).
     Numbered markers are landmark events — hover to expand the title in place. Read all
     top stories in the <b>Top stories</b> tab.</p>
@@ -185,10 +186,14 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
     <div class="discord-row" id="discords"></div>
   </section>
   <section class="panel" id="panel-topstories" hidden>
-    <p class="panel-note">The 20 curated landmark events, and each major category's top 20
-    stories over the five years (era-relative peaks with a per-year quota, so quiet-feed
-    years stay represented).</p>
-    <div class="controls" id="ts-chips" style="margin-bottom:12px;flex-wrap:wrap"></div>
+    <p class="panel-note">The 20 curated landmark events, plus each major category's top
+    stories. <b>Selection:</b> relevance = peak outlet count relative to that year's
+    median (so a 12-outlet 2022 peak can outrank a 15-outlet 2026 peak from a bigger
+    pipeline). <b>Top 25</b> is the pure relevance ranking across all five years — some
+    years may be absent. <b>5 per year</b> guarantees every year its five biggest
+    stories. Click any column header to sort.</p>
+    <div class="controls" id="ts-chips" style="margin-bottom:8px;flex-wrap:wrap"></div>
+    <div class="controls" id="ts-mode" style="margin-bottom:12px"></div>
     <div class="chart-box ledger-wrap"><div id="ts-table"></div></div>
   </section>
 
@@ -407,21 +412,39 @@ function renderStream() {
 
 /* ---------- top stories tab ---------- */
 let tsSelected = "__landmark__";
+let tsMode = "top";                       // "top" (25 by relevance) | "top_yearly"
+let tsSort = { key: "n", dir: 1 };
+const TS_COLS = [["n", "#"], ["event", "Event"], ["title", "Story in the archive"],
+                 ["first", "Broke"], ["pd", "Peak day"], ["sub", "Category"],
+                 ["tags", "Tags"], ["outlets", "Outlets"], ["days", "Days"]];
 function renderTopStories() {
   const groups = [["__landmark__", "Landmark events"],
                   ...Object.keys(D.drill || {}).map((m) => [m, m])];
-  const chips = d3.select("#ts-chips");
-  chips.selectAll("button").data(groups).join("button")
+  d3.select("#ts-chips").selectAll("button").data(groups).join("button")
     .attr("aria-pressed", ([k]) => String(k === tsSelected))
     .text(([, label]) => label)
     .on("click", (ev, [k]) => { tsSelected = k; renderTopStories(); });
 
   const landmark = tsSelected === "__landmark__";
-  const list = landmark ? EVENTS : D.drill[tsSelected].top;
+  document.getElementById("ts-mode").hidden = landmark;
+  d3.select("#ts-mode").selectAll("button")
+    .data([["top", "top 25 · relevance"], ["top_yearly", "5 per year"]]).join("button")
+    .attr("aria-pressed", ([k]) => String(k === tsMode))
+    .text(([, label]) => label)
+    .on("click", (ev, [k]) => { tsMode = k; renderTopStories(); });
+
+  const list = [...(landmark ? EVENTS : D.drill[tsSelected][tsMode])];
+  const { key, dir } = tsSort;
+  list.sort((p, q) => {
+    let a = p[key] ?? p.d, b = q[key] ?? q.d;
+    if (key === "tags") { a = (p.tags || []).join(); b = (q.tags || []).join(); }
+    if (key === "first" || key === "pd") { a = a || p.d; b = b || q.d; }
+    return (a < b ? -1 : a > b ? 1 : 0) * dir;
+  });
   document.getElementById("ts-table").innerHTML = `
-    <table class="ledger"><thead><tr>
-      <th>#</th><th>Event</th><th>Story in the archive</th><th>Broke</th>
-      <th>Peak day</th><th>Category</th><th>Tags</th><th>Outlets</th><th>Days</th></tr></thead>
+    <table class="ledger"><thead><tr>${TS_COLS.map(([k, label]) =>
+      `<th data-k="${k}" class="${k === key ? "sorted" : ""}">${label}${k === key ? (dir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}
+    </tr></thead>
     <tbody>${list.map((e) => `
       <tr><td class="num" style="color:var(--s8);font-weight:700">${e.n}</td>
       <td class="headline" style="max-width:180px">${e.event || ""}</td>
@@ -433,6 +456,13 @@ function renderTopStories() {
       <td class="num">${e.outlets}</td>
       <td class="num">${e.days}</td></tr>`).join("")}
     </tbody></table>`;
+  document.querySelectorAll("#ts-table th").forEach((th) => {
+    th.addEventListener("click", () => {
+      const k = th.dataset.k;
+      tsSort = { key: k, dir: k === tsSort.key ? -tsSort.dir : 1 };
+      renderTopStories();
+    });
+  });
 }
 
 /* ---------- ledger ---------- */

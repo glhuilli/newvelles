@@ -67,9 +67,8 @@ def weekly_sections(per_day):
     """Weekly distinct stories per group: taxonomy majors when labels exist,
     legacy sections otherwise. Top 7 groups + Other (palette ceiling)."""
     d = per_day.copy()
-    labels_path = HERE / "data" / "story_labels.parquet"
-    if labels_path.exists():
-        lab = pd.read_parquet(labels_path)
+    lab = load_labels()
+    if lab is not None:
         d = d.merge(lab[["story_uid", "major"]], on="story_uid", how="left")
         d["group"] = d["major"].fillna("Other")
     else:
@@ -106,12 +105,38 @@ def build_curves(per_day, stories, min_days):
     return curves
 
 
-def _label_map():
+_LABELS_CACHE = None
+
+
+def load_labels():
+    """Corpus labels with manual overrides (analysis/label_overrides.json)
+    applied — corrections found while reviewing the top-story lists."""
+    global _LABELS_CACHE
+    if _LABELS_CACHE is not None:
+        return _LABELS_CACHE
     p = HERE / "data" / "story_labels.parquet"
     if not p.exists():
-        return {}
+        return None
     lab = pd.read_parquet(p)
-    return dict(zip(lab["story_uid"], lab["sub"]))
+    ov_path = HERE / "label_overrides.json"
+    if ov_path.exists():
+        ov = json.loads(ov_path.read_text()).get("overrides", {})
+        drops = {u for u, o in ov.items() if o.get("drop")}
+        lab = lab[~lab["story_uid"].isin(drops)]
+        idx = lab.set_index("story_uid")
+        for uid, o in ov.items():
+            if uid in idx.index and not o.get("drop"):
+                for k in ("major", "sub"):
+                    if k in o:
+                        idx.at[uid, k] = o[k]
+        lab = idx.reset_index()
+    _LABELS_CACHE = lab
+    return lab
+
+
+def _label_map():
+    lab = load_labels()
+    return {} if lab is None else dict(zip(lab["story_uid"], lab["sub"]))
 
 
 def ledger(stories, curves, n=80):
@@ -322,10 +347,9 @@ def core_stats(df, per_day):
 
 def categories(per_day, stories):
     """Core stats per sub-category, ranked by distinct stories."""
-    labels_path = HERE / "data" / "story_labels.parquet"
-    if not labels_path.exists():
+    labels = load_labels()
+    if labels is None:
         return None
-    labels = pd.read_parquet(labels_path)
     lab = labels.set_index("story_uid")
     st = stories.join(lab, on="story_uid", how="inner")
     pdl = per_day.merge(labels[["story_uid", "major", "sub"]], on="story_uid", how="inner")
@@ -368,11 +392,15 @@ def _weekly_by(d, col):
     return wk, order
 
 
-def _top_stories(st, n=20, per_year=3, min_gap_days=20):
-    """Era-relative top stories with a per-year quota, like the event flags.
+def _top_stories(st, n=25, per_year=None, min_gap_days=7):
+    """Top stories by relevance = era-relative peak outlets (F1).
 
-    per_year * years must stay below n, or early years exhaust every slot
-    and late years never appear (the 2026-gap bug): 3 * 6 = 18 < 20.
+    The importance-function exploration (explore_importance.py) tested volume,
+    breadth, composite, and burst×legs alternatives; F1 produced the best
+    editorial lists — the alternatives reward recurring listicle series and
+    era feed-count. per_year=None selects the pure top-n across all years
+    ("top of the top"); per_year=k gives every year k slots first.
+    A small min-gap only dedupes near-identical follow-ups.
     """
     if st.empty:
         return []
@@ -392,16 +420,18 @@ def _top_stories(st, n=20, per_year=3, min_gap_days=20):
                            "days": int(r["days_seen"]), "sub": r.get("sub", ""),
                            "tags": list(r.get("tags", [])),
                            "first": r["first"], "pd": r["peak_day_articles"],
-                           "pa": int(r["peak_articles"])})
+                           "pa": int(r["peak_articles"]),
+                           "score": round(float(r["score"]), 2)})
             return True
         return False
 
-    for _, g in st.groupby("year"):
-        added = 0
-        for _, r in g.iterrows():
-            if added >= per_year or len(chosen) >= n:
-                break
-            added += try_add(r)
+    if per_year:
+        for _, g in st.groupby("year"):
+            added = 0
+            for _, r in g.iterrows():
+                if added >= per_year or len(chosen) >= n:
+                    break
+                added += try_add(r)
     for _, r in st.iterrows():
         if len(chosen) >= n:
             break
@@ -413,8 +443,8 @@ def _top_stories(st, n=20, per_year=3, min_gap_days=20):
 
 
 def drill_views(per_day, stories, majors_order):
-    """Per-major drill data: weekly sub-series + top-20 stories."""
-    labels = pd.read_parquet(HERE / "data" / "story_labels.parquet")
+    """Per-major drill data: weekly sub-series + top stories (both modes)."""
+    labels = load_labels()
     pdl = per_day.merge(labels[["story_uid", "major", "sub"]], on="story_uid", how="inner")
     st = (stories[stories["kind"] == "story"]
           .merge(labels, on="story_uid", how="inner"))
@@ -431,14 +461,16 @@ def drill_views(per_day, stories, majors_order):
             seg_pd = pdl[pdl["major"] == major]
             seg_st = st[st["major"] == major]
             wk, order = _weekly_by(seg_pd, "sub")
-        top = _top_stories(seg_st)
-        for t in top:   # ~5-word event titles (Haiku via name_top_stories.py)
+        top = _top_stories(seg_st)                     # top 25 by relevance
+        top_yearly = _top_stories(seg_st, n=30, per_year=5)   # 5 per year
+        for t in top + top_yearly:  # ~5-word event titles (name_top_stories.py)
             t["event"] = short_titles.get(t["uid"]) or " ".join(t["title"].split()[:6])
         out[major] = {
             "order": order,
             "weekly": [{"d": r["week"], **{s: int(r.get(s, 0)) for s in order}}
                        for _, r in wk.iterrows()],
             "top": top,
+            "top_yearly": top_yearly,
         }
     return out
 
@@ -446,9 +478,8 @@ def drill_views(per_day, stories, majors_order):
 def landmark_events(stories):
     """Match curated events (analysis/events.json) to archive stories."""
     spec = json.loads((HERE / "events.json").read_text())["events"]
-    labels_path = HERE / "data" / "story_labels.parquet"
-    lab = (pd.read_parquet(labels_path).set_index("story_uid")
-           if labels_path.exists() else None)
+    labels = load_labels()
+    lab = labels.set_index("story_uid") if labels is not None else None
     st = stories[stories["kind"] == "story"]
     out = []
     for i, ev in enumerate(spec, 1):
