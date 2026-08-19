@@ -89,7 +89,16 @@ def build_curves(per_day, stories, min_days):
     return curves
 
 
+def _label_map():
+    p = HERE / "data" / "story_labels.parquet"
+    if not p.exists():
+        return {}
+    lab = pd.read_parquet(p)
+    return dict(zip(lab["story_uid"], lab["sub"]))
+
+
 def ledger(stories, curves, n=80):
+    subs = _label_map()
     led = (stories[stories["kind"] == "story"]
            .nlargest(n * 3, ["peak_outlets", "days_seen"])
            # identity occasionally splits one story across a gap; keep the
@@ -113,6 +122,7 @@ def ledger(stories, curves, n=80):
             "span": int(s["span"]), "peak_outlets": int(s["peak_outlets"]),
             "peak_articles": int(s["peak_articles"]),
             "curve": [round(float(x), 2) for x in c], "why": why,
+            "cat": subs.get(s["story_uid"], ""),
         })
     return out
 

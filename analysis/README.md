@@ -31,6 +31,22 @@ python scripts/backfill_history.py --workers 10     # 4. archive -> stories.parq
 analysis/.venv/bin/python analysis/build_payload.py --site   # 5. payload + site/index.html
 ```
 
+## Classification (3-level taxonomy)
+
+`taxonomy.json` (v1.0): 13 majors → ~60 subs → open meta tags, seeded from
+IPTC Media Topics. Golden set: 4,020 stories labeled in-session by Fable
+(`data/golden_sample.parquet` — the permanent eval reference).
+
+```
+analysis/.venv/bin/python analysis/classify_bedrock.py --workers 8  # full corpus, resumable shards
+analysis/.venv/bin/python analysis/merge_labels.py                  # -> story_labels.parquet
+analysis/.venv/bin/python analysis/eval_labels.py data/haiku_labels # score vs golden
+analysis/.venv/bin/python analysis/build_payload.py --site          # refresh Categories tab
+```
+
+Benchmarks and route comparison (Haiku / embeddings / qwen3:8b): see
+`data/eval_report.md`. Route C: `train_classifier.py`; Route D: `classify_qwen.py`.
+
 Export = copy `analysis/site/index.html` anywhere; it has zero external
 dependencies.
 

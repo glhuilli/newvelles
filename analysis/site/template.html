@@ -376,7 +376,8 @@ function renderLedger() {
   const tr = table.append("tbody").selectAll("tr").data(rows).join("tr");
   tr.append("td").attr("class", "headline").text((r) => r.headline);
   tr.append("td").html((r) =>
-    `<span class="sec-chip"><span class="sw" style="background:${SCOLOR[r.section] || "var(--muted)"}"></span>${r.section}</span>`);
+    `<span class="sec-chip"><span class="sw" style="background:${SCOLOR[r.section] || "var(--muted)"}"></span>${r.section}</span>` +
+    (r.cat ? `<div class="why" style="margin-top:2px">${r.cat}</div>` : ""));
   tr.append("td").text((r) => fmtD(P(r.peak_day)));
   tr.append("td").attr("class", "num").text((r) => r.peak_outlets);
   tr.append("td").attr("class", "num").text((r) => r.days);

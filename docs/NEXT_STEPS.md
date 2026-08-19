@@ -159,6 +159,13 @@ dataset**, not per-run JSONs:
   historical feeds (HuffPost, CNN, CBS locals…) so early years get correct
   outlets/sections instead of the domain fallback.
 
+**Step 2.5 — taxonomy + stats (2026-08-18, done except tail).** 3-level
+classification (13 majors / ~60 subs / meta tags, `analysis/taxonomy.json`)
+over the archive: Fable golden set (4,020, the eval reference), full corpus
+via Bedrock Haiku (92%+ labeled; last shards auto-retry after the daily token
+quota reset), benchmark of 4 routes in `analysis/data/eval_report.md`.
+Dashboard gained Stats and Categories tabs.
+
 **Step 3 — the analysis itself:** DuckDB/pandas over the Parquet; candidate
 angles: longest-running stories since 2021, coverage concentration by outlet
 over time, section drift, story-lifetime distributions, duplication-era vs
