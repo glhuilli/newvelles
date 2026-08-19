@@ -354,6 +354,82 @@ def categories(per_day, stories):
             "majors_order": majors_order}
 
 
+def _weekly_by(d, col):
+    """Weekly distinct stories per value of `col`, top 7 values + Other."""
+    d = d.copy()
+    d["week"] = pd.to_datetime(d["day"]).dt.to_period("W-SUN").dt.start_time.dt.strftime("%Y-%m-%d")
+    top = d.groupby(col)["story_uid"].nunique().nlargest(TOP_SECTIONS).index.tolist()
+    d["grp"] = d[col].where(d[col].isin(top), "Other")
+    wk = (d.groupby(["week", "grp"])["story_uid"].nunique().unstack(fill_value=0)
+          .reset_index())
+    order = [s for s in top if s in wk.columns] + (["Other"] if "Other" in wk.columns else [])
+    return wk, order
+
+
+def _top_stories(st, n=20, per_year=4, min_gap_days=20):
+    """Era-relative top stories with a per-year quota, like the event flags."""
+    if st.empty:
+        return []
+    st = st.copy()
+    st["year"] = st["peak_day"].str[:4]
+    year_median = st.groupby("year")["peak_outlets"].median().to_dict()
+    st["score"] = st.apply(
+        lambda r: r["peak_outlets"] / max(1.0, year_median[r["year"]]), axis=1)
+    st = st.sort_values("score", ascending=False).drop_duplicates("headline")
+    chosen = []
+
+    def try_add(r):
+        d = pd.Timestamp(r["peak_day"])
+        if all(abs((d - pd.Timestamp(c["d"])).days) >= min_gap_days for c in chosen):
+            chosen.append({"d": r["peak_day"], "uid": r["story_uid"],
+                           "title": r["headline"], "outlets": int(r["peak_outlets"]),
+                           "days": int(r["days_seen"]), "sub": r.get("sub", ""),
+                           "tags": list(r.get("tags", []))})
+            return True
+        return False
+
+    for _, g in st.groupby("year"):
+        added = 0
+        for _, r in g.iterrows():
+            if added >= per_year or len(chosen) >= n:
+                break
+            added += try_add(r)
+    for _, r in st.iterrows():
+        if len(chosen) >= n:
+            break
+        try_add(r)
+    chosen.sort(key=lambda c: c["d"])
+    for i, c in enumerate(chosen, 1):
+        c["n"] = i
+    return chosen
+
+
+def drill_views(per_day, stories, majors_order):
+    """Per-major drill data: weekly sub-series + top-20 stories."""
+    labels = pd.read_parquet(HERE / "data" / "story_labels.parquet")
+    pdl = per_day.merge(labels[["story_uid", "major", "sub"]], on="story_uid", how="inner")
+    st = (stories[stories["kind"] == "story"]
+          .merge(labels, on="story_uid", how="inner"))
+    top7 = [m for m in majors_order if m != "Other"]
+    out = {}
+    for major in majors_order:
+        if major == "Other":
+            seg_pd = pdl[~pdl["major"].isin(top7)]
+            seg_st = st[~st["major"].isin(top7)]
+            wk, order = _weekly_by(seg_pd, "major")   # Other drills into minor majors
+        else:
+            seg_pd = pdl[pdl["major"] == major]
+            seg_st = st[st["major"] == major]
+            wk, order = _weekly_by(seg_pd, "sub")
+        out[major] = {
+            "order": order,
+            "weekly": [{"d": r["week"], **{s: int(r.get(s, 0)) for s in order}}
+                       for _, r in wk.iterrows()],
+            "top": _top_stories(seg_st),
+        }
+    return out
+
+
 def landmark_events(stories):
     """Match curated events (analysis/events.json) to archive stories."""
     spec = json.loads((HERE / "events.json").read_text())["events"]
@@ -450,6 +526,7 @@ def build(site: bool):
         "ledger": led,
         "annotations": annotations(ann_pool),
         "events": landmark_events(stories),
+        "drill": drill_views(per_day, stories, order),
         "lifetimes": lifetimes(stories),
         "archetypes": archetypes(curves),
         "discords": discords(daily),

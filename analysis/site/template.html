@@ -131,17 +131,17 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
     <button role="tab" data-tab="archetypes" aria-selected="false">Archetypes</button>
     <button role="tab" data-tab="stats" aria-selected="false">Stats</button>
     <button role="tab" data-tab="categories" aria-selected="false">Categories</button>
+    <button role="tab" data-tab="topstories" aria-selected="false">Top stories</button>
   </nav>
 </header>
 <main>
   <section class="panel" id="panel-timeline">
-    <p class="panel-note">Brush the strip to zoom. The river below shows weekly distinct
-    stories per <b>major category</b> (3-level taxonomy, top 7 + Other); <b>share</b>
-    re-normalizes each week to 100% (default — the honest cross-era view; <b>counts</b>
-    shows raw volume, which includes pipeline growth). The strip is era-normalized:
-    volume relative to a trailing 91-day baseline, so a 3× day in 2021 stands as tall
-    as one in 2026. Numbered markers are 20 curated landmark events matched to their
-    archive stories — hover one, or hover a row in the table below.</p>
+    <p class="panel-note">Brush the strip to zoom. The river shows each week's share of
+    stories per <b>major category</b> — <b>click a band to drill into its
+    sub-categories</b>, where markers become that category's top 20 stories. The strip
+    is era-normalized (volume vs a trailing 91-day baseline; 1.0 = a typical day).
+    Numbered markers are landmark events — hover to expand the title in place. Read all
+    top stories in the <b>Top stories</b> tab.</p>
     <div class="chart-box" style="margin-bottom:12px">
       <div id="strip"></div>
     </div>
@@ -150,18 +150,12 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
         <span class="box-title" id="stream-title">Stories per week by section</span>
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
           <span class="legend" id="stream-legend"></span>
-          <div class="controls" role="group" aria-label="Offset">
-            <button id="mode-stream" aria-pressed="false">counts</button>
-            <button id="mode-share" aria-pressed="true">share</button>
+          <div class="controls">
+            <button id="stream-back" hidden>← all categories</button>
           </div>
         </div>
       </div>
       <div id="stream"></div>
-    </div>
-    <div class="chart-box" style="margin-top:12px">
-      <div class="box-head"><span class="box-title">Landmark events · numbered markers above ·
-        hover a marker to highlight its row</span></div>
-      <div id="events-table"></div>
     </div>
   </section>
 
@@ -190,6 +184,14 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
     14-day windows farthest from every other window in five years.</p>
     <div class="discord-row" id="discords"></div>
   </section>
+  <section class="panel" id="panel-topstories" hidden>
+    <p class="panel-note">The 20 curated landmark events, and each major category's top 20
+    stories over the five years (era-relative peaks with a per-year quota, so quiet-feed
+    years stay represented).</p>
+    <div class="controls" id="ts-chips" style="margin-bottom:12px;flex-wrap:wrap"></div>
+    <div class="chart-box ledger-wrap"><div id="ts-table"></div></div>
+  </section>
+
   <section class="panel" id="panel-categories" hidden>
     <p class="panel-note" id="cat-note"></p>
     <div class="chart-box ledger-wrap"><div id="cat-table"></div></div>
@@ -249,7 +251,7 @@ document.getElementById("colophon").textContent =
 
 /* ---------- tabs ---------- */
 const rendered = {};
-const RENDERERS = { timeline: renderTimeline, ledger: renderLedger, lifetimes: renderLifetimes, archetypes: renderArchetypes, stats: renderStats, categories: renderCategories };
+const RENDERERS = { timeline: renderTimeline, ledger: renderLedger, lifetimes: renderLifetimes, archetypes: renderArchetypes, stats: renderStats, categories: renderCategories, topstories: renderTopStories };
 document.querySelectorAll("nav.tabs button").forEach((btn) => {
   btn.addEventListener("click", () => activate(btn.dataset.tab));
 });
@@ -264,7 +266,36 @@ function activate(tab) {
 /* ---------- timeline: strip + streamgraph ---------- */
 const TL = { W: 1180, HS: 96, HD: 380, ML: 8, MR: 8 };
 let window0 = [d3.timeMonth.offset(T1, -18), T1];
-let streamMode = "share";
+let drillTo = null;   // null = all majors; otherwise a major name
+
+/* numbered marker whose title expands in place on hover */
+function drawMarker(svg, cx, cy, item, hInner) {
+  svg.append("line").attr("x1", cx).attr("x2", cx).attr("y1", cy + 8).attr("y2", hInner)
+    .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3")
+    .style("opacity", 0.6).style("pointer-events", "none");
+  const g = svg.append("g").style("cursor", "default");
+  g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", 7)
+    .style("fill", "var(--s8)").style("stroke", "var(--surface)").style("stroke-width", 1.5);
+  g.append("text").attr("x", cx).attr("y", cy + 3).attr("text-anchor", "middle")
+    .style("font-size", "9px").style("font-weight", 700).style("fill", "#fff")
+    .style("pointer-events", "none").text(item.n);
+  const title = item.event || item.title;
+  const onRight = cx > TL.W * 0.62;
+  g.on("mouseenter", function () {
+    d3.select(this).select("circle").attr("r", 9);
+    d3.select(this).append("text").attr("class", "mk-label")
+      .attr("x", cx + (onRight ? -12 : 12)).attr("y", cy + 4)
+      .attr("text-anchor", onRight ? "end" : "start")
+      .style("font-size", "12px").style("font-weight", 600).style("fill", "var(--ink)")
+      .style("paint-order", "stroke").style("stroke", "var(--surface)")
+      .style("stroke-width", 4).style("pointer-events", "none")
+      .text(title.length > 72 ? title.slice(0, 72) + "…" : title);
+    this.parentNode.appendChild(this);   // raise above bands
+  }).on("mouseleave", function () {
+    d3.select(this).select("circle").attr("r", 7);
+    d3.select(this).selectAll(".mk-label").remove();
+  });
+}
 
 function renderTimeline() {
   const xF = d3.scaleTime().domain([T0, T1]).range([TL.ML, TL.W - TL.MR]);
@@ -283,23 +314,7 @@ function renderTimeline() {
   svg.append("text").attr("x", TL.ML + 4).attr("y", y(1) - 4)
     .style("font-size", "10px").style("fill", "var(--muted)")
     .text("volume vs typical day (era-normalized) · 1.0 = baseline");
-  for (const e of EVENTS) {
-    svg.append("line").attr("x1", xF(e.dd)).attr("x2", xF(e.dd)).attr("y1", 18).attr("y2", TL.HS)
-      .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3")
-      .style("opacity", 0.6).style("pointer-events", "none");
-    const g = svg.append("g").attr("class", "ev-marker").attr("data-ev", e.n)
-      .style("cursor", "default")
-      .on("mousemove", (ev) => { hotEvent(e.n, true); showTip(
-        `<div class="t-date">${fmtD(e.dd)}</div><div class="t-strong">${e.event}</div>
-         <div>${e.title.slice(0, 70)}${e.title.length > 70 ? "…" : ""}</div>`, ev); })
-      .on("mouseleave", () => { hotEvent(e.n, false); hideTip(); });
-    g.append("circle").attr("cx", xF(e.dd)).attr("cy", 10).attr("r", 7)
-      .style("fill", "var(--s8)").style("stroke", "var(--surface)").style("stroke-width", 1.5);
-    g.append("text").attr("x", xF(e.dd)).attr("y", 13).attr("text-anchor", "middle")
-      .style("font-size", "9px").style("font-weight", 700).style("fill", "#fff")
-      .style("pointer-events", "none").text(e.n);
-  }
-  renderEventsTable();
+  for (const e of EVENTS) drawMarker(svg, xF(e.dd), 10, e, TL.HS);
   svg.append("g").attr("class", "axis").attr("transform", `translate(0,${TL.HS})`)
     .call(d3.axisBottom(xF).ticks(d3.timeYear.every(1)).tickSizeOuter(0))
     .select(".domain").remove();
@@ -311,40 +326,54 @@ function renderTimeline() {
   svg.append("g").call(brush).call(brush.move, window0.map(xF));
   svg.selectAll(".selection").style("fill", "var(--s1)").style("fill-opacity", 0.10).style("stroke", "var(--s1)");
 
-  d3.select("#stream-legend").selectAll("span").data(SECTIONS).join("span").attr("class", "li")
-    .html((s) => `<span class="sw" style="background:${SCOLOR[s]}"></span>${s}`);
-  document.getElementById("mode-stream").onclick = (e) => { streamMode = "wiggle"; press(e.target, "mode-share"); renderStream(); };
-  document.getElementById("mode-share").onclick = (e) => { streamMode = "share"; press(e.target, "mode-stream"); renderStream(); };
+  document.getElementById("stream-back").onclick = () => { drillTo = null; renderStream(); };
   renderStream();
 }
-function press(on, offId) { on.setAttribute("aria-pressed", "true"); document.getElementById(offId).setAttribute("aria-pressed", "false"); }
 
 function renderStream() {
   d3.select("#stream").selectAll("*").remove();
   const [a, b] = window0;
-  const rows = weekly.filter((r) => r.d >= d3.timeMonday.floor(a) && r.d <= b);
+  const view = drillTo ? D.drill[drillTo] : null;
+  const keys = view ? view.order : SECTIONS;
+  const color = view
+    ? Object.fromEntries(keys.map((k, i) => [k, `var(--s${(i % 8) + 1})`]))
+    : SCOLOR;
+  const allRows = view
+    ? view.weekly.map((r) => ({ ...r, d: P(r.d) }))
+    : weekly;
+  const markers = (view ? view.top.map((t) => ({ ...t, dd: P(t.d) })) : EVENTS)
+    .filter((m) => m.dd >= a && m.dd <= b);
+  const rows = allRows.filter((r) => r.d >= d3.timeMonday.floor(a) && r.d <= b);
+  document.getElementById("stream-back").hidden = !drillTo;
+  d3.select("#stream-legend").selectAll("span.li").data(keys).join("span").attr("class", "li")
+    .html((s) => `<span class="sw" style="background:${color[s]}"></span>${s}`);
   if (rows.length < 2) return;
-  document.getElementById("stream-title").textContent =
-    `Distinct stories per week by major category · ${fmtMo(rows[0].d)} – ${fmtMo(rows[rows.length - 1].d)}`;
+  document.getElementById("stream-title").textContent = drillTo
+    ? `${drillTo} · weekly share by ${drillTo === "Other" ? "category" : "sub-category"} · ${fmtMo(rows[0].d)} – ${fmtMo(rows[rows.length - 1].d)}`
+    : `Weekly share by major category · click a band to drill in · ${fmtMo(rows[0].d)} – ${fmtMo(rows[rows.length - 1].d)}`;
+
   const svg = svgIn("#stream", TL.W, TL.HD);
-  const stack = d3.stack().keys(SECTIONS)
-    .offset(streamMode === "wiggle" ? d3.stackOffsetWiggle : d3.stackOffsetExpand)
-    .order(d3.stackOrderInsideOut);
-  const series = stack(rows);
+  const series = d3.stack().keys(keys).offset(d3.stackOffsetExpand)
+    .order(d3.stackOrderInsideOut)(rows);
   const x = d3.scaleTime().domain([rows[0].d, rows[rows.length - 1].d]).range([TL.ML, TL.W - TL.MR]);
   const y = d3.scaleLinear()
     .domain([d3.min(series, (s) => d3.min(s, (p) => p[0])), d3.max(series, (s) => d3.max(s, (p) => p[1]))])
     .range([TL.HD - 24, 42]);
   const area = d3.area().x((p) => x(p.data.d)).y0((p) => y(p[0])).y1((p) => y(p[1])).curve(d3.curveBasis);
   const paths = svg.append("g").selectAll("path").data(series).join("path")
-    .attr("d", area).style("fill", (s) => SCOLOR[s.key])
+    .attr("d", area).style("fill", (s) => color[s.key])
     .style("stroke", "var(--surface)").style("stroke-width", 1)
+    .style("cursor", drillTo ? "default" : "pointer")
+    .on("click", (ev, s) => {
+      if (!drillTo && D.drill && D.drill[s.key]) { drillTo = s.key; hideTip(); renderStream(); }
+    })
     .on("mousemove", function (ev, s) {
       paths.style("opacity", (p) => (p === s ? 1 : 0.35));
       const wi = d3.bisector((r) => r.d).center(rows, x.invert(d3.pointer(ev, svg.node())[0]));
       showTip(`<div class="t-date">week of ${fmtD(rows[wi].d)}</div>
-        <div><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${SCOLOR[s.key]}"></span>
-        <span class="t-strong"> ${s.key}</span> · ${rows[wi][s.key]} stories</div>`, ev);
+        <div><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${color[s.key]}"></span>
+        <span class="t-strong"> ${s.key}</span> · ${rows[wi][s.key]} stories</div>
+        ${drillTo ? "" : "<div style='color:var(--muted)'>click to drill in</div>"}`, ev);
     })
     .on("mouseleave", () => { paths.style("opacity", 1); hideTip(); });
   for (const s of series) {
@@ -358,54 +387,38 @@ function renderStream() {
         .style("stroke-width", 3).style("stroke-opacity", 0.75).text(s.key);
     }
   }
-  for (const e of EVENTS.filter((e) => e.dd >= a && e.dd <= b)) {
-    svg.append("line").attr("x1", x(e.dd)).attr("x2", x(e.dd)).attr("y1", 20).attr("y2", TL.HD - 24)
-      .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3")
-      .style("opacity", 0.6).style("pointer-events", "none");
-    svg.append("circle").attr("cx", x(e.dd)).attr("cy", 12).attr("r", 7)
-      .style("fill", "var(--s8)").style("stroke", "var(--surface)").style("stroke-width", 1.5)
-      .on("mousemove", (ev) => { hotEvent(e.n, true); showTip(
-        `<div class="t-date">${fmtD(e.dd)}</div><div class="t-strong">${e.event}</div>`, ev); })
-      .on("mouseleave", () => { hotEvent(e.n, false); hideTip(); });
-    svg.append("text").attr("x", x(e.dd)).attr("y", 15).attr("text-anchor", "middle")
-      .style("font-size", "9px").style("font-weight", 700).style("fill", "#fff")
-      .style("pointer-events", "none").text(e.n);
-  }
+  for (const m of markers) drawMarker(svg, x(m.dd), 12, m, TL.HD - 24);
   svg.append("g").attr("class", "axis").attr("transform", `translate(0,${TL.HD - 24})`)
     .call(d3.axisBottom(x).ticks(8).tickSizeOuter(0)).select(".domain").remove();
 }
 
-/* ---------- landmark events table + marker linking ---------- */
-function hotEvent(n, on) {
-  const row = document.getElementById("ev-row-" + n);
-  if (row) {
-    row.classList.toggle("hot", on);
-    if (on) row.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }
-  d3.selectAll(`.ev-marker[data-ev='${n}'] circle`).attr("r", on ? 9 : 7);
-}
-function renderEventsTable() {
-  const el = document.getElementById("events-table");
-  if (!EVENTS.length) { el.innerHTML = "<p class='panel-note'>No events payload.</p>"; return; }
-  el.innerHTML = `
+/* ---------- top stories tab ---------- */
+let tsSelected = "__landmark__";
+function renderTopStories() {
+  const groups = [["__landmark__", "Landmark events"],
+                  ...Object.keys(D.drill || {}).map((m) => [m, m])];
+  const chips = d3.select("#ts-chips");
+  chips.selectAll("button").data(groups).join("button")
+    .attr("aria-pressed", ([k]) => String(k === tsSelected))
+    .text(([, label]) => label)
+    .on("click", (ev, [k]) => { tsSelected = k; renderTopStories(); });
+
+  const landmark = tsSelected === "__landmark__";
+  const list = landmark ? EVENTS : D.drill[tsSelected].top;
+  document.getElementById("ts-table").innerHTML = `
     <table class="ledger"><thead><tr>
-      <th>#</th><th>Event</th><th>Story in the archive</th><th>Peak day</th>
-      <th>Category</th><th>Tags</th><th>Outlets</th><th>Days</th></tr></thead>
-    <tbody>${EVENTS.map((e) => `
-      <tr id="ev-row-${e.n}" data-ev="${e.n}">
-      <td class="num" style="color:var(--s8);font-weight:700">${e.n}</td>
-      <td class="headline" style="max-width:200px">${e.event}</td>
-      <td class="why" style="max-width:330px">${e.title}</td>
-      <td>${fmtD(P(e.d))}</td>
+      <th>#</th>${landmark ? "<th>Event</th>" : ""}<th>Story in the archive</th>
+      <th>Peak day</th><th>Category</th><th>Tags</th><th>Outlets</th><th>Days</th></tr></thead>
+    <tbody>${list.map((e) => `
+      <tr><td class="num" style="color:var(--s8);font-weight:700">${e.n}</td>
+      ${landmark ? `<td class="headline" style="max-width:190px">${e.event}</td>` : ""}
+      <td class="${landmark ? "why" : "headline"}" style="max-width:340px">${e.title}</td>
+      <td style="white-space:nowrap">${fmtD(P(e.d))}</td>
       <td class="why">${e.sub || "—"}</td>
       <td class="why">${(e.tags || []).join(", ")}</td>
       <td class="num">${e.outlets}</td>
       <td class="num">${e.days}</td></tr>`).join("")}
     </tbody></table>`;
-  el.querySelectorAll("tr[data-ev]").forEach((row) => {
-    row.addEventListener("mouseenter", () => hotEvent(+row.dataset.ev, true));
-    row.addEventListener("mouseleave", () => hotEvent(+row.dataset.ev, false));
-  });
 }
 
 /* ---------- ledger ---------- */
