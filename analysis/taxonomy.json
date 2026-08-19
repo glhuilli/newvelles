@@ -1,6 +1,6 @@
 {
-  "version": "1.0",
-  "notes": "Seeded from IPTC Media Topics, adapted to the Newvelles corpus (US-leaning general news, 2021-2026). Every story gets exactly one major and one sub. 'other-*' subs are the escape valve; a healthy classification puts <8% of stories there.",
+  "version": "1.1",
+  "notes": "Seeded from IPTC Media Topics, adapted to the Newvelles corpus (US-leaning general news, 2021-2026). Every story gets exactly one major and one sub. 'other-*' subs are the escape valve; a healthy classification puts <8% of stories there. v1.1 adds boundary_rules only \u2014 no category changes; existing v1.0 labels remain valid.",
   "majors": {
     "Politics & government": {
       "elections": "Campaigns, primaries, election nights, results, voting logistics",
@@ -123,5 +123,11 @@
   "meta_tags": {
     "definition": "2-6 lowercase tags per story. Two kinds: (1) salient named entities from the title (people, orgs, places, events); (2) group keywords more granular than the sub-category that cluster related stories even when the word is absent from the title (e.g. 'trial', 'world cup', 'immigration crisis', 'layoffs', 'ceasefire', 'recall').",
     "style": "lowercase, singular where natural, multi-word allowed, no hashtags, no duplicates of the sub-category name"
-  }
+  },
+  "boundary_rules": [
+    "Product deals, promo codes, discount roundups, and betting promos always classify as Everyday life/shopping-deals, regardless of the product's domain (tech, sports, finance).",
+    "Consumer advice and how-to content classifies by its advice function (personal-finance, lifestyle-wellness), not by the topic it advises about (fraud, health).",
+    "Deaths under active investigation classify as Crime & justice, not local-incidents, until ruled accidental.",
+    "Classify the story's subject, not its vehicle: a newsletter about campus politics is education, not media-industry."
+  ]
 }

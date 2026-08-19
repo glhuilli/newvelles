@@ -34,9 +34,14 @@ coverage would need per-story calls plus repair logic.
   cost, trained on 3,015 examples. Its top confusions (Economy→Markets 11,
   Politics→Crime 9) mirror Haiku's, which suggests taxonomy boundary fuzziness
   rather than model weakness.
-- **Full-corpus coverage: 106,050 / 114,927 (92.3%).** The last 60 Haiku shards
-  hit the Bedrock daily token quota ("Too many tokens per day"). The run is
-  resumable: `analysis/.venv/bin/python analysis/classify_bedrock.py --workers 8`
-  after the quota resets, then `merge_labels.py` + `build_payload.py --site`.
-- Haiku label normalization: 1,261 rows had a sub under the wrong major
-  (sub trusted, major reassigned); 200 unknown subs fell to other-general.
+- **Full-corpus coverage: 114,927 / 114,927 (100%).** The initial run stopped
+  at 92.3% on the Bedrock daily token quota; the resumable retry completed the
+  last 60 shards after the reset, all under taxonomy v1.0.
+- Haiku label normalization: 1,371 rows had a sub under the wrong major
+  (sub trusted, major reassigned); 220 unknown subs fell to other-general.
+- **Divergence analysis (top Fable-vs-Haiku disagreements)** found one
+  systematic boundary: Haiku classifies by topical domain, the golden set by
+  story *function* (a betting-promo roundup is shopping-deals, not
+  football-nfl; consumer fraud advice is personal-finance, not
+  fraud-corruption). Taxonomy v1.1 adds `boundary_rules` codifying this for
+  future runs; v1.0 labels remain valid and uniform across the corpus.
