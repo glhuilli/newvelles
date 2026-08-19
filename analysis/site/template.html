@@ -136,10 +136,11 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
   <section class="panel" id="panel-timeline">
     <p class="panel-note">Brush the strip to zoom. The river below shows weekly distinct
     stories per <b>major category</b> (3-level taxonomy, top 7 + Other); <b>share</b>
-    re-normalizes each week to 100%. Flags mark the stories that broke the cycle.
-    <b>Honesty note:</b> level shifts (notably mid-2026) reflect pipeline changes — more
-    feeds, new story merging — not news volume; compare shapes within an era, or use
-    <b>share</b> across eras.</p>
+    re-normalizes each week to 100% (default — the honest cross-era view; <b>counts</b>
+    shows raw volume, which includes pipeline growth). The strip is era-normalized:
+    volume relative to a trailing 91-day baseline, so a 3× day in 2021 stands as tall
+    as one in 2026. Flags mark era-relative standouts — peak outlet count divided by
+    that year's median among top stories.</p>
     <div class="chart-box" style="margin-bottom:12px">
       <div id="strip"></div>
     </div>
@@ -149,8 +150,8 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
           <span class="legend" id="stream-legend"></span>
           <div class="controls" role="group" aria-label="Offset">
-            <button id="mode-stream" aria-pressed="true">stream</button>
-            <button id="mode-share" aria-pressed="false">share</button>
+            <button id="mode-stream" aria-pressed="false">counts</button>
+            <button id="mode-share" aria-pressed="true">share</button>
           </div>
         </div>
       </div>
@@ -217,7 +218,7 @@ const fmtD = d3.timeFormat("%b %d, %Y");
 const fmtMo = d3.timeFormat("%b %Y");
 const SECTIONS = D.sections;
 const SCOLOR = Object.fromEntries(SECTIONS.map((s, i) => [s, `var(--s${(i % 8) + 1})`]));
-const daily = D.daily.map((r) => ({ d: P(r.d), a: r.a, s: r.s }));
+const daily = D.daily.map((r) => ({ d: P(r.d), a: r.a, s: r.s, x: r.x ?? 1 }));
 const weekly = D.weekly.map((r) => ({ ...r, d: P(r.d) }));
 const anns = D.annotations.map((r) => ({ ...r, d: P(r.d) }));
 const T0 = daily[0].d, T1 = daily[daily.length - 1].d;
@@ -257,18 +258,25 @@ function activate(tab) {
 /* ---------- timeline: strip + streamgraph ---------- */
 const TL = { W: 1180, HS: 96, HD: 380, ML: 8, MR: 8 };
 let window0 = [d3.timeMonth.offset(T1, -18), T1];
-let streamMode = "wiggle";
+let streamMode = "share";
 
 function renderTimeline() {
   const xF = d3.scaleTime().domain([T0, T1]).range([TL.ML, TL.W - TL.MR]);
   const svg = svgIn("#strip", TL.W, TL.HS + 30);
-  const y = d3.scaleLinear().domain([0, d3.max(daily, (r) => r.a)]).range([TL.HS, 20]);
+  // era-normalized volume index: 1.0 = a typical day for that era, so the
+  // mid-2026 pipeline growth doesn't dwarf every earlier news cycle
+  const y = d3.scaleLinear().domain([0, d3.max(daily, (r) => r.x)]).range([TL.HS, 20]);
+  svg.append("line").attr("x1", TL.ML).attr("x2", TL.W - TL.MR)
+    .attr("y1", y(1)).attr("y2", y(1)).attr("class", "gridline");
   svg.append("path").datum(daily)
-    .attr("d", d3.area().x((r) => xF(r.d)).y0(TL.HS).y1((r) => y(r.a)))
+    .attr("d", d3.area().x((r) => xF(r.d)).y0(TL.HS).y1((r) => y(r.x)))
     .style("fill", "var(--s1)").style("opacity", 0.25);
   svg.append("path").datum(daily)
-    .attr("d", d3.line().x((r) => xF(r.d)).y((r) => y(r.a)))
+    .attr("d", d3.line().x((r) => xF(r.d)).y((r) => y(r.x)))
     .style("stroke", "var(--s1)").style("fill", "none").style("stroke-width", 1);
+  svg.append("text").attr("x", TL.ML + 4).attr("y", y(1) - 4)
+    .style("font-size", "10px").style("fill", "var(--muted)")
+    .text("volume vs typical day (era-normalized) · 1.0 = baseline");
   for (const a of anns) {
     svg.append("line").attr("x1", xF(a.d)).attr("x2", xF(a.d)).attr("y1", 12).attr("y2", TL.HS)
       .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3");

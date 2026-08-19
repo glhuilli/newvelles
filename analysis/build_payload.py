@@ -52,7 +52,13 @@ def daily_series(df):
     run_totals = df.groupby(["day", "run_ts"])["article_count"].sum()
     articles = run_totals.groupby("day").max()
     stories = df.groupby("day")["story_uid"].nunique()
-    return pd.DataFrame({"articles": articles, "stories": stories}).reset_index()
+    out = pd.DataFrame({"articles": articles, "stories": stories}).reset_index()
+    # era-normalized volume index: level shifts from pipeline changes (feed
+    # count, story merging) divide out against a trailing/centered 91-day
+    # median; 1.0 = a typical day for that era
+    base = out["articles"].rolling(91, center=True, min_periods=21).median()
+    out["idx"] = (out["articles"] / base).round(3)
+    return out
 
 
 def weekly_sections(per_day):
@@ -137,15 +143,39 @@ def ledger(stories, curves, n=80):
 
 
 def annotations(led, n=15, min_gap_days=45):
+    """Flags = era-relative standouts: peak outlets divided by the median peak
+    among that calendar year's ledger stories, so a 17-outlet 2022 story
+    outranks an 18-outlet 2026 story from a 40% bigger pipeline."""
+    year_median = (pd.DataFrame(led).assign(year=lambda t: t["peak_day"].str[:4])
+                   .groupby("year")["peak_outlets"].median().to_dict())
+    scored = sorted(led, key=lambda r: -(r["peak_outlets"]
+                                         / max(1.0, year_median[r["peak_day"][:4]])))
     chosen = []
-    for row in sorted(led, key=lambda r: -r["peak_outlets"]):
+
+    def try_add(row):
         d = pd.Timestamp(row["peak_day"])
         if all(abs((d - pd.Timestamp(c["d"])).days) >= min_gap_days for c in chosen):
             chosen.append({"d": row["peak_day"], "uid": row["uid"],
                            "label": row["headline"][:48] + ("…" if len(row["headline"]) > 48 else ""),
                            "outlets": row["peak_outlets"]})
+            return True
+        return False
+
+    # per-year quota first: quiet-pipeline years (2024's max was 11 outlets)
+    # still get their top stories on the timeline
+    by_year: dict = {}
+    for row in scored:
+        by_year.setdefault(row["peak_day"][:4], []).append(row)
+    for year_rows in by_year.values():
+        added = 0
+        for row in year_rows:
+            if added >= 2:
+                break
+            added += try_add(row)
+    for row in scored:                      # then fill globally
         if len(chosen) >= n:
             break
+        try_add(row)
     return sorted(chosen, key=lambda c: c["d"])
 
 
@@ -361,6 +391,7 @@ def build(site: bool):
     wk, order = weekly_sections(per_day)
     curves = build_curves(per_day, stories, min_days=5)
     led = ledger(stories, curves)
+    ann_pool = ledger(stories, curves, n=300)  # wider pool so every year competes
 
     payload = {
         "meta": {
@@ -369,13 +400,14 @@ def build(site: bool):
             "runs": int(df["run_ts"].nunique()), "rows": int(len(df)),
             "stories": int(len(stories)),
         },
-        "daily": [{"d": r["day"], "a": int(r["articles"]), "s": int(r["stories"])}
+        "daily": [{"d": r["day"], "a": int(r["articles"]), "s": int(r["stories"]),
+                   "x": float(r["idx"]) if pd.notna(r["idx"]) else 1.0}
                   for _, r in daily.iterrows()],
         "sections": order,
         "weekly": [{"d": r["week"], **{s: int(r.get(s, 0)) for s in order}}
                    for _, r in wk.iterrows()],
         "ledger": led,
-        "annotations": annotations(led),
+        "annotations": annotations(ann_pool),
         "lifetimes": lifetimes(stories),
         "archetypes": archetypes(curves),
         "discords": discords(daily),
