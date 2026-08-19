@@ -391,7 +391,16 @@ def build(site: bool):
     wk, order = weekly_sections(per_day)
     curves = build_curves(per_day, stories, min_days=5)
     led = ledger(stories, curves)
-    ann_pool = ledger(stories, curves, n=300)  # wider pool so every year competes
+    # annotation pool: top stories PER YEAR (a global pool starves quiet-feed
+    # years like 2024, whose loudest story peaked at 11 outlets)
+    st_ann = stories[stories["kind"] == "story"].copy()
+    st_ann["year"] = st_ann["peak_day"].str[:4]
+    ann_pool = [
+        {"uid": r["story_uid"], "headline": r["headline"],
+         "peak_outlets": int(r["peak_outlets"]), "peak_day": r["peak_day"]}
+        for _, g in st_ann.groupby("year")
+        for _, r in g.nlargest(40, "peak_outlets").drop_duplicates("headline").iterrows()
+    ]
 
     payload = {
         "meta": {
