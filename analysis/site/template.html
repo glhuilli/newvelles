@@ -222,35 +222,61 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
   </section>
   <section class="panel" id="panel-learnings" hidden>
     <div class="discord-title" style="margin-top:0">Classifying 114,927 stories: four routes vs one golden set</div>
-    <p class="panel-note">Every story carries a 3-level classification (13 major categories →
-    ~60 sub-categories → open meta tags; taxonomy seeded from IPTC Media Topics). The
-    reference is a <b>golden set of 4,020 stories</b> — stratified by year, section, and
-    story length — labeled in-session by <b>Claude Fable 5</b> (frontier model, batch-of-250
-    structured labeling; 0 invalid lines; 6.4% fell to "other-*" escape subs, under the 8%
-    design bar). Every route below is scored as agreement with those labels.</p>
+    <p class="panel-note">Every story carries a 3-level classification: one of 13 <b>major
+    categories</b>, one of ~60 <b>sub-categories</b>, and 2–6 open-vocabulary <b>meta
+    tags</b>. The category list is adapted from <b>IPTC Media Topics</b> — the news
+    industry's standard subject taxonomy, maintained by the International Press
+    Telecommunications Council and used by wire agencies and newsrooms to categorize
+    articles.</p>
+    <p class="panel-note"><b>The golden set.</b> The reference labels are a set of
+    <b>4,020 stories</b>, sampled to cover every year, every section, and both short and
+    long-running stories, then labeled by <b>Claude Fable 5</b> (a frontier model — the
+    strongest labeler available to this project). Quality checks on that labeling: every
+    output was valid and matched the taxonomy exactly, and only 6.4% of stories needed an
+    "other-*" catch-all sub-category — low enough to conclude the taxonomy fits the
+    corpus. Every route below is scored by how often it agrees with these labels.</p>
+    <p class="panel-note"><b>How to read the table.</b> <b>n scored</b> — golden-set
+    stories that route labeled, and therefore the sample its scores are computed on (routes
+    differ because of parse failures and train/test splits). <b>Major</b> — share of
+    stories where the route picked the same major category as the golden set.
+    <b>Sub</b> — same, for the exact sub-category. <b>Sub | major ✓</b> — sub-category
+    agreement counting only stories where the major was already right; it isolates
+    fine-grained confusion from coarse mistakes. <b>Tags: any overlap</b> — share of
+    stories where at least one of the route's tags matches a golden tag (a lenient "did it
+    understand the story at all" check). <b>Tags: Jaccard</b> — overlap ÷ union of the two
+    tag sets, averaged (a strict similarity measure; 1.0 = identical tag sets).</p>
     <div class="chart-box" style="margin-bottom:12px">
       <table class="ledger"><thead><tr>
         <th>Route</th><th>n scored</th><th>Major</th><th>Sub</th><th>Sub | major ✓</th>
-        <th>Tags any-overlap</th><th>Tags Jaccard</th><th>Cost / notes</th></tr></thead>
+        <th>Tags: any overlap</th><th>Tags: Jaccard</th><th>Cost / notes</th></tr></thead>
       <tbody>
-        <tr><td class="headline">Claude Haiku 4.5 (Bedrock) — production route</td>
+        <tr><td class="headline">Claude Haiku 4.5 (Bedrock)</td>
           <td class="num">3,704</td><td class="num"><b>0.823</b></td><td class="num"><b>0.662</b></td>
           <td class="num">0.793</td><td class="num"><b>0.975</b></td><td class="num"><b>0.495</b></td>
           <td class="why">~$33 for the full corpus, ~1.5 h batched (150 stories/call)</td></tr>
         <tr><td class="headline">MiniLM embeddings + logistic regression</td>
           <td class="num">1,005</td><td class="num">0.778</td><td class="num">0.631</td>
           <td class="num">0.734</td><td class="num">0.644</td><td class="num">0.203</td>
-          <td class="why">trained on 3,015 golden rows; tags via k-NN transfer (open vocabulary is not classifiable)</td></tr>
+          <td class="why">trained on 3,015 golden rows; deliberate low-effort baseline (see next steps)</td></tr>
         <tr><td class="headline">qwen3:8b (local, ollama)</td>
           <td class="num">2,605</td><td class="num">0.427 <span style="color:var(--muted)">(0.595 case-normalized)</span></td>
           <td class="num">0.262</td><td class="num">0.441</td><td class="num">0.654</td><td class="num">0.193</td>
           <td class="why">only 64.8% of output lines parsed as valid JSON; frequent index misalignment</td></tr>
       </tbody></table>
     </div>
+    <p class="panel-note"><b>The ML baseline, in plain terms.</b> Each headline is turned
+    into a 384-number vector with <b>MiniLM</b> — a small sentence-embedding model that
+    places similar sentences near each other in that vector space — and a logistic
+    regression picks the category from the vector. Meta tags can't be handled that way
+    (they're open vocabulary, not a fixed label list), so the baseline uses <b>k-NN
+    transfer</b>: find the 5 nearest golden-set headlines in the embedding space and
+    inherit the tags they have in common. That inherits only tags that already exist
+    nearby — it can never write a new tag for a new story, which is why its tag scores
+    collapse (0.20 vs 0.50 Jaccard).</p>
     <p class="panel-note"><b>What the numbers taught us.</b>
     (1) <b>Meta tags are the genuinely generative part</b>: the LLM writes "immigration
-    crisis" without those words in the title; a classifier can only inherit neighbors'
-    tags — hence 0.50 vs 0.20 Jaccard, the widest gap in the table.
+    crisis" without those words appearing in the title; extractive and transfer methods
+    can't.
     (2) <b>Sub-category disagreement is often boundary fuzziness, not error</b>: the trained
     model and Haiku make the <i>same</i> confusions (Economy↔Markets, Crime↔Politics
     trials). Reviewing top divergences found one systematic split — Haiku classifies by
@@ -299,6 +325,32 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
     Timeline drill (toggle beside the back button) and the Top stories tab. Landmark
     events are the exception: a hand-curated list of 20, matched to archive stories by
     search terms + date windows.</p>
+
+    <div class="discord-title">Next steps</div>
+    <p class="panel-note"><b>1 · A serious ML classifier.</b> The embedding baseline was a
+    deliberate low-effort option; its 0.78/0.63 with a frozen 90 MB model and one
+    afternoon of work suggests real headroom. Candidates to try, roughly in order:
+    <b>fine-tune a modern encoder</b> (ModernBERT or DeBERTa-v3) end-to-end on the labels
+    instead of freezing embeddings; <b>distill from Haiku</b> — train on all 114,927 Haiku
+    labels rather than 3,000 golden rows, and evaluate against the golden set (weak
+    supervision at 30× the training data usually beats a small clean set);
+    <b>SetFit-style contrastive fine-tuning</b> of the embedding model itself; larger
+    embedding models as a drop-in check. Add <b>abstention</b>: below a confidence
+    threshold, defer to the LLM — a hybrid that could match Haiku's quality at a fraction
+    of its cost.</p>
+    <p class="panel-note"><b>2 · Tags remain LLM work for now.</b> A generative tagger
+    small enough to run locally (fine-tuned seq2seq on Haiku's 114k tag sets) is the
+    experiment worth running before accepting that conclusion.</p>
+    <p class="panel-note"><b>3 · Identity defragmentation.</b> Several benchmark artifacts
+    trace to one upstream cause: big stories split across multiple story identities
+    (the Will Smith slap and its follow-ups live in separate uids). A post-hoc merge pass —
+    embedding similarity + shared entities across nearby uids — would improve ranking,
+    archetypes, and lifetimes at once.</p>
+    <p class="panel-note"><b>4 · Golden set v2.</b> Add a second independent labeling pass
+    (another frontier model, or human review of a slice) to measure the agreement
+    <i>ceiling</i> — without it, "0.82 vs golden" can't be separated into model error vs
+    task ambiguity. Relabel the corpus under taxonomy v1.1 boundary rules in the next
+    full pass.</p>
   </section>
 </main>
 <footer id="colophon"></footer>
