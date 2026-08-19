@@ -245,6 +245,136 @@
    "major": "Politics & government",
    "sub": "policy-regulation",
    "note": "\u2018Through The Stroke Of A Pen, Lives Will Be Changed\u2019: REFORM"
+  },
+  "h_70df83caeb": {
+   "major": "Crime & justice",
+   "sub": "shooting",
+   "note": "Auckland shooting before World Cup - crime, not soccer"
+  },
+  "h_97dcb189b2": {
+   "major": "US news (general)",
+   "sub": "local-incidents",
+   "note": "Pride parade / police uniforms - local, not unrest"
+  },
+  "h_90ad5869a2": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "Freedom Caucus SOTU invite - congress, not diplomacy"
+  },
+  "h_3902c2b0bc": {
+   "major": "Markets & finance",
+   "sub": "crypto",
+   "note": "Trump cryptocurrency purchase - crypto, not diplomacy"
+  },
+  "h_b36b8c86ee": {
+   "major": "Politics & government",
+   "sub": "courts-law",
+   "note": "DOJ suit vs Idaho abortion law - not immigration"
+  },
+  "h_89d181e439": {
+   "major": "Crime & justice",
+   "sub": "violent-crime",
+   "note": "Pelosi assault response - not fraud"
+  },
+  "h_d125457648": {
+   "major": "Conflict & security",
+   "sub": "war",
+   "note": "Iran war live blog was under celebrities"
+  },
+  "h_14908e6289": {
+   "major": "Crime & justice",
+   "sub": "other-crime",
+   "note": "Tesla vandalism amid protests - not human interest"
+  },
+  "h_7b25687168": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "Pentagon spending vote - not public health"
+  },
+  "h_0544d227b2": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "Murphy gun legislation - not other-general"
+  },
+  "h_845238878c": {
+   "major": "Politics & government",
+   "sub": "policy-regulation",
+   "note": "agency-cuts dup aligned with twin uid"
+  },
+  "h_4748604f31": {
+   "major": "Crime & justice",
+   "sub": "trials-courts",
+   "note": "civil rape trial - trial, not courts-law doctrine"
+  },
+  "h_48274c0f9c": {
+   "major": "US news (general)",
+   "sub": "religion",
+   "note": "Pope Francis funeral"
+  },
+  "h_8ae30bcb59": {
+   "major": "US news (general)",
+   "sub": "religion",
+   "note": "Pope Leo XIV election"
+  },
+  "h_0723471eac": {
+   "major": "Politics & government",
+   "sub": "white-house",
+   "note": "Musk performance email vs agencies - gov story"
+  },
+  "h_3fb8fee9d3": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "'President Trump not President Musk' - congress"
+  },
+  "h_6c26cd0745": {
+   "major": "Markets & finance",
+   "sub": "banking-finance",
+   "note": "Powell stays on Fed - rates, not stock-market"
+  },
+  "h_da28969b0d": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "Capitol agenda digest - not military-defense"
+  },
+  "h_d9e7d93c07": {
+   "major": "US news (general)",
+   "sub": "religion",
+   "note": "papal conclave explainer"
+  },
+  "h_d01db3e354": {
+   "major": "US news (general)",
+   "sub": "religion",
+   "note": "Pope Leo and the American church"
+  },
+  "h_d378190320": {
+   "major": "Science & space",
+   "sub": "space",
+   "note": "NASA/SpaceX contracts - space program story"
+  },
+  "h_05891618b4": {
+   "major": "Politics & government",
+   "sub": "congress",
+   "note": "Senate Judiciary probe - congress"
+  },
+  "h_c48d740f55": {
+   "major": "Sports",
+   "sub": "basketball",
+   "note": "Mutombo obit was filed under baseball"
+  },
+  "h_1995066e16": {
+   "major": "US news (general)",
+   "sub": "religion",
+   "note": "Pope Francis final tweet - religion, consistent with papal overrides"
+  },
+  "h_6775e2636d": {
+   "major": "Climate & environment",
+   "sub": "disasters-accidents",
+   "note": "Venezuela earthquake - earthquakes are disasters-accidents per taxonomy"
+  },
+  "h_b6a2e50f98": {
+   "major": "Climate & environment",
+   "sub": "disasters-accidents",
+   "note": "NorCal earthquake - earthquakes are disasters-accidents per taxonomy"
   }
  }
 }
