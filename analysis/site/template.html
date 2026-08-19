@@ -279,22 +279,33 @@ function drawMarker(svg, cx, cy, item, hInner) {
   g.append("text").attr("x", cx).attr("y", cy + 3).attr("text-anchor", "middle")
     .style("font-size", "9px").style("font-weight", 700).style("fill", "#fff")
     .style("pointer-events", "none").text(item.n);
-  const title = item.event || item.title;
-  const onRight = cx > TL.W * 0.62;
-  g.on("mouseenter", function () {
+  const name = item.event || item.title;
+  g.on("mouseenter", function (ev) {
     d3.select(this).select("circle").attr("r", 9);
-    d3.select(this).append("text").attr("class", "mk-label")
-      .attr("x", cx + (onRight ? -12 : 12)).attr("y", cy + 4)
-      .attr("text-anchor", onRight ? "end" : "start")
-      .style("font-size", "12px").style("font-weight", 600).style("fill", "var(--ink)")
-      .style("paint-order", "stroke").style("stroke", "var(--surface)")
-      .style("stroke-width", 4).style("pointer-events", "none")
-      .text(title.length > 72 ? title.slice(0, 72) + "…" : title);
-    this.parentNode.appendChild(this);   // raise above bands
+    const box = this.getBoundingClientRect();
+    showTipAt(`
+      <div class="t-strong">${item.n}. ${name}</div>
+      ${item.event && item.title !== item.event
+        ? `<div class="t-date" style="text-transform:none;font-size:11px;margin:2px 0">${item.title.slice(0, 90)}${item.title.length > 90 ? "…" : ""}</div>` : ""}
+      <div style="margin-top:4px">broke <b>${fmtD(P(item.first || item.d))}</b></div>
+      <div>peak <b>${fmtD(P(item.pd || item.d))}</b>${item.pa ? ` · ${item.pa} articles` : ""}</div>
+      <div>${item.outlets} outlets · ${item.days} day${item.days === 1 ? "" : "s"}${item.sub ? ` · ${item.sub}` : ""}</div>
+      ${item.tags && item.tags.length ? `<div style="color:var(--muted);margin-top:2px">${item.tags.join(", ")}</div>` : ""}`,
+      box.left + box.width / 2, box.bottom + 6);
   }).on("mouseleave", function () {
     d3.select(this).select("circle").attr("r", 7);
-    d3.select(this).selectAll(".mk-label").remove();
+    hideTip();
   });
+}
+
+/* info box pinned at a fixed screen point (marker hover) */
+function showTipAt(html, cx, cy) {
+  tip.innerHTML = html;
+  tip.style.display = "block";
+  let x = cx - tip.offsetWidth / 2, y = cy;
+  x = Math.max(8, Math.min(x, innerWidth - tip.offsetWidth - 8));
+  if (y + tip.offsetHeight > innerHeight - 8) y = cy - tip.offsetHeight - 32;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
 }
 
 function renderTimeline() {
@@ -353,8 +364,10 @@ function renderStream() {
     : `Weekly share by major category · click a band to drill in · ${fmtMo(rows[0].d)} – ${fmtMo(rows[rows.length - 1].d)}`;
 
   const svg = svgIn("#stream", TL.W, TL.HD);
+  // fixed order: bands keep their vertical position and color pairing across
+  // every brushed window (keys arrive size-sorted from the payload)
   const series = d3.stack().keys(keys).offset(d3.stackOffsetExpand)
-    .order(d3.stackOrderInsideOut)(rows);
+    .order(d3.stackOrderNone)(rows);
   const x = d3.scaleTime().domain([rows[0].d, rows[rows.length - 1].d]).range([TL.ML, TL.W - TL.MR]);
   const y = d3.scaleLinear()
     .domain([d3.min(series, (s) => d3.min(s, (p) => p[0])), d3.max(series, (s) => d3.max(s, (p) => p[1]))])
@@ -407,13 +420,14 @@ function renderTopStories() {
   const list = landmark ? EVENTS : D.drill[tsSelected].top;
   document.getElementById("ts-table").innerHTML = `
     <table class="ledger"><thead><tr>
-      <th>#</th>${landmark ? "<th>Event</th>" : ""}<th>Story in the archive</th>
+      <th>#</th><th>Event</th><th>Story in the archive</th><th>Broke</th>
       <th>Peak day</th><th>Category</th><th>Tags</th><th>Outlets</th><th>Days</th></tr></thead>
     <tbody>${list.map((e) => `
       <tr><td class="num" style="color:var(--s8);font-weight:700">${e.n}</td>
-      ${landmark ? `<td class="headline" style="max-width:190px">${e.event}</td>` : ""}
-      <td class="${landmark ? "why" : "headline"}" style="max-width:340px">${e.title}</td>
-      <td style="white-space:nowrap">${fmtD(P(e.d))}</td>
+      <td class="headline" style="max-width:180px">${e.event || ""}</td>
+      <td class="why" style="max-width:300px">${e.title}</td>
+      <td style="white-space:nowrap">${fmtD(P(e.first || e.d))}</td>
+      <td style="white-space:nowrap">${fmtD(P(e.pd || e.d))}</td>
       <td class="why">${e.sub || "—"}</td>
       <td class="why">${(e.tags || []).join(", ")}</td>
       <td class="num">${e.outlets}</td>

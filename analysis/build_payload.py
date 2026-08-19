@@ -44,6 +44,8 @@ def per_story(per_day):
     peak_rows = per_day.loc[per_day.groupby("story_uid")["outlets"].idxmax()]
     st["headline"] = peak_rows.set_index("story_uid")["headline"]
     st["peak_day"] = peak_rows.set_index("story_uid")["day"]
+    art_rows = per_day.loc[per_day.groupby("story_uid")["articles"].idxmax()]
+    st["peak_day_articles"] = art_rows.set_index("story_uid")["day"]
     st["span"] = ((pd.to_datetime(st["last"]) - pd.to_datetime(st["first"])).dt.days + 1)
     return st.reset_index()
 
@@ -366,8 +368,12 @@ def _weekly_by(d, col):
     return wk, order
 
 
-def _top_stories(st, n=20, per_year=4, min_gap_days=20):
-    """Era-relative top stories with a per-year quota, like the event flags."""
+def _top_stories(st, n=20, per_year=3, min_gap_days=20):
+    """Era-relative top stories with a per-year quota, like the event flags.
+
+    per_year * years must stay below n, or early years exhaust every slot
+    and late years never appear (the 2026-gap bug): 3 * 6 = 18 < 20.
+    """
     if st.empty:
         return []
     st = st.copy()
@@ -384,7 +390,9 @@ def _top_stories(st, n=20, per_year=4, min_gap_days=20):
             chosen.append({"d": r["peak_day"], "uid": r["story_uid"],
                            "title": r["headline"], "outlets": int(r["peak_outlets"]),
                            "days": int(r["days_seen"]), "sub": r.get("sub", ""),
-                           "tags": list(r.get("tags", []))})
+                           "tags": list(r.get("tags", [])),
+                           "first": r["first"], "pd": r["peak_day_articles"],
+                           "pa": int(r["peak_articles"])})
             return True
         return False
 
@@ -411,6 +419,8 @@ def drill_views(per_day, stories, majors_order):
     st = (stories[stories["kind"] == "story"]
           .merge(labels, on="story_uid", how="inner"))
     top7 = [m for m in majors_order if m != "Other"]
+    titles_path = HERE / "data" / "short_titles.json"
+    short_titles = json.loads(titles_path.read_text()) if titles_path.exists() else {}
     out = {}
     for major in majors_order:
         if major == "Other":
@@ -421,11 +431,14 @@ def drill_views(per_day, stories, majors_order):
             seg_pd = pdl[pdl["major"] == major]
             seg_st = st[st["major"] == major]
             wk, order = _weekly_by(seg_pd, "sub")
+        top = _top_stories(seg_st)
+        for t in top:   # ~5-word event titles (Haiku via name_top_stories.py)
+            t["event"] = short_titles.get(t["uid"]) or " ".join(t["title"].split()[:6])
         out[major] = {
             "order": order,
             "weekly": [{"d": r["week"], **{s: int(r.get(s, 0)) for s in order}}
                        for _, r in wk.iterrows()],
-            "top": _top_stories(seg_st),
+            "top": top,
         }
     return out
 
@@ -450,7 +463,8 @@ def landmark_events(stories):
         r = hit.nlargest(1, "peak_outlets").iloc[0]
         row = {"n": i, "event": ev["name"], "d": r["peak_day"], "uid": r["story_uid"],
                "title": r["headline"], "outlets": int(r["peak_outlets"]),
-               "days": int(r["days_seen"]), "first": r["first"]}
+               "days": int(r["days_seen"]), "first": r["first"],
+               "pd": r["peak_day_articles"], "pa": int(r["peak_articles"])}
         if lab is not None and r["story_uid"] in lab.index:
             row["sub"] = lab.loc[r["story_uid"], "sub"]
             row["tags"] = list(lab.loc[r["story_uid"], "tags"])
