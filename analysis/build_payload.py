@@ -354,6 +354,38 @@ def categories(per_day, stories):
             "majors_order": majors_order}
 
 
+def landmark_events(stories):
+    """Match curated events (analysis/events.json) to archive stories."""
+    spec = json.loads((HERE / "events.json").read_text())["events"]
+    labels_path = HERE / "data" / "story_labels.parquet"
+    lab = (pd.read_parquet(labels_path).set_index("story_uid")
+           if labels_path.exists() else None)
+    st = stories[stories["kind"] == "story"]
+    out = []
+    for i, ev in enumerate(spec, 1):
+        w = st[(st["peak_day"] >= ev["from"]) & (st["peak_day"] <= ev["to"])]
+        low = w["headline"].str.lower()
+        mask = low.apply(lambda h: all(t in h for t in ev["terms"])
+                         and not any(x in h for x in ev.get("exclude", [])))
+        hit = w[mask]
+        if hit.empty:
+            print(f"  ⚠️ event not matched: {ev['name']}")
+            continue
+        r = hit.nlargest(1, "peak_outlets").iloc[0]
+        row = {"n": i, "event": ev["name"], "d": r["peak_day"], "uid": r["story_uid"],
+               "title": r["headline"], "outlets": int(r["peak_outlets"]),
+               "days": int(r["days_seen"]), "first": r["first"]}
+        if lab is not None and r["story_uid"] in lab.index:
+            row["sub"] = lab.loc[r["story_uid"], "sub"]
+            row["tags"] = list(lab.loc[r["story_uid"], "tags"])
+        if "sub" in ev:      # curated override (e.g. identity-drifted uids)
+            row["sub"] = ev["sub"]
+        if "tags" in ev:
+            row["tags"] = ev["tags"]
+        out.append(row)
+    return out
+
+
 def discords(daily, m=14, top=5):
     v = daily["articles"].to_numpy(dtype=float)
     n = len(v) - m + 1
@@ -417,6 +449,7 @@ def build(site: bool):
                    for _, r in wk.iterrows()],
         "ledger": led,
         "annotations": annotations(ann_pool),
+        "events": landmark_events(stories),
         "lifetimes": lifetimes(stories),
         "archetypes": archetypes(curves),
         "discords": discords(daily),

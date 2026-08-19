@@ -103,6 +103,7 @@ table.ledger td.num { font-variant-numeric: tabular-nums; text-align: right; }
 table.ledger .headline { font-weight: 600; max-width: 420px; }
 table.ledger .why { color: var(--ink-2); font-size: 12px; }
 table.ledger tr:hover td { background: color-mix(in oklab, var(--accent) 6%, transparent); }
+table.ledger tr.hot td { background: color-mix(in oklab, var(--s8) 12%, transparent); }
 .sec-chip { display: inline-flex; align-items: center; gap: 5px; font: 11px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-2); white-space: nowrap; }
 .sec-chip .sw { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
 
@@ -139,8 +140,8 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
     re-normalizes each week to 100% (default — the honest cross-era view; <b>counts</b>
     shows raw volume, which includes pipeline growth). The strip is era-normalized:
     volume relative to a trailing 91-day baseline, so a 3× day in 2021 stands as tall
-    as one in 2026. Flags mark era-relative standouts — peak outlet count divided by
-    that year's median among top stories.</p>
+    as one in 2026. Numbered markers are 20 curated landmark events matched to their
+    archive stories — hover one, or hover a row in the table below.</p>
     <div class="chart-box" style="margin-bottom:12px">
       <div id="strip"></div>
     </div>
@@ -156,6 +157,11 @@ footer { flex: none; max-width: 1220px; margin: 0 auto; width: 100%; padding: 8p
         </div>
       </div>
       <div id="stream"></div>
+    </div>
+    <div class="chart-box" style="margin-top:12px">
+      <div class="box-head"><span class="box-title">Landmark events · numbered markers above ·
+        hover a marker to highlight its row</span></div>
+      <div id="events-table"></div>
     </div>
   </section>
 
@@ -220,7 +226,7 @@ const SECTIONS = D.sections;
 const SCOLOR = Object.fromEntries(SECTIONS.map((s, i) => [s, `var(--s${(i % 8) + 1})`]));
 const daily = D.daily.map((r) => ({ d: P(r.d), a: r.a, s: r.s, x: r.x ?? 1 }));
 const weekly = D.weekly.map((r) => ({ ...r, d: P(r.d) }));
-const anns = D.annotations.map((r) => ({ ...r, d: P(r.d) }));
+const EVENTS = (D.events || []).map((e) => ({ ...e, dd: P(e.d) }));
 const T0 = daily[0].d, T1 = daily[daily.length - 1].d;
 
 const tip = document.getElementById("tooltip");
@@ -277,16 +283,23 @@ function renderTimeline() {
   svg.append("text").attr("x", TL.ML + 4).attr("y", y(1) - 4)
     .style("font-size", "10px").style("fill", "var(--muted)")
     .text("volume vs typical day (era-normalized) · 1.0 = baseline");
-  for (const a of anns) {
-    svg.append("line").attr("x1", xF(a.d)).attr("x2", xF(a.d)).attr("y1", 12).attr("y2", TL.HS)
-      .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3");
-    svg.append("circle").attr("cx", xF(a.d)).attr("cy", 10).attr("r", 3)
-      .style("fill", "var(--s8)").style("cursor", "default")
-      .on("mousemove", (ev) => showTip(
-        `<div class="t-date">${fmtD(a.d)}</div><div class="t-strong">${a.label}</div>
-         <div>peak ${a.outlets} outlets</div>`, ev))
-      .on("mouseleave", hideTip);
+  for (const e of EVENTS) {
+    svg.append("line").attr("x1", xF(e.dd)).attr("x2", xF(e.dd)).attr("y1", 18).attr("y2", TL.HS)
+      .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3")
+      .style("opacity", 0.6).style("pointer-events", "none");
+    const g = svg.append("g").attr("class", "ev-marker").attr("data-ev", e.n)
+      .style("cursor", "default")
+      .on("mousemove", (ev) => { hotEvent(e.n, true); showTip(
+        `<div class="t-date">${fmtD(e.dd)}</div><div class="t-strong">${e.event}</div>
+         <div>${e.title.slice(0, 70)}${e.title.length > 70 ? "…" : ""}</div>`, ev); })
+      .on("mouseleave", () => { hotEvent(e.n, false); hideTip(); });
+    g.append("circle").attr("cx", xF(e.dd)).attr("cy", 10).attr("r", 7)
+      .style("fill", "var(--s8)").style("stroke", "var(--surface)").style("stroke-width", 1.5);
+    g.append("text").attr("x", xF(e.dd)).attr("y", 13).attr("text-anchor", "middle")
+      .style("font-size", "9px").style("font-weight", 700).style("fill", "#fff")
+      .style("pointer-events", "none").text(e.n);
   }
+  renderEventsTable();
   svg.append("g").attr("class", "axis").attr("transform", `translate(0,${TL.HS})`)
     .call(d3.axisBottom(xF).ticks(d3.timeYear.every(1)).tickSizeOuter(0))
     .select(".domain").remove();
@@ -345,21 +358,54 @@ function renderStream() {
         .style("stroke-width", 3).style("stroke-opacity", 0.75).text(s.key);
     }
   }
-  const inWin = anns.filter((an) => an.d >= a && an.d <= b);
-  inWin.forEach((an, i) => {
-    const ly = 12 + (i % 2) * 14;   // alternate rows so nearby labels don't collide
-    svg.append("line").attr("x1", x(an.d)).attr("x2", x(an.d)).attr("y1", ly + 2).attr("y2", TL.HD - 24)
+  for (const e of EVENTS.filter((e) => e.dd >= a && e.dd <= b)) {
+    svg.append("line").attr("x1", x(e.dd)).attr("x2", x(e.dd)).attr("y1", 20).attr("y2", TL.HD - 24)
       .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3")
-      .style("pointer-events", "none");
-    const onRight = x(an.d) > TL.W * 0.7;
-    svg.append("text").attr("x", x(an.d) + (onRight ? -4 : 4)).attr("y", ly)
-      .attr("text-anchor", onRight ? "end" : "start")
-      .style("font-size", "10.5px").style("fill", "var(--ink-2)")
-      .style("paint-order", "stroke").style("stroke", "var(--surface)").style("stroke-width", 3)
-      .text(an.label.length > 30 ? an.label.slice(0, 30) + "…" : an.label);
-  });
+      .style("opacity", 0.6).style("pointer-events", "none");
+    svg.append("circle").attr("cx", x(e.dd)).attr("cy", 12).attr("r", 7)
+      .style("fill", "var(--s8)").style("stroke", "var(--surface)").style("stroke-width", 1.5)
+      .on("mousemove", (ev) => { hotEvent(e.n, true); showTip(
+        `<div class="t-date">${fmtD(e.dd)}</div><div class="t-strong">${e.event}</div>`, ev); })
+      .on("mouseleave", () => { hotEvent(e.n, false); hideTip(); });
+    svg.append("text").attr("x", x(e.dd)).attr("y", 15).attr("text-anchor", "middle")
+      .style("font-size", "9px").style("font-weight", 700).style("fill", "#fff")
+      .style("pointer-events", "none").text(e.n);
+  }
   svg.append("g").attr("class", "axis").attr("transform", `translate(0,${TL.HD - 24})`)
     .call(d3.axisBottom(x).ticks(8).tickSizeOuter(0)).select(".domain").remove();
+}
+
+/* ---------- landmark events table + marker linking ---------- */
+function hotEvent(n, on) {
+  const row = document.getElementById("ev-row-" + n);
+  if (row) {
+    row.classList.toggle("hot", on);
+    if (on) row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  d3.selectAll(`.ev-marker[data-ev='${n}'] circle`).attr("r", on ? 9 : 7);
+}
+function renderEventsTable() {
+  const el = document.getElementById("events-table");
+  if (!EVENTS.length) { el.innerHTML = "<p class='panel-note'>No events payload.</p>"; return; }
+  el.innerHTML = `
+    <table class="ledger"><thead><tr>
+      <th>#</th><th>Event</th><th>Story in the archive</th><th>Peak day</th>
+      <th>Category</th><th>Tags</th><th>Outlets</th><th>Days</th></tr></thead>
+    <tbody>${EVENTS.map((e) => `
+      <tr id="ev-row-${e.n}" data-ev="${e.n}">
+      <td class="num" style="color:var(--s8);font-weight:700">${e.n}</td>
+      <td class="headline" style="max-width:200px">${e.event}</td>
+      <td class="why" style="max-width:330px">${e.title}</td>
+      <td>${fmtD(P(e.d))}</td>
+      <td class="why">${e.sub || "—"}</td>
+      <td class="why">${(e.tags || []).join(", ")}</td>
+      <td class="num">${e.outlets}</td>
+      <td class="num">${e.days}</td></tr>`).join("")}
+    </tbody></table>`;
+  el.querySelectorAll("tr[data-ev]").forEach((row) => {
+    row.addEventListener("mouseenter", () => hotEvent(+row.dataset.ev, true));
+    row.addEventListener("mouseleave", () => hotEvent(+row.dataset.ev, false));
+  });
 }
 
 /* ---------- ledger ---------- */
