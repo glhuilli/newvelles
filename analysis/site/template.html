@@ -325,6 +325,48 @@ table.ledger tr.hot td { background: color-mix(in oklab, var(--s8) 12%, transpar
     events are the exception: a hand-curated list of 20, matched to archive stories by
     search terms + date windows.</p>
 
+    <div class="discord-title">Linking stories into events: what "days of coverage" should mean</div>
+    <p class="panel-note"><b>The problem.</b> Story identity (kept deliberately unchanged)
+    tracks one keyword-stable thread — but big events spawn a new thread per angle. October
+    7 shows the gap: the war was in the news 40+ consecutive days, yet it appears as
+    <b>131+ separate story identities</b>, most lasting 1–2 days; the Musk-Twitter takeover
+    is 57 threads, including four identities carrying the <i>same headline</i>. Readers who
+    lived those weeks remember continuous coverage; the identity layer can't show it.</p>
+    <p class="panel-note"><b>Linking options evaluated</b> (star-shaped around each top-25
+    anchor; scored by hand-checking four known events — October 7, Musk-Twitter, SVB, the
+    Queen's death — for correct broke date, plausible duration, and leakage):</p>
+    <div class="chart-box" style="margin-bottom:12px">
+      <table class="ledger"><thead><tr>
+        <th>Option</th><th>Rule</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td class="headline">Raw entity overlap</td><td class="why">share ≥ 2 entity tokens</td>
+          <td class="why">too loose — generic tokens (biden, trump) link everything</td></tr>
+        <tr><td class="headline">IDF-weighted entities</td><td class="why">Σ idf(shared tokens) ≥ τ — rare entities count more</td>
+          <td class="why">good recall; person-entity gravity pulls in unrelated stories about the same people</td></tr>
+        <tr><td class="headline">Signature Jaccard</td><td class="why">keywords ∪ entities overlap ≥ 0.15</td>
+          <td class="why">middling on both axes</td></tr>
+        <tr><td class="headline">Embedding similarity</td><td class="why">MiniLM cosine to anchor headline ≥ 0.5</td>
+          <td class="why">too narrow — one headline can't represent an event's many angles (Oct 7 found only 30 stories)</td></tr>
+        <tr><td class="headline"><b>Hybrid — chosen</b></td><td class="why">moderate IDF overlap AND moderate embedding similarity, OR very high IDF overlap</td>
+          <td class="why">correct broke/peak/duration on all four cases; Oct 7 → 175 stories, 124 continuous days</td></tr>
+      </tbody></table>
+    </div>
+    <p class="panel-note"><b>Definitions now used for top stories.</b> An event's
+    <b>broke</b> date = start of the coverage episode containing the peak (a stray related
+    story days earlier can't hijack the clock). <b>Peak</b> = the day with the most
+    combined articles across all linked stories. <b>Days</b> = the continuous run from
+    broke until coverage disappears for more than 3 days; the full list of coverage
+    <b>periods</b> (episodes) is kept and drawn in the timeline's linkage lane. Event
+    titles are generated from the cluster's earliest and biggest member headlines — so
+    October 7 is titled by the attack, not by whichever single angle peaked hardest.</p>
+    <p class="panel-note"><b>Known limitations (v1).</b> Linking is anchor-star, not
+    global — only the ~300 top stories get clusters. Multi-topic digest identities can
+    leak a stray story in (a North Korea missile brief entered the Oct 7 cluster).
+    The peak-episode rule can date "broke" at the main run rather than a smaller
+    earlier burst (Musk-Twitter dates from the layoffs wave, not the deal-close two
+    weeks prior — the earlier episode remains visible in the lane). The 120-day search
+    window caps very long events; October 7's "124 days" is a floor, not a ceiling.</p>
+
     <div class="discord-title">Next steps</div>
     <p class="panel-note"><b>1 · A serious ML classifier.</b> The embedding baseline was a
     deliberate low-effort option; its 0.78/0.63 with a frozen 90 MB model and one
@@ -340,11 +382,13 @@ table.ledger tr.hot td { background: color-mix(in oklab, var(--s8) 12%, transpar
     <p class="panel-note"><b>2 · Tags remain LLM work for now.</b> A generative tagger
     small enough to run locally (fine-tuned seq2seq on Haiku's 114k tag sets) is the
     experiment worth running before accepting that conclusion.</p>
-    <p class="panel-note"><b>3 · Identity defragmentation.</b> Several benchmark artifacts
-    trace to one upstream cause: big stories split across multiple story identities
-    (the Will Smith slap and its follow-ups live in separate uids). A post-hoc merge pass —
-    embedding similarity + shared entities across nearby uids — would improve ranking,
-    archetypes, and lifetimes at once.</p>
+    <p class="panel-note"><b>3 · Event linking v2.</b> The anchor-star linker above is v1.
+    Remaining work: <b>global</b> event clustering (every story assigned to an event, not
+    only the top ~300 anchors), learnable thresholds (fit τ against a hand-labeled set of
+    link judgments instead of eyeballing four cases), LLM verification of borderline links
+    (cheap Haiku yes/no on the 10–20 lowest-scoring members per cluster), and removing the
+    120-day window cap with an episode-following expansion. Archetypes and ranking should
+    then move onto cluster series rather than identity series.</p>
     <p class="panel-note"><b>4 · Golden set v2.</b> Add a second independent labeling pass
     (another frontier model, or human review of a slice) to measure the agreement
     <i>ceiling</i> — without it, "0.82 vs golden" can't be separated into model error vs
@@ -406,34 +450,86 @@ let window0 = [d3.timeMonth.offset(T1, -18), T1];
 let drillTo = null;   // null = all majors; otherwise a major name
 let drillMode = "top";   // marker list in drill view: "top" | "top_yearly"
 
-/* numbered marker whose title expands in place on hover */
+/* numbered marker: hover = event info box; click = pin the linkage lane */
+let pinnedCluster = null;
+const markerDate = (item) => {
+  const C = (D.clusters || {})[item.uid];
+  return C ? P(C.b) : item.dd;
+};
 function drawMarker(svg, cx, cy, item, hInner) {
+  const C = (D.clusters || {})[item.uid];
   svg.append("line").attr("x1", cx).attr("x2", cx).attr("y1", cy + 8).attr("y2", hInner)
     .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3")
     .style("opacity", 0.6).style("pointer-events", "none");
-  const g = svg.append("g").style("cursor", "default");
+  const g = svg.append("g").style("cursor", C ? "pointer" : "default");
   g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", 7)
-    .style("fill", "var(--s8)").style("stroke", "var(--surface)").style("stroke-width", 1.5);
+    .style("fill", "var(--s8)").style("stroke", "var(--surface)")
+    .style("stroke-width", pinnedCluster === item.uid ? 3 : 1.5);
   g.append("text").attr("x", cx).attr("y", cy + 3).attr("text-anchor", "middle")
     .style("font-size", "9px").style("font-weight", 700).style("fill", "#fff")
     .style("pointer-events", "none").text(item.n);
-  const name = item.event || item.title;
+  const name = (C && C.t) || item.event || item.title;
   g.on("mouseenter", function (ev) {
     d3.select(this).select("circle").attr("r", 9);
     const box = this.getBoundingClientRect();
+    const body = C ? `
+      <div style="margin-top:4px">broke <b>${fmtD(P(C.b))}</b> · peak <b>${fmtD(P(C.p))}</b> (${C.pa} articles)</div>
+      <div><b>${C.d}</b> days continuous · ${C.cd} coverage days in ${C.eps.length} period${C.eps.length === 1 ? "" : "s"}</div>
+      <div>${C.n} linked stories${item.sub ? ` · ${item.sub}` : ""}</div>
+      <div style="color:var(--muted);margin-top:2px">click to ${pinnedCluster === item.uid ? "hide" : "show"} the linked stories</div>` : `
+      <div style="margin-top:4px">broke <b>${fmtD(P(item.first || item.d))}</b> · peak <b>${fmtD(P(item.pd || item.d))}</b></div>
+      <div>${item.outlets} outlets · ${item.days} day${item.days === 1 ? "" : "s"}</div>`;
     showTipAt(`
       <div class="t-strong">${item.n}. ${name}</div>
-      ${item.event && item.title !== item.event
-        ? `<div class="t-date" style="text-transform:none;font-size:11px;margin:2px 0">${item.title.slice(0, 90)}${item.title.length > 90 ? "…" : ""}</div>` : ""}
-      <div style="margin-top:4px">broke <b>${fmtD(P(item.first || item.d))}</b></div>
-      <div>peak <b>${fmtD(P(item.pd || item.d))}</b>${item.pa ? ` · ${item.pa} articles` : ""}</div>
-      <div>${item.outlets} outlets · ${item.days} day${item.days === 1 ? "" : "s"}${item.sub ? ` · ${item.sub}` : ""}</div>
+      ${item.title && item.title !== name
+        ? `<div class="t-date" style="text-transform:none;font-size:11px;margin:2px 0">anchor: ${item.title.slice(0, 84)}${item.title.length > 84 ? "…" : ""}</div>` : ""}
+      ${body}
       ${item.tags && item.tags.length ? `<div style="color:var(--muted);margin-top:2px">${item.tags.join(", ")}</div>` : ""}`,
       box.left + box.width / 2, box.bottom + 6);
   }).on("mouseleave", function () {
     d3.select(this).select("circle").attr("r", 7);
     hideTip();
+  }).on("click", () => {
+    if (!C) return;
+    pinnedCluster = pinnedCluster === item.uid ? null : item.uid;
+    hideTip(); renderStream();
   });
+}
+
+/* linkage lane: one dot per linked story at its first day + episode bars */
+function drawClusterLane(svg, x, a, b) {
+  const C = (D.clusters || {})[pinnedCluster];
+  if (!C) return;
+  const laneY = TL.HD - 44;
+  for (const ep of C.eps) {
+    const x0 = Math.max(x(P(ep[0])), TL.ML), x1 = Math.min(x(P(ep[1])), TL.W - TL.MR);
+    if (x1 < TL.ML || x0 > TL.W - TL.MR) continue;
+    svg.append("line").attr("x1", x0).attr("x2", Math.max(x1, x0 + 2))
+      .attr("y1", laneY + 12).attr("y2", laneY + 12)
+      .style("stroke", "var(--s8)").style("stroke-width", 4)
+      .style("stroke-linecap", "round").style("opacity", 0.5);
+  }
+  svg.append("text").attr("x", TL.ML + 2).attr("y", laneY - 10)
+    .style("font-size", "10.5px").style("font-weight", 600).style("fill", "var(--s8)")
+    .text(`${C.t} — ${C.n} linked stories, coverage periods below`);
+  for (const m of C.members) {
+    const md = P(m.f);
+    if (md < a || md > b) continue;
+    svg.append("circle").attr("cx", x(md)).attr("cy", laneY).attr("r", 4)
+      .style("fill", "var(--surface)").style("stroke", "var(--s8)").style("stroke-width", 2)
+      .style("cursor", "default")
+      .on("mouseenter", function () {
+        d3.select(this).attr("r", 5.5);
+        const box = this.getBoundingClientRect();
+        showTipAt(`
+          <div class="t-strong">${m.t}</div>
+          <div style="margin-top:3px">appeared <b>${fmtD(P(m.f))}</b> · ${m.days} day${m.days === 1 ? "" : "s"} in the news</div>
+          <div>${m.a} articles · ${m.o} outlets</div>
+          ${m.tags && m.tags.length ? `<div style="color:var(--muted);margin-top:2px">${m.tags.join(", ")}</div>` : ""}`,
+          box.left + box.width / 2, box.bottom + 6);
+      })
+      .on("mouseleave", function () { d3.select(this).attr("r", 4); hideTip(); });
+  }
 }
 
 /* info box pinned at a fixed screen point (marker hover) */
@@ -463,7 +559,7 @@ function renderTimeline() {
   svg.append("text").attr("x", TL.ML + 4).attr("y", y(1) - 4)
     .style("font-size", "10px").style("fill", "var(--muted)")
     .text("volume vs typical day (era-normalized) · 1.0 = baseline");
-  for (const e of EVENTS) drawMarker(svg, xF(e.dd), 10, e, TL.HS);
+  for (const e of EVENTS) drawMarker(svg, xF(markerDate(e)), 10, e, TL.HS);
   svg.append("g").attr("class", "axis").attr("transform", `translate(0,${TL.HS})`)
     .call(d3.axisBottom(xF).ticks(d3.timeYear.every(1)).tickSizeOuter(0))
     .select(".domain").remove();
@@ -475,7 +571,7 @@ function renderTimeline() {
   svg.append("g").call(brush).call(brush.move, window0.map(xF));
   svg.selectAll(".selection").style("fill", "var(--s1)").style("fill-opacity", 0.10).style("stroke", "var(--s1)");
 
-  document.getElementById("stream-back").onclick = () => { drillTo = null; renderStream(); };
+  document.getElementById("stream-back").onclick = () => { drillTo = null; pinnedCluster = null; renderStream(); };
   renderStream();
 }
 
@@ -491,7 +587,7 @@ function renderStream() {
     ? view.weekly.map((r) => ({ ...r, d: P(r.d) }))
     : weekly;
   const markers = (view ? view[drillMode].map((t) => ({ ...t, dd: P(t.d) })) : EVENTS)
-    .filter((m) => m.dd >= a && m.dd <= b);
+    .filter((m) => markerDate(m) >= a && markerDate(m) <= b);
   const rows = allRows.filter((r) => r.d >= d3.timeMonday.floor(a) && r.d <= b);
   document.getElementById("stream-back").hidden = !drillTo;
   const dt = document.getElementById("drill-title");
@@ -526,7 +622,7 @@ function renderStream() {
     .style("stroke", "var(--surface)").style("stroke-width", 1)
     .style("cursor", drillTo ? "default" : "pointer")
     .on("click", (ev, s) => {
-      if (!drillTo && D.drill && D.drill[s.key]) { drillTo = s.key; hideTip(); renderStream(); }
+      if (!drillTo && D.drill && D.drill[s.key]) { drillTo = s.key; pinnedCluster = null; hideTip(); renderStream(); }
     })
     .on("mousemove", function (ev, s) {
       paths.style("opacity", (p) => (p === s ? 1 : 0.35));
@@ -548,7 +644,8 @@ function renderStream() {
         .style("stroke-width", 3).style("stroke-opacity", 0.75).text(s.key);
     }
   }
-  for (const m of markers) drawMarker(svg, x(m.dd), 12, m, TL.HD - 24);
+  for (const m of markers) drawMarker(svg, x(markerDate(m)), 12, m, TL.HD - 24);
+  drawClusterLane(svg, x, a, b);
   svg.append("g").attr("class", "axis").attr("transform", `translate(0,${TL.HD - 24})`)
     .call(d3.axisBottom(x).ticks(8).tickSizeOuter(0)).select(".domain").remove();
 }
@@ -557,9 +654,14 @@ function renderStream() {
 let tsSelected = "__landmark__";
 let tsMode = "top";                       // "top" (25 by relevance) | "top_yearly"
 let tsSort = { key: "n", dir: 1 };
-const TS_COLS = [["n", "#"], ["event", "Event"], ["title", "Story in the archive"],
+const TS_COLS = [["n", "#"], ["event", "Event"], ["title", "Anchor story"],
                  ["first", "Broke"], ["pd", "Peak day"], ["sub", "Category"],
-                 ["tags", "Tags"], ["outlets", "Outlets"], ["days", "Days"]];
+                 ["tags", "Tags"], ["outlets", "Outlets"], ["days", "Days"], ["linked", "Linked"]];
+const withCluster = (e) => {
+  const C = (D.clusters || {})[e.uid] || {};
+  return { ...e, event: C.t || e.event, first: C.b || e.first || e.d,
+           pd: C.p || e.pd || e.d, days: C.d ?? e.days, linked: C.n || 1 };
+};
 function renderTopStories() {
   const groups = [["__landmark__", "Landmark events"],
                   ...Object.keys(D.drill || {}).map((m) => [m, m])];
@@ -576,7 +678,7 @@ function renderTopStories() {
     .text(([, label]) => label)
     .on("click", (ev, [k]) => { tsMode = k; renderTopStories(); });
 
-  const list = [...(landmark ? EVENTS : D.drill[tsSelected][tsMode])];
+  const list = (landmark ? EVENTS : D.drill[tsSelected][tsMode]).map(withCluster);
   const { key, dir } = tsSort;
   list.sort((p, q) => {
     let a = p[key] ?? p.d, b = q[key] ?? q.d;
@@ -597,7 +699,8 @@ function renderTopStories() {
       <td class="why">${e.sub || "—"}</td>
       <td class="why">${(e.tags || []).join(", ")}</td>
       <td class="num">${e.outlets}</td>
-      <td class="num">${e.days}</td></tr>`).join("")}
+      <td class="num">${e.days}</td>
+      <td class="num">${e.linked}</td></tr>`).join("")}
     </tbody></table>`;
   document.querySelectorAll("#ts-table th").forEach((th) => {
     th.addEventListener("click", () => {
@@ -677,7 +780,7 @@ function renderLifetimes() {
     .attr("cx", (p) => x(P(p.d))).attr("cy", (p) => y(Math.max(1, p.span))).attr("r", (p) => r(p.peak))
     .style("fill", "var(--s1)").style("stroke", "var(--surface)").style("stroke-width", 2)
     .on("mousemove", (ev, p) => showTip(`<div class="t-strong">${p.label}</div>
-      <div>ran ${p.span}d · peak ${p.peak} outlets${p.cat ? ` · ${p.cat}` : ""}</div>`, ev))
+      <div>${p.linked ? `event cluster: ${p.linked} linked stories · ` : ""}ran ${p.span}d · peak ${p.peak} outlets${p.cat ? ` · ${p.cat}` : ""}</div>`, ev))
     .on("mouseleave", hideTip);
   svg.append("g").selectAll("text.nl").data(L.named).join("text")
     .attr("x", (p) => { const cx = x(P(p.d)); return cx > W * 0.75 ? cx - r(p.peak) - 5 : cx + r(p.peak) + 5; })

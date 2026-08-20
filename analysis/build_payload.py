@@ -206,7 +206,7 @@ def annotations(led, n=15, min_gap_days=45):
     return sorted(chosen, key=lambda c: c["d"])
 
 
-def lifetimes(stories, base_n=3200, named_n=12):
+def lifetimes(stories, clusters=None, base_n=3200, named_n=12):
     keep = stories[(stories["span"] >= 7) | (stories["peak_outlets"] >= 10)]
     if len(keep) > 2600:
         top = keep.nlargest(600, ["peak_outlets", "span"])
@@ -220,8 +220,12 @@ def lifetimes(stories, base_n=3200, named_n=12):
     return {
         "base": [{"d": r["first"], "span": int(r["span"]), "peak": int(r["peak_outlets"])}
                  for _, r in base.iterrows()],
-        "named": [{"d": r["first"], "span": int(r["span"]), "peak": int(r["peak_outlets"]),
-                   "label": r["headline"][:40],
+        "named": [{"d": (clusters or {}).get(r["story_uid"], {}).get("b", r["first"]),
+                   "span": int((clusters or {}).get(r["story_uid"], {}).get("d", r["span"])),
+                   "peak": int(r["peak_outlets"]),
+                   "label": ((clusters or {}).get(r["story_uid"], {}).get("t")
+                             or r["headline"][:40]),
+                   "linked": (clusters or {}).get(r["story_uid"], {}).get("n", 0),
                    "cat": subs.get(r["story_uid"], "")} for _, r in named.iterrows()],
         "total": int(len(stories)),
         "shown": int(len(base)),
@@ -475,6 +479,28 @@ def drill_views(per_day, stories, majors_order):
     return out
 
 
+def event_clusters():
+    """Trimmed event-cluster layer (link_events.py + name_clusters.py) keyed
+    by anchor uid, for the timeline info boxes and the linkage lane."""
+    cpath = HERE / "data" / "event_clusters.json"
+    if not cpath.exists():
+        return None
+    clusters = json.loads(cpath.read_text())
+    tpath = HERE / "data" / "cluster_titles.json"
+    titles = json.loads(tpath.read_text()) if tpath.exists() else {}
+    out = {}
+    for uid, c in clusters.items():
+        out[uid] = {
+            "t": titles.get(uid, ""), "b": c["broke"], "p": c["peak_day"],
+            "pa": c["peak_articles"], "d": c["days"], "cd": c["coverage_days"],
+            "n": c["n_stories"], "eps": c["episodes"],
+            "members": [{"t": m["title"][:95], "f": m["first"], "days": m["days"],
+                         "o": m["outlets"], "a": m["arts"], "tags": m["tags"]}
+                        for m in c["members"][:12]],
+        }
+    return out
+
+
 def landmark_events(stories):
     """Match curated events (analysis/events.json) to archive stories."""
     spec = json.loads((HERE / "events.json").read_text())["events"]
@@ -572,7 +598,8 @@ def build(site: bool):
         "annotations": annotations(ann_pool),
         "events": landmark_events(stories),
         "drill": drill_views(per_day, stories, order),
-        "lifetimes": lifetimes(stories),
+        "clusters": event_clusters(),
+        "lifetimes": lifetimes(stories, event_clusters()),
         "archetypes": archetypes(curves),
         "discords": discords(daily),
         "stats": core_stats(df, per_day),
