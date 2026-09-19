@@ -1,6 +1,6 @@
 # Newvelles — Status & Next Steps
 
-_Last updated: 2026-08-17, at the completion of the redesign cutover._
+_Last updated: 2026-09-19 (Bedrock hard-stop restored). Previous full pass: 2026-08-17, at the completion of the redesign cutover._
 
 ## Where the project stands (shipped 2026-08-16/17)
 
@@ -133,7 +133,13 @@ incl. spaCy NER). Early-era files carry the heavy intra-group duplication
 archive to `archive/YYYY/` (gitignored), resumable, ~16-way parallel.
 Transfer cost ≈ $0.25, roughly an evening of runtime overall.
 
-**Step 2 — backfill dataset** (`scripts/backfill_history.py`, to build):
+**Step 2 — backfill dataset. ✅ DONE (2026-08-17).** `scripts/backfill_history.py`
+built and run over the full mirror: 9,311 runs → 446,519 (run, story) rows →
+114,927 unique stories across 1,832 days in `analysis/data/stories.parquet`
+(gitignored; rebuild via the pipeline in `analysis/README.md`). Archive is
+100% source-mapped (`scripts/scan_archive_sources.py`). A tabbed dashboard
+over the real data lives at `analysis/site/index.html` (Timeline/Ledger/
+Lifetimes/Archetypes; single exportable file). The original spec (kept):
 replay the mirror chronologically through `build_stories()` (parallel) + the
 momentum identity matcher (sequential), emitting an **analysis-ready columnar
 dataset**, not per-run JSONs:
@@ -153,6 +159,13 @@ dataset**, not per-run JSONs:
   historical feeds (HuffPost, CNN, CBS locals…) so early years get correct
   outlets/sections instead of the domain fallback.
 
+**Step 2.5 — taxonomy + stats (2026-08-18, done except tail).** 3-level
+classification (13 majors / ~60 subs / meta tags, `analysis/taxonomy.json`)
+over the archive: Fable golden set (4,020, the eval reference), full corpus
+via Bedrock Haiku (92%+ labeled; last shards auto-retry after the daily token
+quota reset), benchmark of 4 routes in `analysis/data/eval_report.md`.
+Dashboard gained Stats and Categories tabs.
+
 **Step 3 — the analysis itself:** DuckDB/pandas over the Parquet; candidate
 angles: longest-running stories since 2021, coverage concentration by outlet
 over time, section drift, story-lifetime distributions, duplication-era vs
@@ -162,6 +175,18 @@ glhuilli.github.io.
 ---
 
 ## Smaller follow-ups
+
+- **Restore the Bedrock hard-stop to $15 in September 2026.** ✅ DONE (2026-09-19):
+  `newvelles-bedrock-hard-stop` is back at $15/month (verified with
+  describe-budget; spend at the time was $0). It had been raised to $60 on
+  2026-08-18 to absorb the one-off ~$30 historical-classification run (Haiku
+  labeling of 114k archive stories) without tripping the auto-deny on the
+  Lambda role. Recipe if it is ever needed again: dump with describe-budget,
+  keep the same definition with `"Amount": "15"`, apply with
+  `aws budgets update-budget --account-id 617641631577 --new-budget file://...`.
+  Still open, longer term: tag analysis Bedrock usage separately so ad-hoc
+  analysis spend never counts against the pipeline guardrail. The $10 alert
+  budget was left unchanged throughout.
 
 - **Dependabot for Python deps:** spaCy drifts often (we were 12 patch
   releases behind when the entity guard landed). Check whether

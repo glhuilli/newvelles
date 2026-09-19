@@ -1,0 +1,27 @@
+{
+  "notes": "Curated landmark events for the timeline. Each is matched to the archive story with the highest peak outlet count whose headline contains every term (and no exclude term) inside the window. Edit and rebuild the payload to change the markers.",
+  "events": [
+    {"name": "Kabul falls — Afghanistan withdrawal", "from": "2021-08-01", "to": "2021-09-15", "terms": ["taliban"]},
+    {"name": "Russia invades Ukraine", "from": "2022-02-20", "to": "2022-03-05", "terms": ["russia", "military operation"],
+     "sub": "war", "tags": ["russia", "ukraine", "invasion", "putin"],
+     "override_note": "this uid drifted identity (started as a jan-6 story); corpus label reflects its early life, so the event row carries curated labels"},
+    {"name": "Uvalde school shooting", "from": "2022-05-24", "to": "2022-06-10", "terms": ["uvalde"]},
+    {"name": "Roe v. Wade overturned", "from": "2022-06-24", "to": "2022-07-10", "terms": ["roe"]},
+    {"name": "Queen Elizabeth II dies", "from": "2022-09-08", "to": "2022-09-25", "terms": ["queen elizabeth"]},
+    {"name": "Musk takes over Twitter", "from": "2022-10-25", "to": "2022-11-30", "terms": ["musk", "twitter"]},
+    {"name": "Silicon Valley Bank collapse", "from": "2023-03-09", "to": "2023-03-25", "terms": ["silicon valley bank"]},
+    {"name": "Trump indicted", "from": "2023-03-30", "to": "2023-06-15", "terms": ["trump", "indict"]},
+    {"name": "Titan submersible", "from": "2023-06-18", "to": "2023-07-01", "terms": ["submersible"]},
+    {"name": "Maui wildfires", "from": "2023-08-08", "to": "2023-08-25", "terms": ["maui"]},
+    {"name": "October 7 attack on Israel", "from": "2023-10-07", "to": "2023-10-25", "terms": ["israel"]},
+    {"name": "Baltimore bridge collapse", "from": "2024-03-26", "to": "2024-04-10", "terms": ["baltimore", "bridge"]},
+    {"name": "Trump assassination attempt", "from": "2024-07-13", "to": "2024-07-25", "terms": ["trump", "assassination"]},
+    {"name": "Biden passes the torch", "from": "2024-07-21", "to": "2024-08-05", "terms": ["biden", "torch"]},
+    {"name": "2024 election night", "from": "2024-11-04", "to": "2024-11-15", "terms": ["election"], "exclude": ["musk"]},
+    {"name": "LA wildfires", "from": "2025-01-07", "to": "2025-01-25", "terms": ["wildfire"]},
+    {"name": "Trump's second inauguration", "from": "2025-01-18", "to": "2025-01-28", "terms": ["inauguration"]},
+    {"name": "Tariff shock", "from": "2025-04-01", "to": "2025-04-20", "terms": ["tariffs"]},
+    {"name": "Shots fired at Correspondents' Dinner", "from": "2026-04-25", "to": "2026-05-05", "terms": ["correspondents"]},
+    {"name": "SCOTUS transgender-athlete case", "from": "2026-06-28", "to": "2026-07-10", "terms": ["transgender athlete"]}
+  ]
+}

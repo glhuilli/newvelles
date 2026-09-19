@@ -100,5 +100,7 @@
   "https://techcrunch.com/feed/": {"outlet": "TechCrunch", "domain": "techcrunch.com", "section": "Tech"},
   "https://thehill.com/news/feed/": {"outlet": "The Hill", "domain": "thehill.com", "section": "US politics"},
   "https://feeds.npr.org/1014/rss.xml": {"outlet": "NPR", "domain": "npr.org", "section": "US politics"},
-  "https://www.pbs.org/newshour/feeds/rss/politics": {"outlet": "PBS", "domain": "pbs.org", "section": "US politics"}
+  "https://www.pbs.org/newshour/feeds/rss/politics": {"outlet": "PBS", "domain": "pbs.org", "section": "US politics"},
+  "https://lifehacker.com/feed/rss?test_uuid=zXnWOLjQQwkYjMVwrvo5w&test_variant=A": {"outlet": "Lifehacker", "domain": "lifehacker.com", "section": "Tech"},
+  "https://lifehacker.com/feed/rss?test_uuid=zXnWOLjQQwkYjMVwrvo5w&test_variant=B": {"outlet": "Lifehacker", "domain": "lifehacker.com", "section": "Tech"}
 }

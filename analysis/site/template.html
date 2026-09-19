@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Five years of news cycles — Newvelles archive</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb;
+  --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --baseline: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #008300; --s3: #e87ba4; --s4: #eda100;
+  --s5: #1baf7a; --s6: #eb6834; --s7: #4a3aa7; --s8: #e34948;
+  --accent: #2a78d6; --dim: #d6d5cf;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19;
+    --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --baseline: #383835; --ring: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #008300; --s3: #d55181; --s4: #c98500;
+    --s5: #199e70; --s6: #d95926; --s7: #9085e9; --s8: #e66767;
+    --accent: #3987e5; --dim: #33332f;
+  }
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--page); color: var(--ink);
+  font: 14.5px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: flex; flex-direction: column; padding: 0 22px;
+}
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+header {
+  max-width: 1220px; margin: 0 auto; width: 100%;
+  padding: 22px 0 0; flex: none;
+}
+.mast { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
+h1 {
+  font-family: "Iowan Old Style", "Palatino Nova", Palatino, Georgia, serif;
+  font-size: clamp(21px, 2.6vw, 27px); font-weight: 600; letter-spacing: -0.01em;
+}
+.meta {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px; letter-spacing: 0.08em; color: var(--muted);
+}
+nav.tabs { display: flex; gap: 4px; margin: 14px 0 0; border-bottom: 1px solid var(--grid); }
+nav.tabs button {
+  font: 600 13px system-ui, sans-serif; color: var(--ink-2);
+  background: none; border: none; border-bottom: 2px solid transparent;
+  padding: 8px 14px 9px; cursor: pointer; margin-bottom: -1px;
+}
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+main { flex: 1; max-width: 1220px; margin: 0 auto; width: 100%; padding: 16px 0 18px; min-height: 0; }
+.panel[hidden] { display: none; }
+.panel-note { color: var(--ink-2); font-size: 13px; margin-bottom: 10px; max-width: 90ch; }
+.panel-note b { color: var(--ink); }
+.chart-box {
+  background: var(--surface); border: 1px solid var(--ring); border-radius: 10px;
+  padding: 14px 16px 10px;
+}
+.box-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.box-title { font-size: 12.5px; font-weight: 600; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; }
+.legend .li { display: inline-flex; align-items: center; gap: 5px; font: 11px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-2); }
+.legend .sw { width: 9px; height: 9px; border-radius: 2.5px; }
+.controls { display: flex; gap: 6px; }
+.controls button {
+  font: 11px ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.06em;
+  padding: 3px 10px; border-radius: 999px; border: 1px solid var(--ring);
+  background: transparent; color: var(--ink-2); cursor: pointer;
+}
+.controls button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+svg { display: block; width: 100%; height: auto; }
+svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.axis text { fill: var(--muted); font-size: 11px; }
+.axis line, .axis path { stroke: var(--baseline); }
+.gridline { stroke: var(--grid); stroke-width: 1; shape-rendering: crispEdges; }
+#tooltip {
+  position: fixed; pointer-events: none; z-index: 10; display: none;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--ring);
+  border-radius: 8px; padding: 7px 10px; font-size: 12px; line-height: 1.45;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.14); max-width: 280px;
+}
+#tooltip .t-date { font: 10px ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+#tooltip .t-strong { font-weight: 600; }
+
+.ledger-wrap { max-height: calc(100vh - 260px); overflow: auto; }
+table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.ledger th {
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+  text-align: left; font: 500 10px ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted);
+  padding: 6px 10px 8px; border-bottom: 1px solid var(--baseline); cursor: pointer;
+  white-space: nowrap;
+}
+table.ledger th.sorted { color: var(--accent); }
+table.ledger td { padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+table.ledger td.num { font-variant-numeric: tabular-nums; text-align: right; }
+table.ledger .headline { font-weight: 600; max-width: 420px; }
+table.ledger .why { color: var(--ink-2); font-size: 12px; }
+table.ledger tr:hover td { background: color-mix(in oklab, var(--accent) 6%, transparent); }
+table.ledger tr.hot td { background: color-mix(in oklab, var(--s8) 12%, transparent); }
+.sec-chip { display: inline-flex; align-items: center; gap: 5px; font: 11px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-2); white-space: nowrap; }
+.sec-chip .sw { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+.arch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.arch-cell { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 12px 14px 8px; }
+.arch-name { font-size: 13px; font-weight: 600; }
+.arch-meta { font: 11px ui-monospace, "SF Mono", Menlo, monospace; color: var(--muted); margin-bottom: 4px; }
+.discord-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 12px; }
+.discord-cell { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 10px 12px 6px; }
+.discord-title { font-size: 15px; font-weight: 600; margin: 16px 0 2px; font-family: "Iowan Old Style", Palatino, Georgia, serif; }
+@media (max-width: 700px) { .ledger-wrap { max-height: none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="mast">
+    <h1>Five years of news cycles</h1>
+    <span class="meta" id="meta-line"></span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="timeline" aria-selected="true">Timeline</button>
+    <button role="tab" data-tab="ledger" aria-selected="false">Ledger</button>
+    <button role="tab" data-tab="lifetimes" aria-selected="false">Lifetimes</button>
+    <button role="tab" data-tab="archetypes" aria-selected="false">Archetypes</button>
+    <button role="tab" data-tab="stats" aria-selected="false">Stats</button>
+    <button role="tab" data-tab="categories" aria-selected="false">Categories</button>
+    <button role="tab" data-tab="topstories" aria-selected="false">Top stories</button>
+    <button role="tab" data-tab="learnings" aria-selected="false">Learnings</button>
+  </nav>
+</header>
+<main>
+  <section class="panel" id="panel-timeline">
+    <p class="panel-note">Brush the strip to zoom. The river shows each week's share of
+    stories per <b>major category</b> — <b>click a band to drill into its
+    sub-categories</b>, where markers become that category's top 25 stories by relevance
+    (era-relative peak coverage). The strip
+    is era-normalized (volume vs a trailing 91-day baseline; 1.0 = a typical day).
+    Numbered markers are landmark events — hover to expand the title in place. Read all
+    top stories in the <b>Top stories</b> tab.</p>
+    <div class="chart-box" style="margin-bottom:12px">
+      <div id="strip"></div>
+    </div>
+    <div class="chart-box">
+      <div id="drill-title" hidden
+        style="font-family:'Iowan Old Style',Palatino,Georgia,serif;font-size:21px;font-weight:600;margin-bottom:2px"></div>
+      <div class="box-head">
+        <span class="box-title" id="stream-title">Stories per week by section</span>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <span class="legend" id="stream-legend"></span>
+          <div class="controls" id="drill-mode" hidden></div>
+          <div class="controls">
+            <button id="stream-back" hidden>← all categories</button>
+          </div>
+        </div>
+      </div>
+      <div id="stream"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-ledger" hidden>
+    <p class="panel-note">The validation ledger: top stories by peak outlet count, each
+    with its coverage curve. Click a column header to sort. If these rows contradict
+    remembered reality, the pipeline — not the chart — is wrong.</p>
+    <div class="chart-box ledger-wrap"><div id="ledger"></div></div>
+  </section>
+
+  <section class="panel" id="panel-lifetimes" hidden>
+    <p class="panel-note">Every story is a dot: when it was born vs how many days it ran
+    (log scale); size is peak outlet count. Gray is context; labeled blue dots are the
+    longest, loudest stories of the archive.</p>
+    <div class="chart-box">
+      <div class="box-head"><span class="box-title" id="lifetimes-title"></span></div>
+      <div id="lifetimes"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-archetypes" hidden>
+    <p class="panel-note" id="arch-note"></p>
+    <div class="arch-grid" id="arch-grid"></div>
+    <div class="discord-title">Days that resemble no other days</div>
+    <p class="panel-note">Matrix-profile discords over the daily volume series — the
+    14-day windows farthest from every other window in five years.</p>
+    <div class="discord-row" id="discords"></div>
+  </section>
+  <section class="panel" id="panel-topstories" hidden>
+    <p class="panel-note">The 20 curated landmark events, plus each major category's top
+    stories. <b>Selection:</b> relevance = peak outlet count relative to that year's
+    median (so a 12-outlet 2022 peak can outrank a 15-outlet 2026 peak from a bigger
+    pipeline). <b>Top 25</b> is the pure relevance ranking across all five years — some
+    years may be absent. <b>5 per year</b> guarantees every year its five biggest
+    stories. Click any column header to sort.</p>
+    <div class="controls" id="ts-chips" style="margin-bottom:8px;flex-wrap:wrap"></div>
+    <div class="controls" id="ts-mode" style="margin-bottom:12px"></div>
+    <div class="chart-box ledger-wrap"><div id="ts-table"></div></div>
+  </section>
+
+  <section class="panel" id="panel-categories" hidden>
+    <p class="panel-note" id="cat-note"></p>
+    <div class="chart-box ledger-wrap"><div id="cat-table"></div></div>
+  </section>
+
+  <section class="panel" id="panel-stats" hidden>
+    <p class="panel-note"><b>Definitions.</b> A <b>run</b> is one pipeline execution
+    (median 5 per day). An <b>observation</b> is a story seen in one run. <b>Distinct</b>
+    counts unique stories in the window. <b>New</b> counts stories on the first day they
+    ever appeared. A <b>source</b> is an outlet as resolved by the source table.</p>
+    <div class="chart-box" style="margin-bottom:12px">
+      <div class="box-head"><span class="box-title">Core stats · median (p25–p75)</span></div>
+      <div id="stats-core"></div>
+    </div>
+    <div class="chart-box">
+      <div class="box-head"><span class="box-title" id="stats-src-title"></span></div>
+      <div id="stats-sources"></div>
+    </div>
+  </section>
+  <section class="panel" id="panel-learnings" hidden>
+    <div class="discord-title" style="margin-top:0">Classifying 114,927 stories: four routes vs one golden set</div>
+    <p class="panel-note">Every story carries a 3-level classification: one of 13 <b>major
+    categories</b>, one of ~60 <b>sub-categories</b>, and 2–6 open-vocabulary <b>meta
+    tags</b>. The category list is adapted from <b>IPTC Media Topics</b> — the news
+    industry's standard subject taxonomy, maintained by the International Press
+    Telecommunications Council and used by wire agencies and newsrooms to categorize
+    articles.</p>
+    <p class="panel-note"><b>The golden set.</b> The reference labels are a set of
+    <b>4,020 stories</b>, sampled to cover every year, every section, and both short and
+    long-running stories, then labeled by <b>Claude Fable 5</b> (a frontier model — the
+    strongest labeler available to this project). Quality checks on that labeling: every
+    output was valid and matched the taxonomy exactly, and only 6.4% of stories needed an
+    "other-*" catch-all sub-category — low enough to conclude the taxonomy fits the
+    corpus. Every route below is scored by how often it agrees with these labels.</p>
+    <p class="panel-note"><b>How to read the table.</b> <b>n scored</b> — golden-set
+    stories that route labeled, and therefore the sample its scores are computed on (routes
+    differ because of parse failures and train/test splits). <b>Major</b> — share of
+    stories where the route picked the same major category as the golden set.
+    <b>Sub</b> — same, for the exact sub-category. <b>Sub | major ✓</b> — sub-category
+    agreement counting only stories where the major was already right; it isolates
+    fine-grained confusion from coarse mistakes. <b>Tags: any overlap</b> — share of
+    stories where at least one of the route's tags matches a golden tag (a lenient "did it
+    understand the story at all" check). <b>Tags: Jaccard</b> — overlap ÷ union of the two
+    tag sets, averaged (a strict similarity measure; 1.0 = identical tag sets).</p>
+    <div class="chart-box" style="margin-bottom:12px">
+      <table class="ledger"><thead><tr>
+        <th>Route</th><th>n scored</th><th>Major</th><th>Sub</th><th>Sub | major ✓</th>
+        <th>Tags: any overlap</th><th>Tags: Jaccard</th><th>Cost / notes</th></tr></thead>
+      <tbody>
+        <tr><td class="headline">Claude Haiku 4.5 (Bedrock)</td>
+          <td class="num">3,704</td><td class="num"><b>0.823</b></td><td class="num"><b>0.662</b></td>
+          <td class="num">0.793</td><td class="num"><b>0.975</b></td><td class="num"><b>0.495</b></td>
+          <td class="why">~$33 for the full corpus, ~1.5 h batched (150 stories/call)</td></tr>
+        <tr><td class="headline">MiniLM embeddings + logistic regression</td>
+          <td class="num">1,005</td><td class="num">0.778</td><td class="num">0.631</td>
+          <td class="num">0.734</td><td class="num">0.644</td><td class="num">0.203</td>
+          <td class="why">trained on 3,015 golden rows; deliberate low-effort baseline (see next steps)</td></tr>
+        <tr><td class="headline">qwen3:8b (local, ollama)</td>
+          <td class="num">2,605</td><td class="num">0.427 <span style="color:var(--muted)">(0.595 case-normalized)</span></td>
+          <td class="num">0.262</td><td class="num">0.441</td><td class="num">0.654</td><td class="num">0.193</td>
+          <td class="why">only 64.8% of output lines parsed as valid JSON; frequent index misalignment</td></tr>
+      </tbody></table>
+    </div>
+    <p class="panel-note"><b>The ML baseline, in plain terms.</b> Each headline is turned
+    into a 384-number vector with <b>MiniLM</b> — a small sentence-embedding model that
+    places similar sentences near each other in that vector space — and a logistic
+    regression picks the category from the vector. Meta tags can't be handled that way
+    (they're open vocabulary, not a fixed label list), so the baseline uses <b>k-NN
+    transfer</b>: find the 5 nearest golden-set headlines in the embedding space and
+    inherit the tags they have in common. That inherits only tags that already exist
+    nearby — it can never write a new tag for a new story, which is why its tag scores
+    collapse (0.20 vs 0.50 Jaccard).</p>
+    <p class="panel-note"><b>What the numbers taught us.</b>
+    (1) <b>Meta tags are the genuinely generative part</b>: the LLM writes "immigration
+    crisis" without those words appearing in the title; extractive and transfer methods
+    can't.
+    (2) <b>Sub-category disagreement is often boundary fuzziness, not error</b>: the trained
+    model and Haiku make the <i>same</i> confusions (Economy↔Markets, Crime↔Politics
+    trials). Reviewing top divergences found one systematic split — Haiku classifies by
+    topical domain, the golden set by story <i>function</i> (a betting-promo roundup is
+    shopping-deals, not football) — now codified as taxonomy v1.1 boundary rules.
+    (3) <b>The local 8B model fails structurally before it fails semantically</b>: a third
+    of its output wasn't parseable JSON, and its top "confusions" were lowercased category
+    names. (4) A manual review of the 200 per-category top stories produced 49 label
+    overrides (~6% of reviewed rows — consistent with 0.82 major agreement).</p>
+
+    <div class="discord-title">Ranking importance: five functions, one survivor</div>
+    <p class="panel-note">Candidate scores built from per-story features: days reported,
+    distinct outlets over the story's life, total articles, and broke-to-peak distance —
+    each era-normalized against the year's median, so pipeline growth (more feeds in
+    2026) can't masquerade as importance.</p>
+    <div class="chart-box" style="margin-bottom:12px">
+      <table class="ledger"><thead><tr>
+        <th>Function</th><th>Definition</th><th>Spearman vs F1</th><th>Why it loses</th></tr></thead>
+      <tbody>
+        <tr><td class="headline">F1 · era-relative peak outlets — <b>in use</b></td>
+          <td class="why">peak outlet count ÷ year median</td><td class="num">1.00</td>
+          <td class="why">it doesn't: outlet concentration at peak is the one signal robust to
+          listicles, identity fragmentation, and era feed-count</td></tr>
+        <tr><td class="headline">F5 · burst × legs</td>
+          <td class="why">F1 × persistence × build-up bonus</td><td class="num">0.96</td>
+          <td class="why">rewards fragmented multi-day follow-ups; a weather story cracked
+          Culture's top 10</td></tr>
+        <tr><td class="headline">F3 · breadth × persistence</td>
+          <td class="why">total outlets × log days</td><td class="num">0.89</td>
+          <td class="why">2026-biased; buried the Will Smith slap at #150 because its
+          follow-ups live under separate story identities</td></tr>
+        <tr><td class="headline">F4 · composite z-score</td>
+          <td class="why">mean z of peak, breadth, days, volume</td><td class="num">0.83</td>
+          <td class="why">inherits every failure mode below at once</td></tr>
+        <tr><td class="headline">F2 · total article volume</td>
+          <td class="why">Σ articles over the story's life</td><td class="num">0.60</td>
+          <td class="why">poisoned by recurring listicle series — "Best Movies to Stream
+          This Week" accumulates 114 articles and outranks real news</td></tr>
+      </tbody></table>
+    </div>
+    <p class="panel-note"><b>Selection design.</b> The visible quality problems were never
+    the score: an earlier per-year quota (4 × 5 years) silently consumed all 20 slots
+    before 2026 existed, and wide spacing rules forced weak stories in. Current design:
+    <b>top 25 by pure F1</b> (7-day spacing only, to dedupe follow-ups) as the main view,
+    with <b>5 per year</b> as the guaranteed-coverage alternate — visible in both the
+    Timeline drill (toggle beside the back button) and the Top stories tab. Landmark
+    events are the exception: a hand-curated list of 20, matched to archive stories by
+    search terms + date windows.</p>
+
+    <div class="discord-title">Linking stories into events: what "days of coverage" should mean</div>
+    <p class="panel-note"><b>The problem.</b> Story identity (kept deliberately unchanged)
+    tracks one keyword-stable thread — but big events spawn a new thread per angle. October
+    7 shows the gap: the war was in the news 40+ consecutive days, yet it appears as
+    <b>131+ separate story identities</b>, most lasting 1–2 days; the Musk-Twitter takeover
+    is 57 threads, including four identities carrying the <i>same headline</i>. Readers who
+    lived those weeks remember continuous coverage; the identity layer can't show it.</p>
+    <p class="panel-note"><b>Linking options evaluated</b> (star-shaped around each top-25
+    anchor; scored by hand-checking four known events — October 7, Musk-Twitter, SVB, the
+    Queen's death — for correct broke date, plausible duration, and leakage):</p>
+    <div class="chart-box" style="margin-bottom:12px">
+      <table class="ledger"><thead><tr>
+        <th>Option</th><th>Rule</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td class="headline">Raw entity overlap</td><td class="why">share ≥ 2 entity tokens</td>
+          <td class="why">too loose — generic tokens (biden, trump) link everything</td></tr>
+        <tr><td class="headline">IDF-weighted entities</td><td class="why">Σ idf(shared tokens) ≥ τ — rare entities count more</td>
+          <td class="why">good recall; person-entity gravity pulls in unrelated stories about the same people</td></tr>
+        <tr><td class="headline">Signature Jaccard</td><td class="why">keywords ∪ entities overlap ≥ 0.15</td>
+          <td class="why">middling on both axes</td></tr>
+        <tr><td class="headline">Embedding similarity</td><td class="why">MiniLM cosine to anchor headline ≥ 0.5</td>
+          <td class="why">too narrow — one headline can't represent an event's many angles (Oct 7 found only 30 stories)</td></tr>
+        <tr><td class="headline"><b>Hybrid — chosen</b></td><td class="why">moderate IDF overlap AND moderate embedding similarity, OR very high IDF overlap</td>
+          <td class="why">correct broke/peak/duration on all four cases; Oct 7 → 175 stories, 124 continuous days</td></tr>
+      </tbody></table>
+    </div>
+    <p class="panel-note"><b>Definitions now used for top stories.</b> An event's
+    <b>broke</b> date = start of the coverage episode containing the peak (a stray related
+    story days earlier can't hijack the clock). <b>Peak</b> = the day with the most
+    combined articles across all linked stories. <b>Days</b> = the continuous run from
+    broke until coverage disappears for more than 3 days; the full list of coverage
+    <b>periods</b> (episodes) is kept and drawn in the timeline's linkage lane. Event
+    titles are generated from the cluster's earliest and biggest member headlines — so
+    October 7 is titled by the attack, not by whichever single angle peaked hardest.</p>
+    <p class="panel-note"><b>Known limitations (v1).</b> Linking is anchor-star, not
+    global — only the ~300 top stories get clusters. Multi-topic digest identities can
+    leak a stray story in (a North Korea missile brief entered the Oct 7 cluster).
+    The peak-episode rule can date "broke" at the main run rather than a smaller
+    earlier burst (Musk-Twitter dates from the layoffs wave, not the deal-close two
+    weeks prior — the earlier episode remains visible in the lane). The 120-day search
+    window caps very long events; October 7's "124 days" is a floor, not a ceiling.</p>
+
+    <div class="discord-title">Next steps</div>
+    <p class="panel-note"><b>1 · A serious ML classifier.</b> The embedding baseline was a
+    deliberate low-effort option; its 0.78/0.63 with a frozen 90 MB model and one
+    afternoon of work suggests real headroom. Candidates to try, roughly in order:
+    <b>fine-tune a modern encoder</b> (ModernBERT or DeBERTa-v3) end-to-end on the labels
+    instead of freezing embeddings; <b>distill from Haiku</b> — train on all 114,927 Haiku
+    labels rather than 3,000 golden rows, and evaluate against the golden set (weak
+    supervision at 30× the training data usually beats a small clean set);
+    <b>SetFit-style contrastive fine-tuning</b> of the embedding model itself; larger
+    embedding models as a drop-in check. Add <b>abstention</b>: below a confidence
+    threshold, defer to the LLM — a hybrid that could match Haiku's quality at a fraction
+    of its cost.</p>
+    <p class="panel-note"><b>2 · Tags remain LLM work for now.</b> A generative tagger
+    small enough to run locally (fine-tuned seq2seq on Haiku's 114k tag sets) is the
+    experiment worth running before accepting that conclusion.</p>
+    <p class="panel-note"><b>3 · Event linking v2.</b> The anchor-star linker above is v1.
+    Remaining work: <b>global</b> event clustering (every story assigned to an event, not
+    only the top ~300 anchors), learnable thresholds (fit τ against a hand-labeled set of
+    link judgments instead of eyeballing four cases), LLM verification of borderline links
+    (cheap Haiku yes/no on the 10–20 lowest-scoring members per cluster), and removing the
+    120-day window cap with an episode-following expansion. Archetypes and ranking should
+    then move onto cluster series rather than identity series.</p>
+    <p class="panel-note"><b>4 · Golden set v2.</b> Add a second independent labeling pass
+    (another frontier model, or human review of a slice) to measure the agreement
+    <i>ceiling</i> — without it, "0.82 vs golden" can't be separated into model error vs
+    task ambiguity. Relabel the corpus under taxonomy v1.1 boundary rules in the next
+    full pass.</p>
+  </section>
+</main>
+<div id="tooltip" role="status"></div>
+
+<script>/*__D3__*/</script>
+<script>/*__DATA__*/</script>
+<script>
+"use strict";
+/* ---------- shared ---------- */
+const D = window.DATA;
+const P = (d) => d3.timeParse("%Y-%m-%d")(d);
+const fmtD = d3.timeFormat("%b %d, %Y");
+const fmtMo = d3.timeFormat("%b %Y");
+const SECTIONS = D.sections;
+const SCOLOR = Object.fromEntries(SECTIONS.map((s, i) => [s, `var(--s${(i % 8) + 1})`]));
+const daily = D.daily.map((r) => ({ d: P(r.d), a: r.a, s: r.s, x: r.x ?? 1 }));
+const weekly = D.weekly.map((r) => ({ ...r, d: P(r.d) }));
+const EVENTS = (D.events || []).map((e) => ({ ...e, dd: P(e.d) }));
+const T0 = daily[0].d, T1 = daily[daily.length - 1].d;
+
+const tip = document.getElementById("tooltip");
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.style.display = "block";
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - pad;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => (tip.style.display = "none");
+const svgIn = (sel, w, h) => d3.select(sel).append("svg").attr("viewBox", `0 0 ${w} ${h}`);
+
+document.getElementById("meta-line").textContent =
+  `${D.meta.first_day} → ${D.meta.last_day} · ${D.meta.runs.toLocaleString()} runs · ` +
+  `${D.meta.stories.toLocaleString()} stories`;
+
+/* ---------- tabs ---------- */
+const rendered = {};
+const RENDERERS = { timeline: renderTimeline, ledger: renderLedger, lifetimes: renderLifetimes, archetypes: renderArchetypes, stats: renderStats, categories: renderCategories, topstories: renderTopStories, learnings: () => {} };
+document.querySelectorAll("nav.tabs button").forEach((btn) => {
+  btn.addEventListener("click", () => activate(btn.dataset.tab));
+});
+function activate(tab) {
+  document.querySelectorAll("nav.tabs button").forEach((b) =>
+    b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+  document.querySelectorAll(".panel").forEach((p) =>
+    p.toggleAttribute("hidden", p.id !== "panel-" + tab));
+  if (!rendered[tab]) { RENDERERS[tab](); rendered[tab] = true; }
+}
+
+/* ---------- timeline: strip + streamgraph ---------- */
+const TL = { W: 1180, HS: 96, HD: 380, ML: 8, MR: 8 };
+let window0 = [d3.timeMonth.offset(T1, -18), T1];
+let drillTo = null;   // null = all majors; otherwise a major name
+let drillMode = "top";   // marker list in drill view: "top" | "top_yearly"
+
+/* numbered marker: hover = event info box; click = pin the linkage lane */
+let pinnedCluster = null;
+const markerDate = (item) => {
+  const C = (D.clusters || {})[item.uid];
+  return C ? P(C.b) : item.dd;
+};
+function drawMarker(svg, cx, cy, item, hInner) {
+  const C = (D.clusters || {})[item.uid];
+  svg.append("line").attr("x1", cx).attr("x2", cx).attr("y1", cy + 8).attr("y2", hInner)
+    .style("stroke", "var(--s8)").style("stroke-width", 1).style("stroke-dasharray", "2,3")
+    .style("opacity", 0.6).style("pointer-events", "none");
+  const g = svg.append("g").style("cursor", C ? "pointer" : "default");
+  g.append("circle").attr("cx", cx).attr("cy", cy).attr("r", 7)
+    .style("fill", "var(--s8)").style("stroke", "var(--surface)")
+    .style("stroke-width", pinnedCluster === item.uid ? 3 : 1.5);
+  g.append("text").attr("x", cx).attr("y", cy + 3).attr("text-anchor", "middle")
+    .style("font-size", "9px").style("font-weight", 700).style("fill", "#fff")
+    .style("pointer-events", "none").text(item.n);
+  const name = (C && C.t) || item.event || item.title;
+  g.on("mouseenter", function (ev) {
+    d3.select(this).select("circle").attr("r", 9);
+    const box = this.getBoundingClientRect();
+    const body = C ? `
+      <div style="margin-top:4px">broke <b>${fmtD(P(C.b))}</b> · peak <b>${fmtD(P(C.p))}</b> (${C.pa} articles)</div>
+      <div><b>${C.d}</b> days continuous · ${C.cd} coverage days in ${C.eps.length} period${C.eps.length === 1 ? "" : "s"}</div>
+      <div>${C.n} linked stories${item.sub ? ` · ${item.sub}` : ""}</div>
+      <div style="color:var(--muted);margin-top:2px">click to ${pinnedCluster === item.uid ? "hide" : "show"} the linked stories</div>` : `
+      <div style="margin-top:4px">broke <b>${fmtD(P(item.first || item.d))}</b> · peak <b>${fmtD(P(item.pd || item.d))}</b></div>
+      <div>${item.outlets} outlets · ${item.days} day${item.days === 1 ? "" : "s"}</div>`;
+    showTipAt(`
+      <div class="t-strong">${item.n}. ${name}</div>
+      ${item.title && item.title !== name
+        ? `<div class="t-date" style="text-transform:none;font-size:11px;margin:2px 0">anchor: ${item.title.slice(0, 84)}${item.title.length > 84 ? "…" : ""}</div>` : ""}
+      ${body}
+      ${item.tags && item.tags.length ? `<div style="color:var(--muted);margin-top:2px">${item.tags.join(", ")}</div>` : ""}`,
+      box.left + box.width / 2, box.bottom + 6);
+  }).on("mouseleave", function () {
+    d3.select(this).select("circle").attr("r", 7);
+    hideTip();
+  }).on("click", () => {
+    if (!C) return;
+    pinnedCluster = pinnedCluster === item.uid ? null : item.uid;
+    hideTip(); renderStream();
+  });
+}
+
+/* linkage lane: one dot per linked story at its first day + episode bars */
+function drawClusterLane(svg, x, a, b) {
+  const C = (D.clusters || {})[pinnedCluster];
+  if (!C) return;
+  const laneY = TL.HD - 44;
+  for (const ep of C.eps) {
+    const x0 = Math.max(x(P(ep[0])), TL.ML), x1 = Math.min(x(P(ep[1])), TL.W - TL.MR);
+    if (x1 < TL.ML || x0 > TL.W - TL.MR) continue;
+    svg.append("line").attr("x1", x0).attr("x2", Math.max(x1, x0 + 2))
+      .attr("y1", laneY + 12).attr("y2", laneY + 12)
+      .style("stroke", "var(--s8)").style("stroke-width", 4)
+      .style("stroke-linecap", "round").style("opacity", 0.5);
+  }
+  svg.append("text").attr("x", TL.ML + 2).attr("y", laneY - 10)
+    .style("font-size", "10.5px").style("font-weight", 600).style("fill", "var(--s8)")
+    .text(`${C.t} — ${C.n} linked stories, coverage periods below`);
+  for (const m of C.members) {
+    const md = P(m.f);
+    if (md < a || md > b) continue;
+    svg.append("circle").attr("cx", x(md)).attr("cy", laneY).attr("r", 4)
+      .style("fill", "var(--surface)").style("stroke", "var(--s8)").style("stroke-width", 2)
+      .style("cursor", "default")
+      .on("mouseenter", function () {
+        d3.select(this).attr("r", 5.5);
+        const box = this.getBoundingClientRect();
+        showTipAt(`
+          <div class="t-strong">${m.t}</div>
+          <div style="margin-top:3px">appeared <b>${fmtD(P(m.f))}</b> · ${m.days} day${m.days === 1 ? "" : "s"} in the news</div>
+          <div>${m.a} articles · ${m.o} outlets</div>
+          ${m.tags && m.tags.length ? `<div style="color:var(--muted);margin-top:2px">${m.tags.join(", ")}</div>` : ""}`,
+          box.left + box.width / 2, box.bottom + 6);
+      })
+      .on("mouseleave", function () { d3.select(this).attr("r", 4); hideTip(); });
+  }
+}
+
+/* info box pinned at a fixed screen point (marker hover) */
+function showTipAt(html, cx, cy) {
+  tip.innerHTML = html;
+  tip.style.display = "block";
+  let x = cx - tip.offsetWidth / 2, y = cy;
+  x = Math.max(8, Math.min(x, innerWidth - tip.offsetWidth - 8));
+  if (y + tip.offsetHeight > innerHeight - 8) y = cy - tip.offsetHeight - 32;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+
+function renderTimeline() {
+  const xF = d3.scaleTime().domain([T0, T1]).range([TL.ML, TL.W - TL.MR]);
+  const svg = svgIn("#strip", TL.W, TL.HS + 30);
+  // era-normalized volume index: 1.0 = a typical day for that era, so the
+  // mid-2026 pipeline growth doesn't dwarf every earlier news cycle
+  const y = d3.scaleLinear().domain([0, d3.max(daily, (r) => r.x)]).range([TL.HS, 20]);
+  svg.append("line").attr("x1", TL.ML).attr("x2", TL.W - TL.MR)
+    .attr("y1", y(1)).attr("y2", y(1)).attr("class", "gridline");
+  svg.append("path").datum(daily)
+    .attr("d", d3.area().x((r) => xF(r.d)).y0(TL.HS).y1((r) => y(r.x)))
+    .style("fill", "var(--s1)").style("opacity", 0.25);
+  svg.append("path").datum(daily)
+    .attr("d", d3.line().x((r) => xF(r.d)).y((r) => y(r.x)))
+    .style("stroke", "var(--s1)").style("fill", "none").style("stroke-width", 1);
+  svg.append("text").attr("x", TL.ML + 4).attr("y", y(1) - 4)
+    .style("font-size", "10px").style("fill", "var(--muted)")
+    .text("volume vs typical day (era-normalized) · 1.0 = baseline");
+  for (const e of EVENTS) drawMarker(svg, xF(markerDate(e)), 10, e, TL.HS);
+  svg.append("g").attr("class", "axis").attr("transform", `translate(0,${TL.HS})`)
+    .call(d3.axisBottom(xF).ticks(d3.timeYear.every(1)).tickSizeOuter(0))
+    .select(".domain").remove();
+  const brush = d3.brushX().extent([[TL.ML, 4], [TL.W - TL.MR, TL.HS]])
+    .on("end", (ev) => {
+      window0 = ev.selection ? ev.selection.map(xF.invert) : [T0, T1];
+      renderStream();
+    });
+  svg.append("g").call(brush).call(brush.move, window0.map(xF));
+  svg.selectAll(".selection").style("fill", "var(--s1)").style("fill-opacity", 0.10).style("stroke", "var(--s1)");
+
+  document.getElementById("stream-back").onclick = () => { drillTo = null; pinnedCluster = null; renderStream(); };
+  renderStream();
+}
+
+function renderStream() {
+  d3.select("#stream").selectAll("*").remove();
+  const [a, b] = window0;
+  const view = drillTo ? D.drill[drillTo] : null;
+  const keys = view ? view.order : SECTIONS;
+  const color = view
+    ? Object.fromEntries(keys.map((k, i) => [k, `var(--s${(i % 8) + 1})`]))
+    : SCOLOR;
+  const allRows = view
+    ? view.weekly.map((r) => ({ ...r, d: P(r.d) }))
+    : weekly;
+  const markers = (view ? view[drillMode].map((t) => ({ ...t, dd: P(t.d) })) : EVENTS)
+    .filter((m) => markerDate(m) >= a && markerDate(m) <= b);
+  const rows = allRows.filter((r) => r.d >= d3.timeMonday.floor(a) && r.d <= b);
+  document.getElementById("stream-back").hidden = !drillTo;
+  const dt = document.getElementById("drill-title");
+  dt.hidden = !drillTo;
+  dt.textContent = drillTo || "";
+  const dm = document.getElementById("drill-mode");
+  dm.hidden = !drillTo;
+  d3.select(dm).selectAll("button")
+    .data([["top", "top 25"], ["top_yearly", "5 per year"]]).join("button")
+    .attr("aria-pressed", ([k]) => String(k === drillMode))
+    .text(([, label]) => label)
+    .on("click", (ev, [k]) => { drillMode = k; renderStream(); });
+  d3.select("#stream-legend").selectAll("span.li").data(keys).join("span").attr("class", "li")
+    .html((s) => `<span class="sw" style="background:${color[s]}"></span>${s}`);
+  if (rows.length < 2) return;
+  document.getElementById("stream-title").textContent = drillTo
+    ? `${drillTo} · weekly share by ${drillTo === "Other" ? "category" : "sub-category"} · ${fmtMo(rows[0].d)} – ${fmtMo(rows[rows.length - 1].d)}`
+    : `Weekly share by major category · click a band to drill in · ${fmtMo(rows[0].d)} – ${fmtMo(rows[rows.length - 1].d)}`;
+
+  const svg = svgIn("#stream", TL.W, TL.HD);
+  // fixed order: bands keep their vertical position and color pairing across
+  // every brushed window (keys arrive size-sorted from the payload)
+  const series = d3.stack().keys(keys).offset(d3.stackOffsetExpand)
+    .order(d3.stackOrderNone)(rows);
+  const x = d3.scaleTime().domain([rows[0].d, rows[rows.length - 1].d]).range([TL.ML, TL.W - TL.MR]);
+  const y = d3.scaleLinear()
+    .domain([d3.min(series, (s) => d3.min(s, (p) => p[0])), d3.max(series, (s) => d3.max(s, (p) => p[1]))])
+    .range([TL.HD - 24, 42]);
+  const area = d3.area().x((p) => x(p.data.d)).y0((p) => y(p[0])).y1((p) => y(p[1])).curve(d3.curveBasis);
+  const paths = svg.append("g").selectAll("path").data(series).join("path")
+    .attr("d", area).style("fill", (s) => color[s.key])
+    .style("stroke", "var(--surface)").style("stroke-width", 1)
+    .style("cursor", drillTo ? "default" : "pointer")
+    .on("click", (ev, s) => {
+      if (!drillTo && D.drill && D.drill[s.key]) { drillTo = s.key; pinnedCluster = null; hideTip(); renderStream(); }
+    })
+    .on("mousemove", function (ev, s) {
+      paths.style("opacity", (p) => (p === s ? 1 : 0.35));
+      const wi = d3.bisector((r) => r.d).center(rows, x.invert(d3.pointer(ev, svg.node())[0]));
+      showTip(`<div class="t-date">week of ${fmtD(rows[wi].d)}</div>
+        <div><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${color[s.key]}"></span>
+        <span class="t-strong"> ${s.key}</span> · ${rows[wi][s.key]} stories</div>
+        ${drillTo ? "" : "<div style='color:var(--muted)'>click to drill in</div>"}`, ev);
+    })
+    .on("mouseleave", () => { paths.style("opacity", 1); hideTip(); });
+  for (const s of series) {
+    let best = 0, bi = 0;
+    s.forEach((p, i) => { const t = Math.abs(y(p[0]) - y(p[1])); if (t > best) { best = t; bi = i; } });
+    if (best > 24) {
+      svg.append("text").attr("x", x(s[bi].data.d)).attr("y", (y(s[bi][0]) + y(s[bi][1])) / 2 + 4)
+        .attr("text-anchor", "middle").style("font-size", "11.5px").style("font-weight", 600)
+        .style("fill", "var(--ink)").style("pointer-events", "none")
+        .style("paint-order", "stroke").style("stroke", "var(--surface)")
+        .style("stroke-width", 3).style("stroke-opacity", 0.75).text(s.key);
+    }
+  }
+  for (const m of markers) drawMarker(svg, x(markerDate(m)), 12, m, TL.HD - 24);
+  drawClusterLane(svg, x, a, b);
+  svg.append("g").attr("class", "axis").attr("transform", `translate(0,${TL.HD - 24})`)
+    .call(d3.axisBottom(x).ticks(8).tickSizeOuter(0)).select(".domain").remove();
+}
+
+/* ---------- top stories tab ---------- */
+let tsSelected = "__landmark__";
+let tsMode = "top";                       // "top" (25 by relevance) | "top_yearly"
+let tsSort = { key: "n", dir: 1 };
+const TS_COLS = [["n", "#"], ["event", "Event"], ["title", "Anchor story"],
+                 ["first", "Broke"], ["pd", "Peak day"], ["sub", "Category"],
+                 ["tags", "Tags"], ["outlets", "Outlets"], ["days", "Days"], ["linked", "Linked"]];
+const withCluster = (e) => {
+  const C = (D.clusters || {})[e.uid] || {};
+  return { ...e, event: C.t || e.event, first: C.b || e.first || e.d,
+           pd: C.p || e.pd || e.d, days: C.d ?? e.days, linked: C.n || 1 };
+};
+function renderTopStories() {
+  const groups = [["__landmark__", "Landmark events"],
+                  ...Object.keys(D.drill || {}).map((m) => [m, m])];
+  d3.select("#ts-chips").selectAll("button").data(groups).join("button")
+    .attr("aria-pressed", ([k]) => String(k === tsSelected))
+    .text(([, label]) => label)
+    .on("click", (ev, [k]) => { tsSelected = k; renderTopStories(); });
+
+  const landmark = tsSelected === "__landmark__";
+  document.getElementById("ts-mode").hidden = landmark;
+  d3.select("#ts-mode").selectAll("button")
+    .data([["top", "top 25 · relevance"], ["top_yearly", "5 per year"]]).join("button")
+    .attr("aria-pressed", ([k]) => String(k === tsMode))
+    .text(([, label]) => label)
+    .on("click", (ev, [k]) => { tsMode = k; renderTopStories(); });
+
+  const list = (landmark ? EVENTS : D.drill[tsSelected][tsMode]).map(withCluster);
+  const { key, dir } = tsSort;
+  list.sort((p, q) => {
+    let a = p[key] ?? p.d, b = q[key] ?? q.d;
+    if (key === "tags") { a = (p.tags || []).join(); b = (q.tags || []).join(); }
+    if (key === "first" || key === "pd") { a = a || p.d; b = b || q.d; }
+    return (a < b ? -1 : a > b ? 1 : 0) * dir;
+  });
+  document.getElementById("ts-table").innerHTML = `
+    <table class="ledger"><thead><tr>${TS_COLS.map(([k, label]) =>
+      `<th data-k="${k}" class="${k === key ? "sorted" : ""}">${label}${k === key ? (dir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}
+    </tr></thead>
+    <tbody>${list.map((e) => `
+      <tr><td class="num" style="color:var(--s8);font-weight:700">${e.n}</td>
+      <td class="headline" style="max-width:180px">${e.event || ""}</td>
+      <td class="why" style="max-width:300px">${e.title}</td>
+      <td style="white-space:nowrap">${fmtD(P(e.first || e.d))}</td>
+      <td style="white-space:nowrap">${fmtD(P(e.pd || e.d))}</td>
+      <td class="why">${e.sub || "—"}</td>
+      <td class="why">${(e.tags || []).join(", ")}</td>
+      <td class="num">${e.outlets}</td>
+      <td class="num">${e.days}</td>
+      <td class="num">${e.linked}</td></tr>`).join("")}
+    </tbody></table>`;
+  document.querySelectorAll("#ts-table th").forEach((th) => {
+    th.addEventListener("click", () => {
+      const k = th.dataset.k;
+      tsSort = { key: k, dir: k === tsSort.key ? -tsSort.dir : 1 };
+      renderTopStories();
+    });
+  });
+}
+
+/* ---------- ledger ---------- */
+let sortKey = "peak_outlets", sortDir = -1;
+function renderLedger() {
+  const cols = [
+    ["headline", "Story"], ["section", "Section"], ["peak_day", "Broke"],
+    ["peak_outlets", "Peak outlets"], ["days", "Days seen"], ["span", "Span"],
+    ["curve", "Coverage curve"], ["why", "Why flagged"]];
+  const wrap = d3.select("#ledger");
+  wrap.selectAll("*").remove();
+  const table = wrap.append("table").attr("class", "ledger");
+  table.append("thead").append("tr").selectAll("th").data(cols).join("th")
+    .classed("sorted", ([k]) => k === sortKey)
+    .text(([, label]) => label)
+    .on("click", (ev, [k]) => {
+      if (k === "curve") return;
+      sortDir = k === sortKey ? -sortDir : (k === "headline" || k === "section" ? 1 : -1);
+      sortKey = k; renderLedger();
+    });
+  const rows = [...D.ledger].sort((p, q) =>
+    (p[sortKey] < q[sortKey] ? -1 : p[sortKey] > q[sortKey] ? 1 : 0) * sortDir);
+  const tr = table.append("tbody").selectAll("tr").data(rows).join("tr");
+  tr.append("td").attr("class", "headline").text((r) => r.headline);
+  tr.append("td").html((r) =>
+    `<span class="sec-chip"><span class="sw" style="background:${SCOLOR[r.section] || "var(--muted)"}"></span>${r.section}</span>` +
+    (r.cat ? `<div class="why" style="margin-top:2px">${r.cat}</div>` : ""));
+  tr.append("td").text((r) => fmtD(P(r.peak_day)));
+  tr.append("td").attr("class", "num").text((r) => r.peak_outlets);
+  tr.append("td").attr("class", "num").text((r) => r.days);
+  tr.append("td").attr("class", "num").text((r) => r.span + "d");
+  tr.append("td").each(function (r) {
+    const s = d3.select(this).append("svg").attr("viewBox", "0 0 120 24").style("width", "120px");
+    const sx = d3.scaleLinear().domain([0, r.curve.length - 1]).range([2, 118]);
+    const sy = d3.scaleLinear().domain([0, d3.max(r.curve)]).range([21, 3]);
+    s.append("path").datum(r.curve)
+      .attr("d", d3.line().x((v, i) => sx(i)).y((v) => sy(v)).curve(d3.curveMonotoneX))
+      .style("fill", "none").style("stroke", "var(--s1)").style("stroke-width", 1.5);
+  });
+  tr.append("td").attr("class", "why").text((r) => r.why);
+}
+
+/* ---------- lifetimes ---------- */
+function renderLifetimes() {
+  const L = D.lifetimes;
+  document.getElementById("lifetimes-title").textContent =
+    `${L.shown.toLocaleString()} of ${L.total.toLocaleString()} stories drawn ` +
+    `(long-running and high-coverage stories kept preferentially; the rest sampled)`;
+  const W = 1180, H = 460, M = { l: 52, r: 14, t: 12, b: 26 };
+  const svg = svgIn("#lifetimes", W, H);
+  const x = d3.scaleTime().domain([T0, T1]).range([M.l, W - M.r]);
+  const ymax = d3.max(L.base.concat(L.named), (r) => r.span);
+  const y = d3.scaleLog().domain([1, ymax * 1.3]).range([H - M.b, M.t]);
+  const r = d3.scaleSqrt().domain([2, d3.max(L.base.concat(L.named), (p) => p.peak)]).range([1.6, 11]);
+  const ticks = [1, 7, 30, 90, 365].filter((t) => t <= ymax * 1.3);
+  svg.append("g").selectAll("line").data(ticks).join("line")
+    .attr("class", "gridline").attr("x1", M.l).attr("x2", W - M.r).attr("y1", y).attr("y2", y);
+  svg.append("g").selectAll("text").data(ticks).join("text")
+    .attr("x", M.l - 8).attr("y", (t) => y(t) + 4).attr("text-anchor", "end")
+    .style("font-size", "11px").style("fill", "var(--muted)")
+    .text((t) => (t === 1 ? "1 day" : t === 365 ? "1 year" : t + "d"));
+  svg.append("g").selectAll("circle").data(L.base).join("circle")
+    .attr("cx", (p) => x(P(p.d))).attr("cy", (p) => y(Math.max(1, p.span))).attr("r", (p) => r(p.peak))
+    .style("fill", "var(--muted)").style("opacity", 0.22)
+    .on("mousemove", (ev, p) => showTip(`<div class="t-date">${fmtD(P(p.d))}</div>
+      <div>ran <span class="t-strong">${p.span}d</span> · peak ${p.peak} outlets</div>`, ev))
+    .on("mouseleave", hideTip);
+  svg.append("g").selectAll("circle").data(L.named).join("circle")
+    .attr("cx", (p) => x(P(p.d))).attr("cy", (p) => y(Math.max(1, p.span))).attr("r", (p) => r(p.peak))
+    .style("fill", "var(--s1)").style("stroke", "var(--surface)").style("stroke-width", 2)
+    .on("mousemove", (ev, p) => showTip(`<div class="t-strong">${p.label}</div>
+      <div>${p.linked ? `event cluster: ${p.linked} linked stories · ` : ""}ran ${p.span}d · peak ${p.peak} outlets${p.cat ? ` · ${p.cat}` : ""}</div>`, ev))
+    .on("mouseleave", hideTip);
+  svg.append("g").selectAll("text.nl").data(L.named).join("text")
+    .attr("x", (p) => { const cx = x(P(p.d)); return cx > W * 0.75 ? cx - r(p.peak) - 5 : cx + r(p.peak) + 5; })
+    .attr("y", (p) => y(Math.max(1, p.span)) + 4)
+    .attr("text-anchor", (p) => (x(P(p.d)) > W * 0.75 ? "end" : "start"))
+    .style("font-size", "11px").style("font-weight", 600).style("fill", "var(--ink)")
+    .style("paint-order", "stroke").style("stroke", "var(--surface)").style("stroke-width", 3)
+    .text((p) => p.label);
+  svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - M.b})`)
+    .call(d3.axisBottom(x).ticks(d3.timeYear.every(1)).tickSizeOuter(0)).select(".domain").remove();
+}
+
+/* ---------- archetypes ---------- */
+function renderArchetypes() {
+  const A = D.archetypes;
+  document.getElementById("arch-note").innerHTML =
+    `<b>${A.n.toLocaleString()} stories</b> that ran ≥ 5 distinct days, each coverage curve ` +
+    `normalized to unit time and clustered by shape (k-means, k=${A.clusters.length}; ` +
+    `silhouette ${A.silhouette}). Thin lines are individual stories; the heavy line is each ` +
+    `cluster's medoid.`;
+  const grid = d3.select("#arch-grid");
+  for (const c of A.clusters) {
+    const cell = grid.append("div").attr("class", "arch-cell");
+    cell.append("div").attr("class", "arch-name").text(c.name);
+    cell.append("div").attr("class", "arch-meta")
+      .text(`${c.size.toLocaleString()} stories · ${(c.share * 100).toFixed(1)}%`);
+    const svg = cell.append("svg").attr("viewBox", "0 0 300 110");
+    const sx = d3.scaleLinear().domain([0, c.medoid.length - 1]).range([4, 296]);
+    const sy = d3.scaleLinear().domain([0, 1.05]).range([104, 6]);
+    const line = d3.line().x((v, i) => sx(i)).y((v) => sy(v)).curve(d3.curveBasis);
+    for (const m of c.members) {
+      svg.append("path").datum(m).attr("d", line).style("fill", "none")
+        .style("stroke", "var(--muted)").style("opacity", 0.3).style("stroke-width", 1);
+    }
+    svg.append("path").datum(c.medoid).attr("d", line).style("fill", "none")
+      .style("stroke", "var(--s1)").style("stroke-width", 2.4);
+  }
+  const dr = d3.select("#discords");
+  for (const w of D.discords) {
+    const cell = dr.append("div").attr("class", "discord-cell");
+    cell.append("div").attr("class", "arch-meta")
+      .text(`${fmtD(P(w.start))} – ${fmtD(P(w.end))} · score ${w.score}`);
+    const svg = cell.append("svg").attr("viewBox", "0 0 200 74");
+    const sx = d3.scaleLinear().domain([0, w.curve.length - 1]).range([3, 197]);
+    const sy = d3.scaleLinear().domain([0, d3.max(w.curve)]).range([70, 6]);
+    svg.append("path").datum(w.curve)
+      .attr("d", d3.area().x((v, i) => sx(i)).y0(70).y1((v) => sy(v)).curve(d3.curveMonotoneX))
+      .style("fill", "var(--s8)").style("opacity", 0.22);
+    svg.append("path").datum(w.curve)
+      .attr("d", d3.line().x((v, i) => sx(i)).y((v) => sy(v)).curve(d3.curveMonotoneX))
+      .style("fill", "none").style("stroke", "var(--s8)").style("stroke-width", 1.8);
+  }
+}
+
+/* ---------- categories ---------- */
+function renderCategories() {
+  const C = D.categories;
+  const note = document.getElementById("cat-note");
+  if (!C) {
+    note.textContent = "Categories need story_labels.parquet — run the classification and rebuild.";
+    return;
+  }
+  note.innerHTML = `Every story classified into a 3-level taxonomy (major → sub-category → meta
+    tags) by Claude Haiku on Bedrock, validated against a ${'Fable'}-labeled golden set.
+    <b>${C.labeled.toLocaleString()}</b> stories labeled (${(100 * C.coverage).toFixed(1)}% of the archive).
+    Ranked by distinct stories.`;
+  const majorColor = Object.fromEntries(C.majors_order.map((mj, i) => [mj, `var(--s${(i % 8) + 1})`]));
+  const maxShare = Math.max(...C.subs.map((s) => s.share));
+  document.getElementById("cat-table").innerHTML = `
+    <table class="ledger"><thead><tr>
+      <th>Sub-category</th><th>Major</th><th>Stories</th><th>Share</th>
+      <th>Story-days</th><th>Median distinct/day</th><th>Top tags</th><th>Exemplar story</th></tr></thead>
+    <tbody>${C.subs.map((s) => `
+      <tr><td class="headline">${s.sub}</td>
+      <td><span class="sec-chip"><span class="sw" style="background:${majorColor[s.major]}"></span>${s.major}</span></td>
+      <td class="num">${s.stories.toLocaleString()}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div style="height:8px;border-radius:4px;background:${majorColor[s.major]};width:${Math.max(2, Math.round(110 * s.share / maxShare))}px"></div>
+        <span style="font-variant-numeric:tabular-nums">${(100 * s.share).toFixed(1)}%</span></div></td>
+      <td class="num">${s.story_days.toLocaleString()}</td>
+      <td class="num">${s.median_per_day}</td>
+      <td class="why">${s.top_tags.join(", ")}</td>
+      <td class="why">${s.exemplar}</td></tr>`).join("")}
+    </tbody></table>`;
+}
+
+/* ---------- stats ---------- */
+function renderStats() {
+  const S = D.stats;
+  if (!S) {
+    document.getElementById("stats-core").innerHTML =
+      "<p class='panel-note'>Stats need the outlets-enabled dataset (parquet v2). Rebuild the payload after the v2 backfill.</p>";
+    return;
+  }
+  const fmt = (m) => (m ? `<b>${m.median.toLocaleString()}</b> <span style="color:var(--muted)">(${m.p25}–${m.p75})</span>` : "—");
+  const g = S.grains;
+  document.getElementById("stats-core").innerHTML = `
+    <table class="ledger"><thead><tr>
+      <th>Metric</th><th>Per run</th><th>Per day</th><th>Per week</th></tr></thead>
+    <tbody>
+      <tr><td>Story observations</td><td class="num">${fmt(g.run.observations)}</td><td class="num">${fmt(g.day.observations)}</td><td class="num">${fmt(g.week.observations)}</td></tr>
+      <tr><td>Distinct stories</td><td class="num">${fmt(g.run.distinct)}</td><td class="num">${fmt(g.day.distinct)}</td><td class="num">${fmt(g.week.distinct)}</td></tr>
+      <tr><td>New stories</td><td class="num">${fmt(g.run.new)}</td><td class="num">${fmt(g.day.new)}</td><td class="num">${fmt(g.week.new)}</td></tr>
+      <tr><td>Distinct stories per source, per active day</td><td class="num" colspan="3">${fmt(g.per_source.distinct_per_day)} <span style="color:var(--muted)">· ${g.per_source.note}</span></td></tr>
+    </tbody></table>`;
+  document.getElementById("stats-src-title").textContent =
+    `Top 10 of ${S.n_sources} sources by distinct stories`;
+  const maxShare = Math.max(...S.top_sources.map((s) => s.share));
+  document.getElementById("stats-sources").innerHTML = `
+    <table class="ledger"><thead><tr>
+      <th>Source</th><th>Distinct stories</th><th>Story-days</th><th>Active days</th>
+      <th>Median distinct/day</th><th>Share of story-days</th></tr></thead>
+    <tbody>${S.top_sources.map((s) => `
+      <tr><td class="headline">${s.source}</td>
+      <td class="num">${s.stories.toLocaleString()}</td>
+      <td class="num">${s.story_days.toLocaleString()}</td>
+      <td class="num">${s.active_days.toLocaleString()}</td>
+      <td class="num">${s.median_per_day}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div style="height:8px;border-radius:4px;background:var(--s1);width:${Math.round(120 * s.share / maxShare)}px"></div>
+        <span class="num" style="font-variant-numeric:tabular-nums">${(100 * s.share).toFixed(1)}%</span></div></td></tr>`).join("")}
+    </tbody></table>`;
+}
+
+activate("timeline");
+</script>
+</body>
+</html>
