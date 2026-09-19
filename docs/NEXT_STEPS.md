@@ -1,6 +1,6 @@
 # Newvelles — Status & Next Steps
 
-_Last updated: 2026-08-17, at the completion of the redesign cutover._
+_Last updated: 2026-09-19 (Bedrock hard-stop restored). Previous full pass: 2026-08-17, at the completion of the redesign cutover._
 
 ## Where the project stands (shipped 2026-08-16/17)
 
@@ -176,15 +176,17 @@ glhuilli.github.io.
 
 ## Smaller follow-ups
 
-- **Restore the Bedrock hard-stop to $15 in September 2026.** Raised to $60 on
+- **Restore the Bedrock hard-stop to $15 in September 2026.** ✅ DONE (2026-09-19):
+  `newvelles-bedrock-hard-stop` is back at $15/month (verified with
+  describe-budget; spend at the time was $0). It had been raised to $60 on
   2026-08-18 to absorb the one-off ~$30 historical-classification run (Haiku
   labeling of 114k archive stories) without tripping the auto-deny on the
-  Lambda role. Restore with:
-  `aws budgets update-budget --account-id 617641631577 --new-budget '{...same
-  definition, "Amount": "15"}'` (dump current first with describe-budget).
-  Longer term: tag analysis Bedrock usage separately so ad-hoc analysis spend
-  never counts against the pipeline guardrail. The $10 alert budget was left
-  unchanged and will fire this month — expected, informational.
+  Lambda role. Recipe if it is ever needed again: dump with describe-budget,
+  keep the same definition with `"Amount": "15"`, apply with
+  `aws budgets update-budget --account-id 617641631577 --new-budget file://...`.
+  Still open, longer term: tag analysis Bedrock usage separately so ad-hoc
+  analysis spend never counts against the pipeline guardrail. The $10 alert
+  budget was left unchanged throughout.
 
 - **Dependabot for Python deps:** spaCy drifts often (we were 12 patch
   releases behind when the entity guard landed). Check whether
