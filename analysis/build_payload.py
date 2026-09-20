@@ -730,6 +730,7 @@ def write_entry(payload: dict, entry_id: str) -> None:
         "number": int(meta["number"]),
         "title": meta["title"],
         "summary": meta.get("summary", ""),
+        "definitions": meta.get("definitions", ""),
         "first_day": payload["meta"]["first_day"],
         "last_day": payload["meta"]["last_day"],
         "published": meta["published"],

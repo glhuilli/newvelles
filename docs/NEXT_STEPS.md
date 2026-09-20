@@ -187,11 +187,15 @@ and in `newvelles_web` (Flask proxy, tab strip, `src/redesign/analysis/`,
 tests). Nothing published to S3, nothing deployed.
 
 **Review decisions (2026-09-20):** panels are Timeline, Top stories,
-Archetypes, Stats, Categories. Ledger (confusing next to Top stories) and
-Lifetimes (hard to read) are retired; Top stories gained the ledger's
-coverage-curve sparkline (`attach_curves` in `build_payload.py`). Learnings
-is retired from the tab; its content lives in the methods post draft in
-`glhuilli.github.io` (`_posts/2026-08-20-news-cycles-methods.markdown`).
+Archetypes, Categories. Ledger (confusing next to Top stories), Lifetimes
+(hard to read) and Stats (low value) are retired; Top stories gained the
+ledger's coverage-curve sparkline (`attach_curves` in `build_payload.py`,
+cluster-based for event anchors). The "run" and related definitions live in
+the entry header (`definitions` in `entry.json`) and in the methods post.
+Learnings is retired from the tab; its content, the dataset definitions and
+the per-grain medians live in the methods post draft in `glhuilli.github.io`
+(`_posts/2026-08-20-news-cycles-methods.markdown`, linked from the entry
+header as `links.post`; it 404s until the post is pushed).
 
 **Next:** continue iterating locally (`newvelles_web/docs/REDESIGN_STATUS.md`
 has the four commands), then PRs in both repos. Deploy order after that:
