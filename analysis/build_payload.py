@@ -563,7 +563,7 @@ def discords(daily, m=14, top=5):
     return out
 
 
-def build(site: bool):
+def build(site: bool, entry: str | None = None):
     df, per_day = load_frames()
     stories = per_story(per_day)
     daily = daily_series(df)
@@ -620,8 +620,68 @@ def build(site: bool):
         (HERE / "site" / "index.html").write_text(html, encoding="utf-8")
         print(f"site/index.html: {(HERE / 'site' / 'index.html').stat().st_size / 1e6:.2f} MB")
 
+    if entry:
+        write_entry(payload, entry)
+
+
+ENTRIES = HERE / "entries"
+PAYLOAD_VERSION = "0.1.0"
+INDEX_VERSION = "0.1.0"
+
+
+def write_entry(payload: dict, entry_id: str) -> None:
+    """Write entries/<id>/payload.json and upsert entries/index.json.
+
+    entry.json (checked in) carries the human-edited fields. Dates and stats
+    come from the payload so they can never drift from the data.
+    """
+    edir = ENTRIES / entry_id
+    meta_path = edir / "entry.json"
+    if not meta_path.exists():
+        raise SystemExit(f"missing {meta_path}: create it first (see docs/superpowers/specs/2026-09-19-analysis-tab-design.md)")
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    if meta.get("id") != entry_id:
+        raise SystemExit(f"{meta_path} id {meta.get('id')!r} != {entry_id!r}")
+
+    doc = {"version": PAYLOAD_VERSION, "entry": entry_id, **payload}
+    (edir / "payload.json").write_text(json.dumps(doc, separators=(",", ":")), encoding="utf-8")
+
+    majors = payload.get("categories", {}).get("majors_order", [])
+    record = {
+        "id": entry_id,
+        "number": int(meta["number"]),
+        "title": meta["title"],
+        "summary": meta.get("summary", ""),
+        "first_day": payload["meta"]["first_day"],
+        "last_day": payload["meta"]["last_day"],
+        "published": meta["published"],
+        "links": {"post": meta.get("links", {}).get("post", ""), "code": meta.get("links", {}).get("code", "")},
+        "panels": list(meta["panels"]),
+        "payload": f"/analysis/entries/{entry_id}/payload.json",
+        "stats": {
+            "runs": int(payload["meta"]["runs"]),
+            "stories": int(payload["meta"]["stories"]),
+            "days": int(len(payload["daily"])),
+            "majors": int(len(majors)),
+        },
+    }
+
+    index_path = ENTRIES / "index.json"
+    index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else {"entries": []}
+    entries = [e for e in index.get("entries", []) if e["id"] != entry_id] + [record]
+    entries.sort(key=lambda e: e["number"], reverse=True)
+    index = {
+        "version": INDEX_VERSION,
+        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "entries": entries,
+    }
+    index_path.write_text(json.dumps(index, indent=2) + "\n", encoding="utf-8")
+    print(f"entries/{entry_id}/payload.json: {(edir / 'payload.json').stat().st_size / 1e6:.2f} MB · index.json: {len(entries)} entries")
+
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--site", action="store_true")
-    build(ap.parse_args().site)
+    ap.add_argument("--entry", default=None, help="entry id, e.g. five-years; writes entries/<id>/payload.json + index.json")
+    a = ap.parse_args()
+    build(a.site, a.entry)

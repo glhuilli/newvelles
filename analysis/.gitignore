@@ -2,3 +2,5 @@ data/
 cache/
 .venv/
 site/data.json
+
+entries/*/payload.json

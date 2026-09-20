@@ -550,6 +550,13 @@ backfill-momentum:
 	@if [ -z "$(ENV)" ]; then echo "Usage: make backfill-momentum ENV=qa|prod"; exit 1; fi
 	@$(VENV_ACTIVATE) && python scripts/backfill_momentum.py --env $(ENV)
 
+# Publish one analysis entry (index.json + payload.json, gzipped) to the public
+# bucket. Build it first: analysis/.venv/bin/python analysis/build_payload.py --entry <id>
+# Add DRY=1 to print what would upload without touching S3.
+publish-analysis:
+	@if [ -z "$(ENTRY)" ]; then echo "Usage: make publish-analysis ENTRY=five-years [DRY=1]"; exit 1; fi
+	@$(VENV_ACTIVATE) && python scripts/publish_analysis.py --entry $(ENTRY) $(if $(DRY),--dry-run,)
+
 # Restore the public latest_news.json from a timestamped private-bucket archive.
 # Pauses EventBridge so the next scheduled run doesn't immediately overwrite the
 # restore; resume with 'make resume-eventbridge' when the pipeline is fixed.

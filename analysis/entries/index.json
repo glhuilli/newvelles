@@ -1,0 +1,36 @@
+{
+  "version": "0.1.0",
+  "generated": "2026-09-20T08:53:38Z",
+  "entries": [
+    {
+      "id": "five-years",
+      "number": 1,
+      "title": "Five years of news cycles",
+      "summary": "How stories start, peak and fade across the whole archive: which categories fill the wire, how long a story lives, the shapes a news cycle takes, and who covers what. Built from every run since the first day of collection.",
+      "first_day": "2021-07-10",
+      "last_day": "2026-08-18",
+      "published": "2026-09-19",
+      "links": {
+        "post": "",
+        "code": "https://github.com/glhuilli/newvelles/tree/main/analysis"
+      },
+      "panels": [
+        "timeline",
+        "ledger",
+        "lifetimes",
+        "archetypes",
+        "stats",
+        "categories",
+        "topstories",
+        "learnings"
+      ],
+      "payload": "/analysis/entries/five-years/payload.json",
+      "stats": {
+        "runs": 9311,
+        "stories": 114927,
+        "days": 1832,
+        "majors": 13
+      }
+    }
+  ]
+}
