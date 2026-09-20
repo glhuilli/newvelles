@@ -501,27 +501,62 @@ def event_clusters():
     return out
 
 
-def attach_curves(rows, per_day, stories):
-    """Coverage curve per top-story row, the same shape the ledger used:
-    outlets per day over the story's life, resampled to CURVE_POINTS. Rows
-    whose story has no per-day data are left without a curve."""
+def attach_curves(rows, per_day, stories, pad_days=2, max_window_days=120):
+    """Coverage curve per top-story row: outlets per day, resampled to
+    CURVE_POINTS like the ledger's story_curve.
+
+    Rows anchored on an event cluster (link_events.py) use the cluster's
+    coverage: the summed outlets of every linked story per day, from the
+    broke date to the end of the last episode (capped at the linker's
+    window). Big events fragment into many 1–2 day identities, so the anchor
+    identity alone would draw a flat line. Rows without a cluster fall back
+    to the identity's own days. Both windows are padded by pad_days on each
+    side so a one-day burst reads as a spike, not a plateau."""
+    cpath = HERE / "data" / "event_clusters.json"
+    clusters = json.loads(cpath.read_text()) if cpath.exists() else {}
     uids = {r["uid"] for r in rows}
+    member_uids = {m["uid"] for u in uids if u in clusters for m in clusters[u]["members"]}
     st = stories.set_index("story_uid")
-    sub = per_day[per_day["story_uid"].isin(uids)]
-    grouped = {uid: (g["day"].tolist(), g["outlets"].tolist())
-               for uid, g in sub.groupby("story_uid")}
+    sub = per_day[per_day["story_uid"].isin(uids | member_uids)]
+    grouped = {uid: g for uid, g in sub.groupby("story_uid")}
+
+    def _window(first, last):
+        a = (pd.Timestamp(first) - pd.Timedelta(days=pad_days)).strftime("%Y-%m-%d")
+        b = (pd.Timestamp(last) + pd.Timedelta(days=pad_days)).strftime("%Y-%m-%d")
+        return a, b
+
+    def _curve(days, values, first, last):
+        a, b = _window(first, last)
+        keep = [(d, v) for d, v in zip(days, values) if a <= d <= b]
+        if not keep:
+            return None
+        ds, vs = zip(*keep)
+        return [round(float(x), 2) for x in story_curve(list(ds), list(vs), a, b)]
+
     cache = {}
     for r in rows:
         uid = r["uid"]
-        if uid not in cache:
-            if uid in grouped and uid in st.index:
-                days, outlets = grouped[uid]
-                c = story_curve(days, outlets, st.at[uid, "first"], st.at[uid, "last"])
-                cache[uid] = [round(float(x), 2) for x in c]
-            else:
-                cache[uid] = None
-        if cache[uid] is not None:
-            r["curve"] = cache[uid]
+        if uid in cache:
+            if cache[uid] is not None:
+                r["curve"] = cache[uid]
+            continue
+        c = clusters.get(uid)
+        curve = None
+        if c:
+            broke = c["broke"]
+            cap = (pd.Timestamp(broke) + pd.Timedelta(days=max_window_days)).strftime("%Y-%m-%d")
+            ends = [e[1] for e in c["episodes"] if e[1] >= broke]
+            last = min(max(ends), cap) if ends else broke
+            frames = [grouped[m["uid"]] for m in c["members"] if m["uid"] in grouped]
+            if frames:
+                agg = pd.concat(frames).groupby("day")["outlets"].sum().sort_index()
+                curve = _curve(agg.index.tolist(), agg.tolist(), broke, last)
+        if curve is None and uid in grouped and uid in st.index:
+            g = grouped[uid]
+            curve = _curve(g["day"].tolist(), g["outlets"].tolist(), st.at[uid, "first"], st.at[uid, "last"])
+        cache[uid] = curve
+        if curve is not None:
+            r["curve"] = curve
 
 
 def landmark_events(stories):
