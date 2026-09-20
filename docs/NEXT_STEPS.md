@@ -181,16 +181,22 @@ header tab strip (Today / Wire / Analysis), organized as dated entries. Design:
 `docs/superpowers/specs/2026-09-19-analysis-tab-design.md`; plan:
 `docs/superpowers/plans/2026-09-19-analysis-tab.md`.
 
-**State:** all eight panels ported and green on branches named `analysis-tab`
-in this repo (builder `--entry`, `analysis/entries/`, index schema,
-`make publish-analysis`) and in `newvelles_web` (Flask proxy, tab strip,
-`src/redesign/analysis/`, tests). Nothing published to S3, nothing deployed.
+**State:** ported and green on branches named `analysis-tab` in this repo
+(builder `--entry`, `analysis/entries/`, index schema, `make publish-analysis`)
+and in `newvelles_web` (Flask proxy, tab strip, `src/redesign/analysis/`,
+tests). Nothing published to S3, nothing deployed.
 
-**Next:** review every panel locally against the real payload
-(`newvelles_web/docs/REDESIGN_STATUS.md` has the four commands), decide which
-panels stay by editing `panels` in `analysis/entries/five-years/entry.json`,
-rebuild, then PRs in both repos. Deploy order after that: `make publish-analysis
-ENTRY=five-years` first, then the web deploy, so the tab never 404s.
+**Review decisions (2026-09-20):** panels are Timeline, Top stories,
+Archetypes, Stats, Categories. Ledger (confusing next to Top stories) and
+Lifetimes (hard to read) are retired; Top stories gained the ledger's
+coverage-curve sparkline (`attach_curves` in `build_payload.py`). Learnings
+is retired from the tab; its content lives in the methods post draft in
+`glhuilli.github.io` (`_posts/2026-08-20-news-cycles-methods.markdown`).
+
+**Next:** continue iterating locally (`newvelles_web/docs/REDESIGN_STATUS.md`
+has the four commands), then PRs in both repos. Deploy order after that:
+`make publish-analysis ENTRY=five-years` first, then the web deploy, so the
+tab never 404s.
 
 ## Smaller follow-ups
 

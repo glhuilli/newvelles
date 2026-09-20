@@ -501,6 +501,29 @@ def event_clusters():
     return out
 
 
+def attach_curves(rows, per_day, stories):
+    """Coverage curve per top-story row, the same shape the ledger used:
+    outlets per day over the story's life, resampled to CURVE_POINTS. Rows
+    whose story has no per-day data are left without a curve."""
+    uids = {r["uid"] for r in rows}
+    st = stories.set_index("story_uid")
+    sub = per_day[per_day["story_uid"].isin(uids)]
+    grouped = {uid: (g["day"].tolist(), g["outlets"].tolist())
+               for uid, g in sub.groupby("story_uid")}
+    cache = {}
+    for r in rows:
+        uid = r["uid"]
+        if uid not in cache:
+            if uid in grouped and uid in st.index:
+                days, outlets = grouped[uid]
+                c = story_curve(days, outlets, st.at[uid, "first"], st.at[uid, "last"])
+                cache[uid] = [round(float(x), 2) for x in c]
+            else:
+                cache[uid] = None
+        if cache[uid] is not None:
+            r["curve"] = cache[uid]
+
+
 def landmark_events(stories):
     """Match curated events (analysis/events.json) to archive stories."""
     spec = json.loads((HERE / "events.json").read_text())["events"]
@@ -581,6 +604,11 @@ def build(site: bool, entry: str | None = None):
         for _, r in g.nlargest(40, "peak_outlets").drop_duplicates("headline").iterrows()
     ]
 
+    events = landmark_events(stories)
+    drill = drill_views(per_day, stories, order)
+    attach_curves([*events, *(t for v in drill.values() for t in v["top"] + v["top_yearly"])],
+                  per_day, stories)
+
     payload = {
         "meta": {
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
@@ -596,8 +624,8 @@ def build(site: bool, entry: str | None = None):
                    for _, r in wk.iterrows()],
         "ledger": led,
         "annotations": annotations(ann_pool),
-        "events": landmark_events(stories),
-        "drill": drill_views(per_day, stories, order),
+        "events": events,
+        "drill": drill,
         "clusters": event_clusters(),
         "lifetimes": lifetimes(stories, event_clusters()),
         "archetypes": archetypes(curves),

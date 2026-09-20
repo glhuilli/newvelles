@@ -8,5 +8,11 @@
     "post": "",
     "code": "https://github.com/glhuilli/newvelles/tree/main/analysis"
   },
-  "panels": ["timeline", "ledger", "lifetimes", "archetypes", "stats", "categories", "topstories", "learnings"]
+  "panels": [
+    "timeline",
+    "topstories",
+    "archetypes",
+    "stats",
+    "categories"
+  ]
 }
