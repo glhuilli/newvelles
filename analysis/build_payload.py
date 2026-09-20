@@ -525,13 +525,28 @@ def attach_curves(rows, per_day, stories, pad_days=2, max_window_days=120):
         b = (pd.Timestamp(last) + pd.Timedelta(days=pad_days)).strftime("%Y-%m-%d")
         return a, b
 
+    def _resample(days, values, a, b, n=CURVE_POINTS):
+        # Like story_curve, but a window longer than n points takes the max
+        # per bin instead of interpolating: linear resampling drops one-day
+        # spikes that fall between sample points, drawing an all-zero curve.
+        idx = pd.date_range(a, b, freq="D").strftime("%Y-%m-%d")
+        series = pd.Series(0.0, index=idx)
+        series.loc[days] = values
+        v = series.to_numpy(dtype=float)
+        if len(v) <= n:
+            if len(v) < 2:
+                v = np.repeat(v, 2)
+            return np.interp(np.linspace(0, len(v) - 1, n), np.arange(len(v)), v)
+        edges = np.linspace(0, len(v), n + 1).astype(int)
+        return np.array([v[edges[i]:max(edges[i + 1], edges[i] + 1)].max() for i in range(n)])
+
     def _curve(days, values, first, last):
         a, b = _window(first, last)
         keep = [(d, v) for d, v in zip(days, values) if a <= d <= b]
         if not keep:
             return None
         ds, vs = zip(*keep)
-        return [round(float(x), 2) for x in story_curve(list(ds), list(vs), a, b)]
+        return [round(float(x), 2) for x in _resample(list(ds), list(vs), a, b)]
 
     cache = {}
     for r in rows:
