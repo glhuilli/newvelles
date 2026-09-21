@@ -197,10 +197,23 @@ the per-grain medians live in the methods post draft in `glhuilli.github.io`
 (`_posts/2026-08-20-news-cycles-methods.markdown`, linked from the entry
 header as `links.post`; it 404s until the post is pushed).
 
-**Next:** continue iterating locally (`newvelles_web/docs/REDESIGN_STATUS.md`
-has the four commands), then PRs in both repos. Deploy order after that:
-`make publish-analysis ENTRY=five-years` first, then the web deploy, so the
-tab never 404s.
+**Personal site (2026-09-20):** the dashboard is NOT copied to
+glhuilli.github.io. One canonical copy lives on newvelles.com; the methods
+post links to it at `https://newvelles.com/#analysis` (hash deep links added
+in `newvelles_web/src/redesign/hash.js`), and the entry header links back to
+the post. The post also gained the home-page thumbnail it needed to appear in
+the site index; its banner is a placeholder copy of the volume figure at
+`assets/posts/news-cycles/news-cycles-banner.png`, to be replaced.
+
+Reviewing the blog locally needs Homebrew Ruby 3.3, not the system 2.6:
+`PATH="/opt/homebrew/opt/ruby/bin:$PATH" bundle install && bundle exec jekyll
+serve` (system Ruby fails building commonmarker). That regenerates
+`Gemfile.lock`, which is tracked -- do not commit it unless the modern-Ruby
+lock is wanted. `vendor/` and `.bundle/` are untracked build artifacts.
+
+**Deploy order when ready:** `make publish-analysis ENTRY=five-years` first,
+then the web deploy (so the tab never 404s), then push the blog (so its link
+to the tab resolves on arrival). PRs in both repos before that.
 
 ## Smaller follow-ups
 
