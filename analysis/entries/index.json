@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "generated": "2026-09-20T12:01:01Z",
+  "generated": "2026-09-29T12:33:41Z",
   "entries": [
     {
       "id": "five-years",
@@ -12,7 +12,7 @@
       "last_day": "2026-08-18",
       "published": "2026-09-19",
       "links": {
-        "post": "https://glhuilli.github.io/news-cycles-methods.html",
+        "post": "",
         "code": "https://github.com/glhuilli/newvelles/tree/main/analysis"
       },
       "panels": [
