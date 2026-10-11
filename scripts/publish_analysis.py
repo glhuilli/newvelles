@@ -23,12 +23,20 @@ def gzip_bytes(data: bytes) -> bytes:
 
 
 def put_args(key: str, body: bytes, cache_seconds: int) -> dict:
+    """Upload args for one published file.
+
+    ACL matters: the public bucket has no bucket policy, so readability comes
+    from a per-object public-read ACL — the same grant upload_to_s3(
+    public_read=True) makes for stories.json. Without it the object uploads
+    fine and then serves 403 to the front end.
+    """
     return {
         "Key": key,
         "Body": body,
         "ContentType": "application/json",
         "ContentEncoding": "gzip",
         "CacheControl": f"public, max-age={cache_seconds}",
+        "ACL": "public-read",
     }
 
 
