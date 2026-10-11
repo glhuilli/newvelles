@@ -216,10 +216,21 @@ serve` (system Ruby fails building commonmarker). That regenerates
 `Gemfile.lock`, which is tracked -- do not commit it unless the modern-Ruby
 lock is wanted. `vendor/` and `.bundle/` are untracked build artifacts.
 
-**Deploy order when ready:** PRs in both repos, then
-`make publish-analysis ENTRY=five-years` (so the tab has data), then the web
-deploy. The blog is a separate, later step: push it only once the post is
-ready, then set `links.post` and rebuild the index to complete the pairing.
+**Shipped so far (2026-10-11):** both PRs merged (newvelles #41, web #28) and
+the entry is published to the public bucket:
+`analysis/index.json` + `analysis/entries/five-years/payload.json` (306 KB
+gzipped), both returning 200 publicly. **Remaining: the web deploy**
+(`PATH="/opt/homebrew/bin:$PATH" ./bin/deploy.sh` in newvelles_web).
+
+**Publishing gotcha, hit once:** the public bucket has NO bucket policy —
+objects are readable only through a per-object `public-read` ACL, the same
+grant `upload_to_s3(public_read=True)` makes. The first publish omitted it and
+the files uploaded fine then served 403. `scripts/publish_analysis.py` now
+sets the ACL and `test_analysis_index_schema.py` asserts it. Always curl the
+public URL after publishing; a successful upload proves nothing.
+
+The blog is a separate, later step: push it only once the post is ready, then
+set `links.post` and rebuild the index to complete the pairing.
 
 ## Smaller follow-ups
 

@@ -83,3 +83,5 @@ def test_publish_helpers_gzip_and_headers():
     assert args["ContentType"] == "application/json"
     assert args["ContentEncoding"] == "gzip"
     assert args["CacheControl"] == "public, max-age=300"
+    # the public bucket has no policy; readability comes from this ACL alone
+    assert args["ACL"] == "public-read"
