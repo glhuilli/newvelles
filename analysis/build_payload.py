@@ -501,6 +501,79 @@ def event_clusters():
     return out
 
 
+def attach_curves(rows, per_day, stories, pad_days=2, max_window_days=120):
+    """Coverage curve per top-story row: outlets per day, resampled to
+    CURVE_POINTS like the ledger's story_curve.
+
+    Rows anchored on an event cluster (link_events.py) use the cluster's
+    coverage: the summed outlets of every linked story per day, from the
+    broke date to the end of the last episode (capped at the linker's
+    window). Big events fragment into many 1–2 day identities, so the anchor
+    identity alone would draw a flat line. Rows without a cluster fall back
+    to the identity's own days. Both windows are padded by pad_days on each
+    side so a one-day burst reads as a spike, not a plateau."""
+    cpath = HERE / "data" / "event_clusters.json"
+    clusters = json.loads(cpath.read_text()) if cpath.exists() else {}
+    uids = {r["uid"] for r in rows}
+    member_uids = {m["uid"] for u in uids if u in clusters for m in clusters[u]["members"]}
+    st = stories.set_index("story_uid")
+    sub = per_day[per_day["story_uid"].isin(uids | member_uids)]
+    grouped = {uid: g for uid, g in sub.groupby("story_uid")}
+
+    def _window(first, last):
+        a = (pd.Timestamp(first) - pd.Timedelta(days=pad_days)).strftime("%Y-%m-%d")
+        b = (pd.Timestamp(last) + pd.Timedelta(days=pad_days)).strftime("%Y-%m-%d")
+        return a, b
+
+    def _resample(days, values, a, b, n=CURVE_POINTS):
+        # Like story_curve, but a window longer than n points takes the max
+        # per bin instead of interpolating: linear resampling drops one-day
+        # spikes that fall between sample points, drawing an all-zero curve.
+        idx = pd.date_range(a, b, freq="D").strftime("%Y-%m-%d")
+        series = pd.Series(0.0, index=idx)
+        series.loc[days] = values
+        v = series.to_numpy(dtype=float)
+        if len(v) <= n:
+            if len(v) < 2:
+                v = np.repeat(v, 2)
+            return np.interp(np.linspace(0, len(v) - 1, n), np.arange(len(v)), v)
+        edges = np.linspace(0, len(v), n + 1).astype(int)
+        return np.array([v[edges[i]:max(edges[i + 1], edges[i] + 1)].max() for i in range(n)])
+
+    def _curve(days, values, first, last):
+        a, b = _window(first, last)
+        keep = [(d, v) for d, v in zip(days, values) if a <= d <= b]
+        if not keep:
+            return None
+        ds, vs = zip(*keep)
+        return [round(float(x), 2) for x in _resample(list(ds), list(vs), a, b)]
+
+    cache = {}
+    for r in rows:
+        uid = r["uid"]
+        if uid in cache:
+            if cache[uid] is not None:
+                r["curve"] = cache[uid]
+            continue
+        c = clusters.get(uid)
+        curve = None
+        if c:
+            broke = c["broke"]
+            cap = (pd.Timestamp(broke) + pd.Timedelta(days=max_window_days)).strftime("%Y-%m-%d")
+            ends = [e[1] for e in c["episodes"] if e[1] >= broke]
+            last = min(max(ends), cap) if ends else broke
+            frames = [grouped[m["uid"]] for m in c["members"] if m["uid"] in grouped]
+            if frames:
+                agg = pd.concat(frames).groupby("day")["outlets"].sum().sort_index()
+                curve = _curve(agg.index.tolist(), agg.tolist(), broke, last)
+        if curve is None and uid in grouped and uid in st.index:
+            g = grouped[uid]
+            curve = _curve(g["day"].tolist(), g["outlets"].tolist(), st.at[uid, "first"], st.at[uid, "last"])
+        cache[uid] = curve
+        if curve is not None:
+            r["curve"] = curve
+
+
 def landmark_events(stories):
     """Match curated events (analysis/events.json) to archive stories."""
     spec = json.loads((HERE / "events.json").read_text())["events"]
@@ -563,7 +636,7 @@ def discords(daily, m=14, top=5):
     return out
 
 
-def build(site: bool):
+def build(site: bool, entry: str | None = None):
     df, per_day = load_frames()
     stories = per_story(per_day)
     daily = daily_series(df)
@@ -581,6 +654,11 @@ def build(site: bool):
         for _, r in g.nlargest(40, "peak_outlets").drop_duplicates("headline").iterrows()
     ]
 
+    events = landmark_events(stories)
+    drill = drill_views(per_day, stories, order)
+    attach_curves([*events, *(t for v in drill.values() for t in v["top"] + v["top_yearly"])],
+                  per_day, stories)
+
     payload = {
         "meta": {
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
@@ -596,8 +674,8 @@ def build(site: bool):
                    for _, r in wk.iterrows()],
         "ledger": led,
         "annotations": annotations(ann_pool),
-        "events": landmark_events(stories),
-        "drill": drill_views(per_day, stories, order),
+        "events": events,
+        "drill": drill,
         "clusters": event_clusters(),
         "lifetimes": lifetimes(stories, event_clusters()),
         "archetypes": archetypes(curves),
@@ -620,8 +698,69 @@ def build(site: bool):
         (HERE / "site" / "index.html").write_text(html, encoding="utf-8")
         print(f"site/index.html: {(HERE / 'site' / 'index.html').stat().st_size / 1e6:.2f} MB")
 
+    if entry:
+        write_entry(payload, entry)
+
+
+ENTRIES = HERE / "entries"
+PAYLOAD_VERSION = "0.1.0"
+INDEX_VERSION = "0.1.0"
+
+
+def write_entry(payload: dict, entry_id: str) -> None:
+    """Write entries/<id>/payload.json and upsert entries/index.json.
+
+    entry.json (checked in) carries the human-edited fields. Dates and stats
+    come from the payload so they can never drift from the data.
+    """
+    edir = ENTRIES / entry_id
+    meta_path = edir / "entry.json"
+    if not meta_path.exists():
+        raise SystemExit(f"missing {meta_path}: create it first (see docs/superpowers/specs/2026-09-19-analysis-tab-design.md)")
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    if meta.get("id") != entry_id:
+        raise SystemExit(f"{meta_path} id {meta.get('id')!r} != {entry_id!r}")
+
+    doc = {"version": PAYLOAD_VERSION, "entry": entry_id, **payload}
+    (edir / "payload.json").write_text(json.dumps(doc, separators=(",", ":")), encoding="utf-8")
+
+    majors = payload.get("categories", {}).get("majors_order", [])
+    record = {
+        "id": entry_id,
+        "number": int(meta["number"]),
+        "title": meta["title"],
+        "summary": meta.get("summary", ""),
+        "definitions": meta.get("definitions", ""),
+        "first_day": payload["meta"]["first_day"],
+        "last_day": payload["meta"]["last_day"],
+        "published": meta["published"],
+        "links": {"post": meta.get("links", {}).get("post", ""), "code": meta.get("links", {}).get("code", "")},
+        "panels": list(meta["panels"]),
+        "payload": f"/analysis/entries/{entry_id}/payload.json",
+        "stats": {
+            "runs": int(payload["meta"]["runs"]),
+            "stories": int(payload["meta"]["stories"]),
+            "days": int(len(payload["daily"])),
+            "majors": int(len(majors)),
+        },
+    }
+
+    index_path = ENTRIES / "index.json"
+    index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else {"entries": []}
+    entries = [e for e in index.get("entries", []) if e["id"] != entry_id] + [record]
+    entries.sort(key=lambda e: e["number"], reverse=True)
+    index = {
+        "version": INDEX_VERSION,
+        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "entries": entries,
+    }
+    index_path.write_text(json.dumps(index, indent=2) + "\n", encoding="utf-8")
+    print(f"entries/{entry_id}/payload.json: {(edir / 'payload.json').stat().st_size / 1e6:.2f} MB · index.json: {len(entries)} entries")
+
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--site", action="store_true")
-    build(ap.parse_args().site)
+    ap.add_argument("--entry", default=None, help="entry id, e.g. five-years; writes entries/<id>/payload.json + index.json")
+    a = ap.parse_args()
+    build(a.site, a.entry)

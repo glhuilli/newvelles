@@ -174,6 +174,53 @@ glhuilli.github.io.
 
 ---
 
+### 4. Analysis tab on newvelles.com (started 2026-09-19, local review stage)
+
+The five-year dashboard moves from the personal site into the board behind a
+header tab strip (Today / Wire / Analysis), organized as dated entries. Design:
+`docs/superpowers/specs/2026-09-19-analysis-tab-design.md`; plan:
+`docs/superpowers/plans/2026-09-19-analysis-tab.md`.
+
+**State:** ported and green on branches named `analysis-tab` in this repo
+(builder `--entry`, `analysis/entries/`, index schema, `make publish-analysis`)
+and in `newvelles_web` (Flask proxy, tab strip, `src/redesign/analysis/`,
+tests). Nothing published to S3, nothing deployed.
+
+**Review decisions (2026-09-20):** panels are Timeline, Top stories,
+Archetypes, Categories. Ledger (confusing next to Top stories), Lifetimes
+(hard to read) and Stats (low value) are retired; Top stories gained the
+ledger's coverage-curve sparkline (`attach_curves` in `build_payload.py`,
+cluster-based for event anchors). The "run" and related definitions live in
+the entry header (`definitions` in `entry.json`) and in the methods post.
+Learnings is retired from the tab; its content, the dataset definitions and
+the per-grain medians live in the methods post draft in `glhuilli.github.io`
+(`_posts/2026-08-20-news-cycles-methods.markdown`, linked from the entry
+header as `links.post`; it 404s until the post is pushed).
+
+**Personal site — deliberately decoupled (2026-09-20):** the dashboard is NOT
+copied to glhuilli.github.io. One canonical copy lives on newvelles.com. The
+site ships with NO outbound link to the post and no placeholder: `links.post`
+in `entry.json` is empty, and the entry header renders nothing while it is.
+Set it to the post URL and rebuild the index once the post is live.
+
+The post itself is drafted and waiting in `glhuilli.github.io` (6 unpushed
+commits on `master`): it links in at `https://newvelles.com/#analysis` (hash
+deep links live in `newvelles_web/src/redesign/hash.js`), carries the retired
+Learnings content, the dataset definitions and the per-grain medians, and has
+a placeholder banner at `assets/posts/news-cycles/news-cycles-banner.png` (a
+copy of the volume figure) to swap before publishing.
+
+Reviewing the blog locally needs Homebrew Ruby 3.3, not the system 2.6:
+`PATH="/opt/homebrew/opt/ruby/bin:$PATH" bundle install && bundle exec jekyll
+serve` (system Ruby fails building commonmarker). That regenerates
+`Gemfile.lock`, which is tracked -- do not commit it unless the modern-Ruby
+lock is wanted. `vendor/` and `.bundle/` are untracked build artifacts.
+
+**Deploy order when ready:** PRs in both repos, then
+`make publish-analysis ENTRY=five-years` (so the tab has data), then the web
+deploy. The blog is a separate, later step: push it only once the post is
+ready, then set `links.post` and rebuild the index to complete the pairing.
+
 ## Smaller follow-ups
 
 - **Restore the Bedrock hard-stop to $15 in September 2026.** ✅ DONE (2026-09-19):

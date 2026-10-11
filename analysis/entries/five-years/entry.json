@@ -1,0 +1,18 @@
+{
+  "id": "five-years",
+  "number": 1,
+  "title": "Five years of news cycles",
+  "summary": "How stories start, peak and fade across the whole archive: which categories fill the wire, how long a story lives, the shapes a news cycle takes, and who covers what. Built from every run since the first day of collection.",
+  "published": "2026-09-19",
+  "links": {
+    "post": "",
+    "code": "https://github.com/glhuilli/newvelles/tree/main/analysis"
+  },
+  "panels": [
+    "timeline",
+    "topstories",
+    "archetypes",
+    "categories"
+  ],
+  "definitions": "A run is one pipeline execution, median 5 per day. An observation is a story seen in one run. Distinct counts unique story identities in a window. New counts stories on the first day they ever appeared. A source is an outlet as resolved by the source table. Volume series are era-normalized against a trailing 91-day median."
+}
